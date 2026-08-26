@@ -1,0 +1,47 @@
+name: Refresh issue states
+
+# Re-polls every tracked issue and release feed twice a day. Commits only when
+# something actually changed, so the history stays meaningful rather than
+# filling up with identical snapshots. A commit here triggers Build and deploy.
+on:
+  schedule:
+    - cron: '17 5,17 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Poll the GitHub API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 tracker/probe.py > /tmp/state.txt
+          # probe.py exits non-zero rather than emitting an empty file, but be
+          # explicit: never overwrite good data with a truncated poll.
+          lines=$(wc -l < /tmp/state.txt)
+          if [ "$lines" -lt 50 ]; then
+            echo "::error::only $lines items returned; refusing to overwrite"
+            exit 1
+          fi
+          mv /tmp/state.txt tracker/watch-state.txt
+      - name: Rebuild
+        run: python3 tracker/build.py
+      - name: Commit if anything moved
+        run: |
+          if git diff --quiet; then
+            echo "no change"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tracker/watch-state.txt docs
+          git commit -m "chore: refresh tracked issue states"
+          git push

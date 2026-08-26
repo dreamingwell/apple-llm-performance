@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="scrim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#0b0f13" stop-opacity="0.97"/>
+      <stop offset="40%"  stop-color="#0b0f13" stop-opacity="0.90"/>
+      <stop offset="68%"  stop-color="#0b0f13" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#0b0f13" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#0b0f13" stop-opacity="0.35"/>
+      <stop offset="55%"  stop-color="#0b0f13" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#0b0f13" stop-opacity="0.55"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#base)"/>
+  <rect width="1200" height="630" fill="url(#scrim)"/>
+  <rect x="0" y="0" width="1200" height="5" fill="#e08a4c"/>
+
+  <text x="72" y="132" font-family="Andale Mono, monospace" font-size="17" letter-spacing="3.0"
+        fill="#e08a4c" font-weight="bold">APPLE LLM PERFORMANCE TRACKER</text>
+
+  <text x="72" y="232" font-family="Helvetica Neue, Helvetica, sans-serif" font-size="72"
+        font-weight="bold" fill="#f2f5f8">Can Your Mac</text>
+  <text x="72" y="312" font-family="Helvetica Neue, Helvetica, sans-serif" font-size="72"
+        font-weight="bold" fill="#f2f5f8">Run It?</text>
+
+  <text x="72" y="372" font-family="Helvetica Neue, Helvetica, sans-serif" font-size="24" fill="#b3bfcb">
+    13 open-weight models &#215; 7 engines, checked</text>
+  <text x="72" y="404" font-family="Helvetica Neue, Helvetica, sans-serif" font-size="24" fill="#b3bfcb">
+    against every Apple M-series chip.</text>
+
+  <g font-family="Helvetica Neue, Helvetica, sans-serif" font-size="18">
+    <rect x="72"  y="448" width="198" height="42" rx="8" fill="#131a20" fill-opacity="0.92" stroke="#2f3b46"/>
+    <rect x="72"  y="448" width="3"   height="42" rx="2" fill="#59bc88"/>
+    <text x="92"  y="474" fill="#8fcfae" font-weight="bold">7 engines compared</text>
+
+    <rect x="282" y="448" width="252" height="42" rx="8" fill="#131a20" fill-opacity="0.92" stroke="#2f3b46"/>
+    <rect x="282" y="448" width="3"   height="42" rx="2" fill="#e08a4c"/>
+    <text x="302" y="474" fill="#edc79a" font-weight="bold">MLX is not the only way</text>
+  </g>
+
+  <text x="72" y="566" font-family="Andale Mono, monospace" font-size="18" fill="#e08a4c">
+    dreamingwell.com/research/apple-llm-performance</text>
+</svg>
