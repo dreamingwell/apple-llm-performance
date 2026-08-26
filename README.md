@@ -140,17 +140,6 @@ to spend money on.
 If you have measured something on real hardware, that is the most valuable kind
 of contribution — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Older addresses
-
-This repo's Pages site is canonical. Two earlier addresses on dreamingwell.com
-still receive traffic and forward here in a single hop, carrying the query string
-so shared deep links keep their selections:
-
-- `/research/apple-llm-performance/`
-- `/research/mlx-models/` — the address the original Reddit post used
-
-`tracker/make_redirect.py` generates those stubs.
-
 ## Licence
 
 MIT for the code. The benchmark figures and issue references belong to their
