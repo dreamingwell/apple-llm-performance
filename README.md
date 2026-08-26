@@ -36,25 +36,6 @@ whatever tools you like. What we ask is the same thing we ask of ourselves:
 shipped open weights and runs on Apple silicon, we want it here — see
 [CONTRIBUTING.md](CONTRIBUTING.md) for the five files to touch.
 
-## Why it exists
-
-It started as an MLX status page and got a fair beating on r/LocalLLaMA for
-exactly that: MLX is not the only way to run a model on a Mac, and for several
-architectures it is the worst way. `src/llama-arch.cpp` in llama.cpp is the
-honest support list, and it is much longer than mlx-lm's model directory.
-
-Two consequences shape the whole page:
-
-- **Support is per engine, not per model.** Gemma 4 31B has no 4-bit MLX quant
-  and the most open mlx-lm issues of any architecture here, while Google
-  publishes its own quantisation-aware-trained GGUF that llama.cpp loads
-  happily. DeepSeek V4 Flash is unreachable through the mainstream MLX servers
-  and is the fastest thing here through `ds4`, which was written for it.
-- **"It fits" is not "it works."** A model that only fits at 1.3 bits per weight
-  fits the way a piano fits in a lift. Every number on the page is a measured
-  file size with an effective bits-per-weight figure attached, and anything
-  below 4 bits carries a warning that says how much you're giving up.
-
 ## Engines covered
 
 | Engine | Format | Interface | API |
