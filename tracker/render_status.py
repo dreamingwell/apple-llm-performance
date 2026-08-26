@@ -644,8 +644,8 @@ def render():
     doc = TEMPLATE.format(now=now, now_iso=now_iso, usecases=usecases, bands=bands,
                           cards="".join(cards), index=index_rows(rows),
                           cross=cross_tabs(rows, releases))
-    return doc.replace("/research/apple-llm-performance/card.jpg",
-                       "/research/apple-llm-performance/" + card_name())
+    return doc.replace("/apple-llm-performance/card.jpg",
+                       "/apple-llm-performance/" + card_name())
 
 
 TEMPLATE = """<title>Apple LLM Performance Tracker</title>
@@ -653,20 +653,20 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
 <meta name="description" content="Open weight AI models and their Apple M-series compatibility.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DreamingWell">
-<meta property="og:url" content="https://dreamingwell.com/research/apple-llm-performance/">
+<meta property="og:url" content="https://dreamingwell.github.io/apple-llm-performance/">
 <meta property="og:title" content="Apple LLM Performance Tracker">
 <meta property="og:description" content="Open weight AI models and their Apple M-series compatibility.">
-<meta property="og:image" content="https://dreamingwell.com/research/apple-llm-performance/card.jpg">
+<meta property="og:image" content="https://dreamingwell.github.io/apple-llm-performance/card.jpg">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Dark card over a glowing Apple Silicon die reading Can Your Mac Run It? - 13 open-weight AI models across 7 inference engines, checked against every Apple M-series chip. MLX is not the only way.">
+<meta property="og:image:alt" content="Dark card over a glowing Apple Silicon die reading Can Your Mac Run It? - find the best LLM for your Mac and use case. Open source on GitHub.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Apple LLM Performance Tracker">
 <meta name="twitter:description" content="Open weight AI models and their Apple M-series compatibility.">
-<meta name="twitter:image" content="https://dreamingwell.com/research/apple-llm-performance/card.jpg">
-<meta name="twitter:image:alt" content="Dark card over a glowing Apple Silicon die reading Can Your Mac Run It? - 13 open-weight AI models across 7 inference engines, checked against every Apple M-series chip. MLX is not the only way.">
-<link rel="canonical" href="https://dreamingwell.com/research/apple-llm-performance/">
+<meta name="twitter:image" content="https://dreamingwell.github.io/apple-llm-performance/card.jpg">
+<meta name="twitter:image:alt" content="Dark card over a glowing Apple Silicon die reading Can Your Mac Run It? - find the best LLM for your Mac and use case. Open source on GitHub.">
+<link rel="canonical" href="https://dreamingwell.github.io/apple-llm-performance/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -873,6 +873,14 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .model-fit {{ margin: 0; font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: .8rem; color: var(--ink-2); }}
   .model-fit.toolarge {{ color: var(--critical); }}
+  header {{ position: relative; }}
+  .gh {{ position: absolute; top: 0; right: 0; display: inline-flex; align-items: center;
+    gap: .4rem; text-decoration: none; color: var(--ink-2);
+    border: 1px solid var(--line); border-radius: 999px; padding: .3rem .7rem .3rem .6rem;
+    background: var(--surface); font-size: .78rem; font-weight: 500; }}
+  .gh:hover {{ color: var(--ink); border-color: var(--accent); }}
+  .gh svg {{ flex: none; }}
+  @media (max-width: 620px) {{ header {{ padding-top: 2.2rem; }} }}
   .sub-stamp {{ color: var(--muted); white-space: nowrap; }}
   .ix-eng {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .72rem;
     color: var(--muted); white-space: nowrap; }}
@@ -1028,6 +1036,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
 
 <div class="wrap">
   <header>
+    <a class="gh" href="https://github.com/dreamingwell/apple-llm-performance"
+       target="_blank" rel="noopener" aria-label="Open source on GitHub">
+      <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-2.98-.88-2.98-2.9 0-.83.3-1.51.79-2.04-.08-.2-.35-1 .08-2.07 0 0 .65-.2 2.13.79a7.2 7.2 0 0 1 1.94-.26c.66 0 1.32.09 1.94.26 1.48-1 2.13-.79 2.13-.79.43 1.07.16 1.87.08 2.07.49.53.79 1.21.79 2.04 0 2.03-1.21 2.7-2.99 2.9.31.27.58.79.58 1.6 0 1.15-.01 2.09-.01 2.38 0 .21.15.46.55.38A7.99 7.99 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      <span>Open source</span>
+    </a>
     <span class="eyebrow">Top Tier Open Weight Models on Apple Silicon</span>
     <h1>Apple LLM Performance Tracker</h1>
     <p class="sub">Select your Mac CPU model, RAM, and machine count below. Then view what AI models
