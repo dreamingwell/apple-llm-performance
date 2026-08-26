@@ -660,12 +660,12 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Dark card over a glowing Apple Silicon die reading Can Your Mac Run It? - find the best LLM for your Mac and use case. Open source on GitHub.">
+<meta property="og:image:alt" content="Dark card over a glowing Apple Silicon die reading Can Your Mac Run It? - find the best LLM for your Mac, updated daily. Open source on GitHub.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Apple LLM Performance Tracker">
 <meta name="twitter:description" content="Open weight AI models and their Apple M-series compatibility.">
 <meta name="twitter:image" content="https://dreamingwell.github.io/apple-llm-performance/card.jpg">
-<meta name="twitter:image:alt" content="Dark card over a glowing Apple Silicon die reading Can Your Mac Run It? - find the best LLM for your Mac and use case. Open source on GitHub.">
+<meta name="twitter:image:alt" content="Dark card over a glowing Apple Silicon die reading Can Your Mac Run It? - find the best LLM for your Mac, updated daily. Open source on GitHub.">
 <link rel="canonical" href="https://dreamingwell.github.io/apple-llm-performance/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

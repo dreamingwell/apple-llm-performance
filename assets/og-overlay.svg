@@ -26,9 +26,9 @@
         font-weight="bold" fill="#f2f5f8">Run It?</text>
 
   <text x="72" y="372" font-family="Helvetica Neue, Helvetica, sans-serif" font-size="24" fill="#b3bfcb">
-    Find the best LLM for your Mac</text>
+    Find the best LLM for your Mac.</text>
   <text x="72" y="404" font-family="Helvetica Neue, Helvetica, sans-serif" font-size="24" fill="#b3bfcb">
-    and use case.</text>
+    Updated daily!</text>
 
   <g font-family="Helvetica Neue, Helvetica, sans-serif" font-size="18">
     <rect x="72" y="452" width="258" height="44" rx="8" fill="#131a20" fill-opacity="0.92" stroke="#2f3b46"/>
