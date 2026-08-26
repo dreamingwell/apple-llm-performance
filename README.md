@@ -77,8 +77,10 @@ Standard library only. No install step, no network access.
 python3 tracker/build.py      # writes docs/index.html
 ```
 
-GitHub Pages serves `docs/` on the default branch, so a merged PR is a
-deployment. `.github/workflows/deploy.yml` runs the same command on push.
+`docs/` is generated and deliberately **not** committed — Pages serves the
+artifact that `.github/workflows/deploy.yml` builds on every push to `main`, so
+a merged PR is a deployment and nobody has to resolve conflicts in a 620 KB
+generated HTML file.
 
 To refresh the tracked issue states (needs a token — the API allows 60
 unauthenticated requests an hour and this makes ~116):
@@ -111,7 +113,7 @@ tracker/watch-state.txt   last polled state of every tracked issue
 tracker/build.py          renders docs/index.html
 tracker/watch.sh          local twice-daily watch loop
 assets/                   social card source and output
-docs/                     the built site (GitHub Pages serves this)
+docs/                     GENERATED, gitignored - the built site
 ```
 
 `tracker/engines.py` and the `MODELS` list in `tracker/render_status.py` are the

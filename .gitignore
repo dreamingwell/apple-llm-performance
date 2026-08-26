@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Built by tracker/build.py and deployed straight from the Actions artifact.
+docs/
