@@ -44,6 +44,7 @@ shipped open weights and runs on Apple silicon, we want it here — see
 | [Ollama](https://github.com/ollama/ollama) | MLX on Apple silicon, GGUF elsewhere | background server + CLI | OpenAI + native |
 | [LM Studio](https://lmstudio.ai) | GGUF and MLX | desktop app + `lms` + server | OpenAI |
 | [oMLX](https://github.com/jundot/omlx) | MLX | menu-bar app + server | OpenAI + Anthropic |
+| [vLLM Metal](https://github.com/vllm-project/vllm-metal) | MLX | CLI + the vLLM server | OpenAI |
 | [vllm-mlx](https://github.com/waybarrios/vllm-mlx) | MLX | server | OpenAI + Anthropic |
 | [mlx-lm](https://github.com/ml-explore/mlx-lm) | MLX | CLI + `mlx_lm.server` | OpenAI (minimal) |
 | [DwarfStar / ds4](https://github.com/antirez/ds4) | purpose-built GGUF | CLI + server + agent | OpenAI + Anthropic |

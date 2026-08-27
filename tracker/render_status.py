@@ -509,7 +509,9 @@ def engine_tabs(m, rows):
     return f"""
       <div class="eng" data-model="{mid}">
         <div class="eng-tabs" role="tablist" aria-label="Engines for {html.escape(m['name'])}">{''.join(tabs)}
-        </div>{''.join(panes)}
+        </div>
+        <div class="eng-panes">{''.join(panes)}
+        </div>
       </div>"""
 
 
@@ -541,7 +543,9 @@ def cross_tabs(rows, releases):
     return f"""
       <div class="eng" data-model="cross">
         <div class="eng-tabs" role="tablist" aria-label="Engines">{''.join(tabs)}
-        </div>{''.join(panes)}
+        </div>
+        <div class="eng-panes">{''.join(panes)}
+        </div>
       </div>"""
 
 
@@ -887,19 +891,25 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .panel-lead {{ margin: 0 0 1.15rem; font-size: .89rem; color: var(--ink-2); max-width: 54rem; }}
   .panel.wide {{ padding-bottom: 1.35rem; }}
 
-  .eng {{ margin-top: 1px; }}
-  .eng-tabs {{ display: flex; flex-wrap: wrap; gap: 1px; background: var(--line);
-    border: 1px solid var(--line); border-bottom: none; }}
+  /* A vertical rail rather than a tab strip. Eight engines wrapped into two
+     ragged rows horizontally; as a list they stay scannable and there is room
+     for the status text beside each name. */
+  .eng {{ margin-top: 1px; display: grid; grid-template-columns: 13.5rem 1fr;
+    gap: 1px; background: var(--line); border: 1px solid var(--line); }}
+  .eng-tabs {{ display: flex; flex-direction: column; background: var(--surface-2);
+    align-content: start; }}
+  .eng-panes {{ background: var(--surface); min-width: 0; }}
   .eng-tab {{ appearance: none; border: 0; cursor: pointer; text-align: left;
     background: var(--surface-2); color: var(--muted);
-    padding: .6rem .85rem; display: flex; flex-direction: column; gap: .12rem;
-    flex: 1 1 8.5rem; min-width: 7.5rem; font: inherit; border-top: 2px solid transparent; }}
+    padding: .55rem .8rem; display: flex; flex-direction: column; gap: .1rem;
+    font: inherit; border-left: 2px solid transparent;
+    border-bottom: 1px solid var(--line-soft); }}
   .eng-tab:hover {{ background: var(--surface); color: var(--ink-2); }}
   .eng-tab[aria-selected="true"] {{ background: var(--surface); color: var(--ink);
-    border-top-color: var(--accent); }}
-  .eng-tab-n {{ font-size: .84rem; font-weight: 600; letter-spacing: -.005em; }}
-  .eng-tab-s {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .64rem;
-    letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }}
+    border-left-color: var(--accent); }}
+  .eng-tab-n {{ font-size: .82rem; font-weight: 600; letter-spacing: -.005em; }}
+  .eng-tab-s {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .6rem;
+    letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }}
   .eng-tab[aria-selected="true"] .eng-tab-s.s-ready {{ color: var(--ok); }}
   .eng-tab[aria-selected="true"] .eng-tab-s.s-degraded {{ color: var(--warn); }}
   .eng-tab[aria-selected="true"] .eng-tab-s.s-blocked {{ color: var(--critical); }}
@@ -907,15 +917,21 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .eng-tab .eng-tab-s.s-degraded::before,
   .eng-tab .eng-tab-s.s-blocked::before,
   .eng-tab .eng-tab-s.s-unknown::before {{
-    content: ""; display: inline-block; width: .42rem; height: .42rem; border-radius: 50%;
-    margin-right: .35rem; vertical-align: baseline; }}
+    content: ""; display: inline-block; width: .4rem; height: .4rem; border-radius: 50%;
+    margin-right: .32rem; vertical-align: baseline; }}
   .eng-tab .eng-tab-s.s-ready::before {{ background: var(--ok); }}
   .eng-tab .eng-tab-s.s-degraded::before {{ background: var(--warn); }}
   .eng-tab .eng-tab-s.s-blocked::before {{ background: var(--critical); }}
   .eng-tab .eng-tab-s.s-unknown::before {{ background: var(--low); }}
-
-  .eng-pane {{ background: var(--surface); border: 1px solid var(--line); border-top: none;
-    padding: 1.15rem 1.2rem 1.2rem; display: flex; flex-direction: column; gap: .8rem; }}
+  @media (max-width: 820px) {{
+    .eng {{ grid-template-columns: 1fr; }}
+    .eng-tabs {{ flex-direction: row; flex-wrap: wrap; gap: 1px; background: var(--line); }}
+    .eng-tab {{ flex: 1 1 9rem; border-left: 0; border-bottom: 0;
+      border-top: 2px solid transparent; }}
+    .eng-tab[aria-selected="true"] {{ border-top-color: var(--accent); }}
+  }}
+  .eng-pane {{ background: var(--surface); padding: 1.15rem 1.2rem 1.2rem;
+    display: flex; flex-direction: column; gap: .8rem; min-width: 0; }}
   .model-fit {{ margin: 0 0 .35rem; }}
   .scores-wrap {{ margin-top: .9rem; border-top: 1px solid var(--line-soft); padding-top: .7rem; }}
   .scores-wrap > summary {{ cursor: pointer; font-family: "IBM Plex Mono", ui-monospace, monospace;

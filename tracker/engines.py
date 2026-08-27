@@ -75,6 +75,34 @@ ENGINES = [
              "MiniMax M3 and Qwen3.5 families. Its LLM coverage is mlx-lm's, plus those kernels and its "
              "own additions - install the custom kernels or the affected families fall back silently to "
              "a much slower generic path."},
+    {"id": "vllmmetal", "name": "vLLM Metal", "fmt": "MLX",
+     "surface": "CLI + the standard vLLM server", "api": "OpenAI, via vLLM core",
+     "api_kind": "api", "repo": "vllm-project/vllm-metal", "lic": "Apache-2.0",
+     "api_detail": {
+         "endpoints": "Whatever vLLM core exposes, because this is vLLM: /v1/chat/completions, "
+                      "/v1/completions, /v1/embeddings, /v1/models, plus the pooling and rerank routes for "
+                      "the embedding and reranker models it supports.",
+         "streaming": "vLLM's own implementation rather than a reimplementation, so streaming, usage "
+                      "accounting and the rest behave the way the upstream docs say they do.",
+         "tools": "vLLM's tool parsers and guided decoding, again inherited from core. One live defect to "
+                  "know about: mixed batches with top_k enabled on some requests and disabled on others "
+                  "crash the Metal sampler.",
+         "structured": "vLLM's guided decoding stack.",
+         "concurrency": "Continuous batching and paged KV from vLLM core, over Metal kernels. Automatic "
+                        "prefix caching is on by default for unified paged-KV models; hybrid GDN models "
+                        "like Qwen3.8 must opt in with --enable-prefix-caching.",
+         "gotcha": "Model coverage is far narrower than llama.cpp's - this is a young plugin with a "
+                   "deliberately curated matrix, not a general loader. Check the supported-models table "
+                   "before planning around it. Needs macOS 15+ and native arm64 Python 3.12 specifically.",
+     },
+     "what": "vLLM itself, running on Apple Silicon. This is a plugin in the vllm-project org that keeps "
+             "vLLM core and swaps the compute layer for MLX, unifying MLX and PyTorch under one lowering "
+             "path - so you get vLLM's scheduler, paged KV, continuous batching and API surface rather than "
+             "a lookalike. Two things make it worth attention on new hardware: v0.2.0's unified paged varlen "
+             "Metal kernel claims 83x TTFT and 3.6x throughput over v0.1.0, and as of August 2026 it uses "
+             "the **M5 Neural Accelerator tensor units** to speed up MHA, GQA and MQA prefill - the only "
+             "engine here that claims M5-specific acceleration. The cost is coverage: its model matrix is a "
+             "curated list, not everything that exists."},
     {"id": "vllmmlx", "name": "vllm-mlx", "fmt": "MLX",
      "surface": "Server", "api": "OpenAI and Anthropic",
      "api_kind": "api", "repo": "waybarrios/vllm-mlx", "lic": "Apache-2.0",
@@ -192,6 +220,23 @@ EMETA = {
     "ggml-org/llama.cpp#27727": ("medium", "Garbled output from a Qwen3-Coder-Next abliterated GGUF",
         "Filed against a community abliterated finetune rather than the base weights, so it may say more about "
         "that conversion than about the architecture. Worth knowing before you blame the model."),
+    # ---------------- vLLM Metal ----------------
+    "vllm-project/vllm-metal#646": ("high", "Mixed batches with top_k enabled on some requests crash the Metal sampler",
+        "Continuous batching means requests with different sampling parameters land in the same batch, so "
+        "this is reachable with ordinary mixed traffic rather than an exotic configuration."),
+    "vllm-project/vllm-metal#482": ("medium", "Draft-model speculative decoding is net-negative",
+        "Each request re-ingests the full prompt into the draft model, which costs more than the draft saves. "
+        "Worth knowing before you reach for spec decode here; the built-in MTP path (#610) is the one to watch."),
+    "vllm-project/vllm-metal#610": ("medium", "Built-in MTP draft heads do not yet work with prefix caching on hybrid GDN",
+        "Qwen3.8 is exactly that shape, and it ships an MTP head. Until this lands you choose between the "
+        "draft head and the prefix cache rather than having both."),
+    "vllm-project/vllm-metal#644": ("medium", "Nemotron-H (Mamba-2 + MoE hybrid) paged attention not implemented",
+        "Open request rather than a bug. It is the reason Nemotron 3.5 Lightning does not load here."),
+    "vllm-project/vllm-metal#450": ("low", "RFC: attention backend dispatch",
+        "Design work on how backends get selected per model. Useful for judging how settled the internals are."),
+    "vllm-project/vllm-metal#360": ("medium", "RFC: a specialised Metal kernel for MLA paged attention",
+        "Until this exists, latent-attention models fall back to MLX SDPA with no Metal kernel - which is why "
+        "the GLM-4.5 row in the support matrix is flagged as slow and untested."),
     # ---------------- oMLX ----------------
     "jundot/omlx#3121": ("high", "DeepSeek V4 Flash decodes at 4-17 tok/s on an M5 Max from residency thrash",
         "Traced to the bundled mlx 0.32.0 keeping a single residency set, so the weights fault instead of "
@@ -384,6 +429,11 @@ MATRIX = {
             "Loads and generates. Use it to establish what the model does correctly before adding a serving "
             "layer, then move to one of the servers above for concurrency.",
             ["ml-explore/mlx-lm#1335"]),
+        "vllmmetal": cell("blocked", "Blocked", None, None,
+            "The support matrix lists GLM-4.7-Flash but not the full 358B model, and the GLM-4.5 row it does "
+            "carry is flagged as MLA with no Metal kernel and untested. This is a curated matrix rather "
+            "than a general loader, so absence means absence.",
+            ['vllm-project/vllm-metal#360']),
         "ds4": cell("none", "Out of scope", None, None,
             "ds4 loads DeepSeek V4 Flash, DeepSeek V4 PRO and GLM-5.2 only. GLM-4.7 is a different "
             "architecture and will not load.", []),
@@ -420,6 +470,11 @@ MATRIX = {
             ("mlx-community/GLM-4.7-Flash-4bit, 4 shards", "mlx-community/GLM-4.7-Flash-4bit"),
             "Works, and small enough that the CLI is a reasonable way to use it rather than just to test it.",
             ["ml-explore/mlx-lm#1335"]),
+        "vllmmetal": cell("works", "Runs, experimental", None, None,
+            "Experimental but on the plain GQA paged path with automatic prefix caching, and "
+            "`mlx-community/GLM-4.7-Flash-4bit` is the matrix's own example checkpoint. 3B active over "
+            "vLLM's continuous batching is a good pairing.",
+            ['vllm-project/vllm-metal#646']),
         "ds4": cell("none", "Out of scope", None, None,
             "Not one of the three checkpoints ds4 loads.", []),
     },
@@ -457,6 +512,10 @@ MATRIX = {
             ("mlx-community/Muse-Glimmer-30B-4bit, 4 shards", "mlx-community/Muse-Glimmer-30B-4bit"),
             "muse_glimmer has no open issues in mlx-lm. This is the quiet reference path for the model.",
             ["ml-explore/mlx-lm#1335"]),
+        "vllmmetal": cell("blocked", "Blocked", None, None,
+            "Not in the support matrix. The project asks that unsupported models be raised as issues rather "
+            "than assumed, which is a reasonable read on how narrow the tested set is.",
+            []),
         "ds4": cell("none", "Out of scope", None, None, "Not one of the three checkpoints ds4 loads.", []),
     },
 
@@ -491,6 +550,10 @@ MATRIX = {
             ("mlx-community/...Lightning-30B-A3B-4bit, 4 shards",
              "mlx-community/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-4bit"),
             "Runs on the hybrid Mamba-Transformer path without special handling.", []),
+        "vllmmetal": cell("blocked", "Blocked", None, None,
+            "Nemotron-H paged attention is an open request - the Mamba-2 plus MoE hybrid has no "
+            "implementation here yet. That issue is the thing to watch.",
+            ['vllm-project/vllm-metal#644']),
         "ds4": cell("none", "Out of scope", None, None, "Not one of the three checkpoints ds4 loads.", []),
     },
 
@@ -522,6 +585,11 @@ MATRIX = {
             ("mlx-community/gpt-oss-120b-4bit, 13 shards", "mlx-community/gpt-oss-120b-4bit"),
             "Quiet on the model side. Harmony parsing is the client's problem here rather than the engine's.",
             []),
+        "vllmmetal": cell("works", "Runs, experimental", None, None,
+            "Listed as experimental, with a dedicated sink-attention kernel and automatic prefix caching. "
+            "gpt-oss is a shape that trips several engines on this page, so a purpose-built attention path "
+            "for it is worth something.",
+            ['vllm-project/vllm-metal#646']),
         "ds4": cell("none", "Out of scope", None, None, "Not one of the three checkpoints ds4 loads.", []),
     },
 
@@ -565,6 +633,12 @@ MATRIX = {
             "Same blockers, one layer down. These are the issues every MLX server inherits.",
             ["ml-explore/mlx-lm#1493", "ml-explore/mlx-lm#1352", "ml-explore/mlx-lm#1242",
              "ml-explore/mlx-lm#1573"]),
+        "vllmmetal": cell("works", "Runs", None, None,
+            "Fully supported, with a Metal kernel for its per-layer sliding window and YOCO, and automatic "
+            "prefix caching on by default rather than opt-in. That makes this the cleanest MLX route to "
+            "Gemma 4 by a distance - mlx-lm cannot load the 31B at all. The example checkpoint in the "
+            "matrix is the small E2B variant, so verify the 31B before planning around it.",
+            []),
         "ds4": cell("none", "Out of scope", None, None, "Not one of the three checkpoints ds4 loads.", []),
     },
 
@@ -613,6 +687,15 @@ MATRIX = {
             "architecture painful on the servers above start here: ArraysCache is not trimmable, which is the "
             "cause of the k=1 speculative-decoding cap downstream.",
             ["ml-explore/mlx-lm#1446", "ml-explore/mlx-lm#1335"]),
+        "vllmmetal": cell("works", "Runs", None, None,
+            "The strongest MLX option for this model, and the reason is hardware-specific: as of August 2026 "
+            "vLLM Metal uses the M5 Neural Accelerator tensor units for MHA, GQA and MQA prefill, which no "
+            "other engine here claims. `mlx-community/Qwen3.8-27B-8bit` is the project's own example "
+            "checkpoint for the hybrid SDPA + GDN path, so this is the configuration they test. Prefix "
+            "caching works but is opt-in on hybrid GDN - pass `--enable-prefix-caching` - which is a far "
+            "better position than vllm-mlx, where it is off entirely. The open catch is that the built-in "
+            "MTP head and prefix caching do not yet work together.",
+            ['vllm-project/vllm-metal#610', 'vllm-project/vllm-metal#482', 'vllm-project/vllm-metal#646']),
         "ds4": cell("none", "Out of scope", None, None, "Not one of the three checkpoints ds4 loads.", []),
     },
 
@@ -650,11 +733,19 @@ MATRIX = {
             "unmerged. The mlx-community 4-bit was produced with mlx-vlm, which is a different package and a "
             "different code path.",
             ["ml-explore/mlx-lm#1401"]),
+        "vllmmetal": cell("blocked", "Blocked", None, None,
+            "Not in the support matrix, and MiniMax M3's sparse attention would need its own kernel work.",
+            []),
         "ds4": cell("none", "Out of scope", None, None, "Not one of the three checkpoints ds4 loads.", []),
     },
 
     # ====================================================== DeepSeek V4 Flash
     "v4flash": {
+        "vllmmetal": cell("blocked", "Blocked", None, None,
+            "Not in the support matrix. Latent attention generally is the weak spot here: the only MLA row "
+            "carried is flagged as having no Metal kernel, and a specialised MLA paged-attention kernel is "
+            "still at the RFC stage.",
+            ['vllm-project/vllm-metal#360']),
         "ds4": cell("works", "Best path", 164.6,
             ("DeepSeek-V4-Flash Q4K experts, single file", "antirez/deepseek-v4-gguf"),
             "This is what ds4 exists for, and it is the strongest single answer on this page. Purpose-built C "
@@ -713,6 +804,10 @@ MATRIX = {
 
     # =============================================================== GLM-5.2
     "glm52": {
+        "vllmmetal": cell("blocked", "Blocked", None, None,
+            "Not in the matrix. GLM-5.2's DSA attention is a latent-attention variant, and the MLA Metal "
+            "kernel it would need is an open RFC.",
+            ['vllm-project/vllm-metal#360']),
         "ds4": cell("works", "Best path", 211.1,
             ("GLM-5.2-UD-IQ2_XXS routed, single file", "antirez/glm-5.2-gguf"),
             "The highest agentic score reachable on Apple hardware, and ds4 is how you reach it. The routed "
@@ -763,6 +858,9 @@ MATRIX = {
 
     # ======================================================== DeepSeek V4 Pro
     "v4pro": {
+        "vllmmetal": cell("blocked", "Blocked", None, None,
+            "Same as Flash - the architecture is not in the matrix, and MLA has no Metal kernel yet.",
+            ['vllm-project/vllm-metal#360']),
         "ds4": cell("works", "Best path", 464.6,
             ("PRO IQ2_XXS routed, single file; or the Q4 two-machine split", "antirez/deepseek-v4-gguf"),
             "ds4 runs PRO, with the honest caveat that it takes real hardware. The IQ2_XXS routed build is "
@@ -833,6 +931,9 @@ MATRIX = {
             "kimi_k25 and kimi_linear exist; K3 does not. Community REAP repos supply their own modelling code "
             "via auto_map rather than relying on mlx-lm.",
             ["ml-explore/mlx-lm#1572"]),
+        "vllmmetal": cell("blocked", "Blocked", None, None,
+            "Not in the support matrix, and no unpruned MLX build of K3 exists to try.",
+            []),
         "ds4": cell("none", "Out of scope", None, None, "Not one of the three checkpoints ds4 loads.", []),
     },
 
@@ -864,6 +965,12 @@ MATRIX = {
             "`qwen3_5_moe.py` handles it. The constraint is what has been published: pruned builds from 360.9 GB "
             "up, or 805.6 GB unpruned.",
             ["ml-explore/mlx-lm#1572", "ml-explore/mlx-lm#1446"]),
+        "vllmmetal": cell("degraded", "Untested at this size", None, None,
+            "The matrix row covering Qwen3.5/3.6/3.8 notes that the 3.6 generation adds MoE, so this "
+            "architecture is plausibly in scope - but nobody has run a 2.45T checkpoint through it, and no "
+            "MLX build of this model exists that is not expert-pruned. Treat it as untested rather than "
+            "supported.",
+            ['ml-explore/mlx-lm#1572']),
         "ds4": cell("none", "Out of scope", None, None,
             "Not one of the three checkpoints ds4 loads.", []),
     },
@@ -896,6 +1003,11 @@ MATRIX = {
             "`qwen3_next.py` exists and generates. The hybrid cache silently failing is filed here and "
             "propagates to every MLX server that wraps it.",
             ["ml-explore/mlx-lm#1162", "ml-explore/mlx-lm#1335"]),
+        "vllmmetal": cell("works", "Runs", None, None,
+            "Qwen3-Next is a supported family with its own row in the matrix, on the same hybrid SDPA + GDN "
+            "path as Qwen3.8. Prefix caching is opt-in for that shape. At 3B active this is a natural fit "
+            "for vLLM's continuous batching.",
+            ['vllm-project/vllm-metal#610', 'vllm-project/vllm-metal#646']),
         "ds4": cell("none", "Out of scope", None, None,
             "Not one of the three checkpoints ds4 loads.", []),
     },
@@ -922,6 +1034,10 @@ MATRIX = {
         "mlxlm": cell("blocked", "Blocked", None, None,
             "The models directory carries qwen3_next but nothing for qwen4. This is the upstream gap every MLX "
             "engine on this page inherits.", []),
+        "vllmmetal": cell("blocked", "Blocked", None, None,
+            "The matrix covers Qwen3.5 through 3.8, not the qwen4_exp preview architecture. Same upstream "
+            "gap every MLX engine here has.",
+            []),
         "ds4": cell("none", "Out of scope", None, None,
             "Not one of the three checkpoints ds4 loads.", []),
     },
@@ -1041,6 +1157,8 @@ CROSS_BY_ENGINE = {
                  "lmstudio-ai/lmstudio-bug-tracker#2265", "lmstudio-ai/lmstudio-bug-tracker#2240",
                  "lmstudio-ai/lmstudio-bug-tracker#2243"],
     "omlx": ["jundot/omlx#2307", "jundot/omlx#2137"],
+    "vllmmetal": ["vllm-project/vllm-metal#646", "vllm-project/vllm-metal#482",
+                  "vllm-project/vllm-metal#450", "vllm-project/vllm-metal#360"],
     "vllmmlx": ["waybarrios/vllm-mlx#619", "waybarrios/vllm-mlx#584", "waybarrios/vllm-mlx#672",
                 "waybarrios/vllm-mlx#546", "waybarrios/vllm-mlx#627", "waybarrios/vllm-mlx#682",
                 "waybarrios/vllm-mlx#732", "waybarrios/vllm-mlx#570"],
@@ -1060,6 +1178,7 @@ RELEASE_FEEDS = [
     {"engine": "lmstudio", "repo": None, "scheme": "none",
      "note": "closed source; no public tag feed, see the in-app release notes"},
     {"engine": "omlx", "repo": "jundot/omlx", "scheme": "release", "note": ""},
+    {"engine": "vllmmetal", "repo": "vllm-project/vllm-metal", "scheme": "release", "note": ""},
     {"engine": "vllmmlx", "repo": "waybarrios/vllm-mlx", "scheme": "release", "note": ""},
     {"engine": "mlxlm", "repo": "ml-explore/mlx-lm", "scheme": "release", "note": ""},
     {"engine": "ds4", "repo": "antirez/ds4", "scheme": "none",
@@ -1073,7 +1192,7 @@ RELEASE_FEEDS = [
 # ---------------------------------------------------------------------------
 
 FAM = {"llamacpp": "gguf", "ollama": "gguf", "lmstudio": "gguf",
-       "omlx": "mlx", "vllmmlx": "mlx", "mlxlm": "mlx", "ds4": "ds4"}
+       "omlx": "mlx", "vllmmetal": "mlx", "vllmmlx": "mlx", "mlxlm": "mlx", "ds4": "ds4"}
 
 # LM Studio ships both engines, so for a model whose MLX build is the better one
 # it should be judged on that ladder instead.

@@ -24,7 +24,7 @@ ggml-org/llama.cpp#27141|open|nemotron_h_moe aborts in ggml_ssm_scan during cont
 ggml-org/llama.cpp#27335|open|Qwen3.8-27B crashes on an M2 Ultra with default settings
 ggml-org/llama.cpp#27427|open|A ~50 KB request crashes llama-server with exit 139
 ggml-org/llama.cpp#27428|open|draft-mtp roughly halves prompt processing on a multi-GPU layer split
-ggml-org/llama.cpp#27720|open|gpt-oss malformed Harmony channel headers break tool calls
+ggml-org/llama.cpp#27720|closed|gpt-oss malformed Harmony channel headers break tool calls
 ggml-org/llama.cpp#27727|open|Garbled output from a Qwen3-Coder-Next abliterated GGUF
 ggml-org/llama.cpp#27741|open|Feature request: support Qwen3.8-Flash-Next
 jundot/omlx#1195|open|MTP speculative decoding not yet supported for Nemotron-H
@@ -88,6 +88,12 @@ ollama/ollama#17656|open|muse-glimmer:30b-mlx is built from nvfp4-dflash layers,
 ollama/ollama#17776|open|Qwen3.8-27B MTP variants are 2x slower than non-MTP on Apple Silicon
 ollama/ollama#17783|open|gemma4:31b-mlx grows in memory over a session
 ollama/ollama#17878|open|Embeddings silently return all-zero vectors under sustained load
+vllm-project/vllm-metal#360|open|RFC: a specialised Metal kernel for MLA paged attention
+vllm-project/vllm-metal#450|open|RFC: attention backend dispatch
+vllm-project/vllm-metal#482|open|Draft-model speculative decoding is net-negative
+vllm-project/vllm-metal#610|open|Built-in MTP draft heads do not yet work with prefix caching on hybrid GDN
+vllm-project/vllm-metal#644|open|Nemotron-H (Mamba-2 + MoE hybrid) paged attention not implemented
+vllm-project/vllm-metal#646|open|Mixed batches with top_k enabled on some requests crash the Metal sampler
 waybarrios/vllm-mlx#546|open|Strict json_schema decode wedges with no token progress
 waybarrios/vllm-mlx#570|open|Qwen3.6-35B-A3B dequantize shape mismatch (works in mlx-vlm)
 waybarrios/vllm-mlx#584|open|Non-loopback requests silently dropped on --host 0.0.0.0
@@ -110,7 +116,8 @@ waybarrios/vllm-mlx#730|open|Prefix-cache reuse silently disabled for hybrid arc
 waybarrios/vllm-mlx#731|open|PR: make prefix-cache rewind gate aware of non-KV hybrid leaves
 waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tokens_details.cached_tokens
 ggml-org/llama.cpp@release|v0.3.0|latest release
-ollama/ollama@release|v0.33.0|latest release
+ollama/ollama@release|v0.33.1|latest release
 jundot/omlx@release|v0.6.3rc3|latest release
+vllm-project/vllm-metal@release|v0.3.0.dev20260826134128|latest release
 waybarrios/vllm-mlx@release|v0.4.1|latest release
 ml-explore/mlx-lm@release|v0.31.3|latest release
