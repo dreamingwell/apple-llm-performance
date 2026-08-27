@@ -93,12 +93,16 @@ ENGINES = [
                         "like Qwen3.8 must opt in with --enable-prefix-caching.",
          "gotcha": "Model coverage is far narrower than llama.cpp's - this is a young plugin with a "
                    "deliberately curated matrix, not a general loader. Check the supported-models table "
-                   "before planning around it. Needs macOS 15+ and native arm64 Python 3.12 specifically.",
+                   "before planning around it. Needs macOS 15+ and native arm64 Python 3.12 specifically. "
+                   "And note the MLX pin is exact, not a floor: the prebuilt kernels link MLX private "
+                   "headers and libmlx.dylib carries no SONAME version, so a wheel is only ABI-safe "
+                   "against the one MLX it was built against. You cannot upgrade MLX underneath it.",
      },
      "what": "vLLM itself, running on Apple Silicon. This is a plugin in the vllm-project org that keeps "
              "vLLM core and swaps the compute layer for MLX, unifying MLX and PyTorch under one lowering "
              "path - so you get vLLM's scheduler, paged KV, continuous batching and API surface rather than "
-             "a lookalike. Two things make it worth attention on new hardware: v0.2.0's unified paged varlen "
+             "a lookalike. Despite the name it is an MLX engine underneath: it pins a single exact MLX "
+             "version, pulls in mlx-lm and mlx-vlm, and builds its Metal kernels as MLX primitives. Two things make it worth attention on new hardware: v0.2.0's unified paged varlen "
              "Metal kernel claims 83x TTFT and 3.6x throughput over v0.1.0, and as of August 2026 it uses "
              "the **M5 Neural Accelerator tensor units** to speed up MHA, GQA and MQA prefill - the only "
              "engine here that claims M5-specific acceleration. The cost is coverage: its model matrix is a "
@@ -688,9 +692,12 @@ MATRIX = {
             "cause of the k=1 speculative-decoding cap downstream.",
             ["ml-explore/mlx-lm#1446", "ml-explore/mlx-lm#1335"]),
         "vllmmetal": cell("works", "Runs", None, None,
-            "The strongest MLX option for this model, and the reason is hardware-specific: as of August 2026 "
-            "vLLM Metal uses the M5 Neural Accelerator tensor units for MHA, GQA and MQA prefill, which no "
-            "other engine here claims. `mlx-community/Qwen3.8-27B-8bit` is the project's own example "
+            "The strongest MLX-backed option for this model, and worth being precise about why, because the "
+            "name suggests otherwise: this is vLLM's scheduler and API over MLX as the compute layer. It "
+            "pins `mlx==0.32.0` exactly, depends on mlx-lm and mlx-vlm, and its paged attention kernel is "
+            "implemented as an `mlx::core::Primitive` subclass rather than running beside MLX. What it adds "
+            "on top is hardware-specific: as of August 2026 it uses the M5 Neural Accelerator tensor units "
+            "for MHA, GQA and MQA prefill, which no other engine here claims. `mlx-community/Qwen3.8-27B-8bit` is the project's own example "
             "checkpoint for the hybrid SDPA + GDN path, so this is the configuration they test. Prefix "
             "caching works but is opt-in on hybrid GDN - pass `--enable-prefix-caching` - which is a far "
             "better position than vllm-mlx, where it is off entirely. The open catch is that the built-in "
