@@ -49,6 +49,19 @@ shipped open weights and runs on Apple silicon, we want it here — see
 | [mlx-lm](https://github.com/ml-explore/mlx-lm) | MLX | CLI + `mlx_lm.server` | OpenAI (minimal) |
 | [DwarfStar / ds4](https://github.com/antirez/ds4) | purpose-built GGUF | CLI + server + agent | OpenAI + Anthropic |
 
+### Generative media
+
+None of the servers above can load a diffusion or audio model, so these are a
+separate set. The page pairs models with engines of the same modality and never
+shows one against the other.
+
+| Engine | Output | Interface |
+|---|---|---|
+| [mflux](https://github.com/filipstrand/mflux) | image | CLI + Python |
+| [MLX-Audio](https://github.com/Blaizzy/mlx-audio) | audio - TTS, STT, music | CLI + Python + web UI |
+| [MLX-Video](https://github.com/Blaizzy/mlx-video) | video, image | CLI + Python |
+| [DiffusionKit](https://github.com/argmaxinc/DiffusionKit) | image | CLI + Python |
+
 Every one of them speaks HTTP. None is desktop-only.
 
 ## Building it

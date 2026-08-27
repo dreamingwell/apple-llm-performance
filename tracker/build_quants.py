@@ -9,12 +9,18 @@ Rungs whose loss is structural rather than numeric (REAP expert pruning) are
 marked kind="pruned" and carry no bpw, because bits-per-surviving-weight says
 nothing about the experts that were deleted.
 """
-import json, urllib.request, re, collections, sys
+import json, os, urllib.request, re, collections, sys
 from pprint import pformat
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, "quants.py")
 
 PARAMS = {"glm47":358,"glm47f":31,"glimmer":30,"nemolight":30,"gptoss":120,
  "gemma4":30.7,"qwen38":27.8,"m3":428,"v4flash":284,"glm52":744,"v4pro":1600,
- "kimik3":2780,"qwenmax":2446,"qcnext":80,
+ "kimik3":2780,"qwenmax":2446,
+ # generative media
+ "flux2k4":4,"flux2k9":9,"zimage":6,"ltx2":19,
+ "kokoro":0.082,"magpie":0.357,"voicechat":11,"mmmusic3":7,"qcnext":80,
  # Qwen counts Flash-Next as 125B; the safetensors total is 180B because the
  # 51B n-gram embedding table is part of the checkpoint. Weights on disk are what
  # has to be resident, so bits-per-weight is computed against 180B.
@@ -46,7 +52,27 @@ SOURCES = {
                    "mlx-community/Qwen3-Coder-Next-5bit","mlx-community/Qwen3-Coder-Next-4bit",
                    "nightmedia/Qwen3-Coder-Next-mxfp4-mlx"]},
  "q38fnext":{"gguf":["unsloth/Qwen3.8-Flash-Next-GGUF"], "mlx":[]},
+ # --- generative media: weights are published as-is, so the "ladder" is usually
+ # one or two precisions rather than a dozen quant tiers ---
+ "flux2k4": {"gguf":["unsloth/FLUX.2-klein-4B-GGUF"], "mlx":["black-forest-labs/FLUX.2-klein-4B"]},
+ "flux2k9": {"gguf":[], "mlx":["black-forest-labs/FLUX.2-klein-9B"]},
+ "zimage":  {"gguf":[], "mlx":["Tongyi-MAI/Z-Image-Turbo"]},
+ "ltx2":    {"gguf":[], "mlx":["Lightricks/LTX-2.3-fp8","Lightricks/LTX-2.3"]},
+ "kokoro":  {"gguf":[], "mlx":["mlx-community/Kokoro-82M-bf16","mlx-community/Kokoro-82M-8bit",
+                               "mlx-community/Kokoro-82M-4bit"]},
+ "magpie":  {"gguf":[], "mlx":["aufklarer/Magpie-TTS-Multilingual-357M-MLX-8bit",
+                               "aufklarer/Magpie-TTS-Multilingual-357M-MLX-4bit"]},
+ "voicechat":{"gguf":[], "mlx":["mlx-community/NemotronLabs-VoiceChat-11B-8bit",
+                                "mlx-community/NemotronLabs-VoiceChat-11B-4bit"]},
+ "mmmusic3":{"gguf":[], "mlx":["mlx-community/MiniMax-Music3-bf16","mlx-community/MiniMax-Music3-8bit",
+                               "mlx-community/MiniMax-Music3-4bit"]},
 }
+
+# Media checkpoints bundle a transformer with text encoders and a VAE, so
+# dividing repo bytes by the transformer's parameter count is meaningless - LTX-2
+# came out at 65 "bits per weight" that way. These models carry the precision
+# their repo states instead, and no fidelity band.
+MEDIA = {"flux2k4", "flux2k9", "zimage", "ltx2", "kokoro", "magpie", "voicechat", "mmmusic3"}
 
 DRAFT = re.compile(r"(mmproj|^mtp-|-mtp|dflash|dspark|eagle3|imatrix|Qwen3\.5-\d|MTP)", re.I)
 
@@ -88,9 +114,9 @@ def gguf_rungs(repo, mid, only=None):
         if gb < 1:
             continue
         pr = bool(PRUNED.search(k)) or pruned_repo(repo)
-        out.append({"label": k, "repo": repo, "gb": round(gb, 1),
-                    "kind": "pruned" if pr else "quant",
-                    "bpw": None if pr else round(gb * 8 / PARAMS[mid], 2)})
+        kind = "native" if mid in MEDIA else ("pruned" if pr else "quant")
+        out.append({"label": k, "repo": repo, "gb": round(gb, 1), "kind": kind,
+                    "bpw": None if kind != "quant" else round(gb * 8 / PARAMS[mid], 2)})
     return out
 
 
@@ -99,12 +125,12 @@ def mlx_rungs(repo, mid):
               api(f"https://huggingface.co/api/models/{repo}/tree/main?recursive=true")
               if f.get("path", "").endswith(".safetensors"))
     gb = tot / 1e9
-    if gb < 1:
+    if gb < 0.05:              # TTS models are hundreds of megabytes, not gigabytes
         return []
     pruned = bool(PRUNED.search(repo))
-    return [{"label": repo.split("/")[-1], "repo": repo, "gb": round(gb, 1),
-             "kind": "pruned" if pruned else "quant",
-             "bpw": None if pruned else round(gb * 8 / PARAMS[mid], 2)}]
+    kind = "native" if mid in MEDIA else ("pruned" if pruned else "quant")
+    return [{"label": repo.split("/")[-1], "repo": repo, "gb": round(gb, 2), "kind": kind,
+             "bpw": None if kind != "quant" else round(gb * 8 / PARAMS[mid], 2)}]
 
 
 def thin(rungs, keep=9):
@@ -112,7 +138,7 @@ def thin(rungs, keep=9):
     rungs = sorted(rungs, key=lambda r: -r["gb"])
     out = []
     for r in rungs:
-        if out and r["gb"] > out[-1]["gb"] * 0.97 and r["kind"] == out[-1]["kind"]:
+        if out and r["gb"] > out[-1]["gb"] * 0.97 and r["kind"] == out[-1]["kind"] and r["gb"] > 1:
             continue
         out.append(r)
     if len(out) <= keep:
@@ -140,7 +166,7 @@ for mid, fams in SOURCES.items():
             b = f"{r['bpw']:5.2f} bpw" if r["bpw"] else "  pruned "
             print(f"    {r['gb']:8.1f} GB  {b}  {r['label'][:64]}")
 
-with open("quants.py", "w") as f:
+with open(OUT, "w") as f:
     f.write('"""Measured quant ladders. Generated by build_quants.py - do not hand-edit.\n\n'
             'gb is summed file bytes from the HF repo; bpw is gb*8/total-params, so it is\n'
             'the effective bits per weight rather than whatever the quant is named.\n'
@@ -185,11 +211,17 @@ KV = {
  "v4pro":    (mla(61, 512, 64),             1048576, "61 layers of DSA latent attention, 512 + 64 rope"),
  "kimik3":   (mla(24, 512, 64),             1048576, "24 of 93 layers are full attention; the other 69 hold a fixed KDA state"),
  "qwenmax":  (gqa(23, 4, 256),              262144, "23 of 92 layers are full attention, one in every 4; the other 69 are linear"),
+ # Generative media models have no growing KV cache to size, so there is no
+ # per-token figure and the page hides the context table for them.
+ "flux2k4":  (None, None, ""), "flux2k9": (None, None, ""),
+ "zimage":   (None, None, ""), "ltx2":    (None, None, ""),
+ "kokoro":   (None, None, ""), "magpie":  (None, None, ""),
+ "voicechat":(None, None, ""), "mmmusic3":(None, None, ""),
  "qcnext":   (gqa(12, 2, 256),              262144, "12 of 48 layers are Gated Attention; the other 36 are Gated DeltaNet, which holds a fixed state"),
  "q38fnext": (gqa(12, 2, 256),              262144, "12 of 48 layers use Qwen Sparse Attention at micro-block granularity with a 2048 budget, so this is an upper bound; the other 36 are Gated DeltaNet"),
 }
 
-with open("quants.py", "a") as f:
+with open(OUT, "a") as f:
     f.write("\n# bytes of KV per token at fp16, the context ceiling, and how it was derived.\n")
     f.write("KV = " + pformat(KV) + "\n")
 

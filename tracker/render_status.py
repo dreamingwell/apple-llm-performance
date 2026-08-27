@@ -273,6 +273,88 @@ MODELS = [
              "embedding table designed to be offloaded. That last one is why the checkpoint is 180B on disk "
              "against a stated 125B. None of it runs on Apple silicon yet: the architecture is `qwen4_exp` and "
              "no runtime here implements it."},
+    # ===================== generative media ==========================
+    {"id": "flux2k4", "name": "FLUX.2 Klein 4B", "w": 3.1, "est": False, "mod": "image",
+     "arch": "Rectified-flow DiT \u00b7 4B \u00b7 distilled and base", "lic": "FLUX.2 (non-commercial for Klein)",
+     "ctx": "up to ~4 MP, edit-capable", "ctx_label": "Output",
+     "hf": "black-forest-labs/FLUX.2-klein-4B",
+     "coding": [], "agentic": [],
+     "srcs": [("Model card", "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B"),
+              ("mflux FLUX.2 guide", "https://github.com/filipstrand/mflux/blob/main/src/mflux/models/flux2/README.md")],
+     "note": "The pragmatic default for image generation on a Mac. 4B is small enough that the whole thing "
+             "sits in a few gigabytes, it edits as well as it generates, and mflux implements it natively. "
+             "Apple quotes FLUX-dev-4bit as 3.8x faster on M5 than M4, which is the largest generation-over-"
+             "generation jump of anything on this page."},
+    {"id": "flux2k9", "name": "FLUX.2 Klein 9B", "w": 52.9, "est": False, "mod": "image",
+     "arch": "Rectified-flow DiT \u00b7 9B \u00b7 distilled and base", "lic": "FLUX.2 (non-commercial for Klein)",
+     "ctx": "up to ~4 MP, edit-capable", "ctx_label": "Output",
+     "hf": "black-forest-labs/FLUX.2-klein-9B",
+     "coding": [], "agentic": [],
+     "srcs": [("Model card", "https://huggingface.co/black-forest-labs/FLUX.2-klein-9B")],
+     "note": "The larger Klein. Better prompt adherence and detail than the 4B at rather more than twice the "
+             "footprint, and no quantised community builds published yet - so this is a bf16-or-nothing "
+             "choice today."},
+    {"id": "zimage", "name": "Z-Image Turbo 6B", "w": 32.8, "est": False, "mod": "image",
+     "arch": "6B DiT \u00b7 distilled and base", "lic": "Apache-2.0",
+     "ctx": "1024\u00d71024 typical", "ctx_label": "Output",
+     "hf": "Tongyi-MAI/Z-Image-Turbo",
+     "coding": [], "agentic": [],
+     "srcs": [("mflux Z-Image guide", "https://github.com/filipstrand/mflux/blob/main/src/mflux/models/z_image/README.md")],
+     "note": "mflux leads its own README with this one, and describes it as fast, small and very good on "
+             "realism. Apache-2.0, which separates it from the FLUX family for anything commercial. The "
+             "published checkpoint is bf16, so the on-disk figure is larger than the parameter count "
+             "suggests."},
+    {"id": "ltx2", "name": "LTX-2.3", "w": 58.7, "est": False, "mod": "video",
+     "arch": "Video DiT with synchronised audio", "lic": "LTX open weights",
+     "ctx": "text-to-video and image-to-video, with audio", "ctx_label": "Output",
+     "hf": "Lightricks/LTX-2.3",
+     "coding": [], "agentic": [],
+     "srcs": [("Model card", "https://huggingface.co/Lightricks/LTX-2.3")],
+     "note": "Lightricks' video model, and the one generating video with synchronised audio rather than "
+             "silent clips. The fp8 build at 58.7 GB is the one that fits a real machine; the full release "
+             "is 156 GB. Video is where Apple Silicon is furthest behind - expect minutes per clip, not "
+             "seconds, and check MLX-Video's commit history before planning around it."},
+    {"id": "voicechat", "name": "NemotronLabs VoiceChat 11B", "w": 9.2, "est": False, "mod": "audio",
+     "arch": "11B end-to-end full-duplex speech-to-speech", "lic": "NVIDIA Open Model",
+     "ctx": "speech in, speech out, ~450 ms turn-taking", "ctx_label": "Behaviour",
+     "hf": "nvidia/NVIDIA-NemotronLabs-VoiceChat-11B",
+     "coding": [], "agentic": [],
+     "srcs": [("Model card", "https://huggingface.co/nvidia/NVIDIA-NemotronLabs-VoiceChat-11B"),
+              ("MLX 4-bit build", "https://huggingface.co/mlx-community/NemotronLabs-VoiceChat-11B-4bit")],
+     "note": "Released 3 August 2026 and the most interesting audio model here: it listens and speaks at the "
+             "same time rather than taking turns, and it is the first open full-duplex model that can call "
+             "tools mid-conversation. Artificial Analysis put it top-three among open speech models on both "
+             "conversational dynamics and speech reasoning. mlx-community has published 8-bit and 4-bit "
+             "builds, so it runs on a laptop."},
+    {"id": "magpie", "name": "Magpie TTS Multilingual 357M", "w": 0.3, "est": False, "mod": "audio",
+     "arch": "357M text-to-speech", "lic": "NVIDIA Open Model",
+     "ctx": "9 languages", "ctx_label": "Coverage",
+     "hf": "nvidia/magpie_tts_multilingual_357m",
+     "coding": [], "agentic": [],
+     "srcs": [("Model card", "https://huggingface.co/nvidia/magpie_tts_multilingual_357m")],
+     "note": "NVIDIA's small multilingual TTS, part of the Nemotron voice-agent stack alongside VoiceChat "
+             "and the Nemotron ASR models. At a third of a gigabyte it runs on anything, which makes the "
+             "cluster picker beside the point for this one."},
+    {"id": "kokoro", "name": "Kokoro 82M", "w": 0.31, "est": False, "mod": "audio",
+     "arch": "82M text-to-speech", "lic": "Apache-2.0",
+     "ctx": "EN, JA, ZH, FR, ES, IT, PT, HI", "ctx_label": "Coverage",
+     "hf": "hexgrad/Kokoro-82M",
+     "coding": [], "agentic": [],
+     "srcs": [("Model card", "https://huggingface.co/hexgrad/Kokoro-82M"),
+              ("MLX builds", "https://huggingface.co/mlx-community/Kokoro-82M-bf16")],
+     "note": "The default answer for narration on a Mac, and by download count the most used open TTS model "
+             "there is. 82M parameters, Apache-2.0, four MLX precisions published, and small enough that "
+             "the whole model is smaller than one layer of most things on this page."},
+    {"id": "mmmusic3", "name": "MiniMax Music 3", "w": 9.2, "est": False, "mod": "audio",
+     "arch": "Hierarchical AR + flow matching \u00b7 song generation", "lic": "MiniMax open weights",
+     "ctx": "lyrics in, 44.1 kHz stereo out", "ctx_label": "Output",
+     "hf": "MiniMaxAI/MiniMax-Music-3",
+     "coding": [], "agentic": [],
+     "srcs": [("MLX builds", "https://huggingface.co/mlx-community/MiniMax-Music3-bf16"),
+              ("MLX-Audio music guide", "https://github.com/Blaizzy/mlx-audio")],
+     "note": "The only full song-generation model with a maintained MLX port: lyrics in, 44.1 kHz stereo "
+             "out, via a hierarchical autoregressive stage feeding flow matching. Seven MLX precisions "
+             "published, from bf16 at 28.5 GB down to 4-bit at 9.2 GB."},
     {"id": "qwenmax", "name": "Qwen3.8-Max", "w": 246.2, "est": False,
      "arch": "MoE 2.45T total / 95B active \u00b7 hybrid GDN (23 full-attn + 69 linear of 92)",
      "lic": "Qwen3.8-Max (custom)", "ctx": "262k",
@@ -342,6 +424,10 @@ def slug(name):
     return "m-" + "".join(c.lower() if c.isalnum() else "-" for c in name).strip("-")
 
 
+def modality(m):
+    return m.get("mod", "text")
+
+
 def best_cell(m):
     """The engine a model card opens on."""
     eid = BEST[m["id"]]
@@ -404,7 +490,8 @@ def index_rows(rows):
         payload = html.escape(json.dumps(model_payload(m)), quote=True)
         out.append(f"""
         <a class="ix-row v-{SCLASS[c['s']]}" href="#{m['id']}" data-model="{m['id']}"
-           data-sw="{SCLASS[c['s']]}" data-swlabel="{html.escape(c['label'])}" data-payload="{payload}">
+           data-sw="{SCLASS[c['s']]}" data-swlabel="{html.escape(c['label'])}"
+           data-mod="{modality(m)}" data-payload="{payload}">
           <span class="ix-name"><i class="ix-bar" aria-hidden="true"></i><em>{html.escape(m['name'])}</em></span>
           <span class="ix-status v-{SCLASS[c['s']]}">{html.escape(c['label'])}</span>
           <span class="ix-eng">{html.escape(ENGINE_BY_ID[eid]['name'])}</span>
@@ -612,7 +699,7 @@ def render():
         payload = html.escape(json.dumps(model_payload(m)), quote=True)
         cards.append(f"""
     <section class="model v-{sc}" id="card-{m['id']}" data-model="{m['id']}" data-sw="{sc}"
-             data-swlabel="{html.escape(c['label'])}" data-payload="{payload}">
+             data-swlabel="{html.escape(c['label'])}" data-mod="{modality(m)}" data-payload="{payload}">
       <div class="model-head">
         <div class="model-id">
           <h2>{html.escape(m['name'])}</h2>
@@ -621,7 +708,7 @@ def render():
         <dl class="spec">
           <div><dt>Architecture</dt><dd>{html.escape(m['arch'])}</dd></div>
           <div><dt>License</dt><dd>{html.escape(m['lic'])}</dd></div>
-          <div><dt>Context</dt><dd>{html.escape(m['ctx'])}</dd></div>
+          <div><dt>{html.escape(m.get('ctx_label', 'Context'))}</dt><dd>{html.escape(m['ctx'])}</dd></div>
         </dl>
         <p class="model-fit"></p>
         <p class="model-note">{prose(m['note'])}</p>
@@ -640,7 +727,7 @@ def render():
     # Serialised here rather than baked into TEMPLATE: a frozen literal silently
     # went stale once already when new models were added to USE_CASES.
     usecases = json.dumps([{"id": u["id"], "label": u["label"], "gate": u["gate"],
-                            "axis": u["axis"],
+                            "axis": u["axis"], "mod": u.get("mod", "text"),
                             "rank": [[r[0], r[1], r[2]] for r in u["rank"]]}
                            for u in USE_CASES])
     bands = json.dumps([[b[0], b[1], b[2], b[3]] for b in BANDS])
@@ -773,9 +860,9 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   /* Scored against the leader for the selected job, so the top row is always
      full. Width is set from JS; models with no number for that job get none. */
   .ix-bar {{ position: absolute; left: -.35rem; top: 50%; transform: translateY(-50%);
-    height: 1.45rem; width: 0; border-radius: 3px; background: var(--accent);
-    opacity: .13; transition: width .18s ease; pointer-events: none; }}
-  .ix-row.uc-best .ix-bar {{ background: var(--ok); opacity: .2; }}
+    height: 1.45rem; width: 0; border-radius: 3px; background: var(--ok);
+    opacity: .16; transition: width .18s ease; pointer-events: none; }}
+  .ix-row.uc-best .ix-bar {{ opacity: .28; }}
   /* no comparable figure on the leader's scale */
   .ix-row.no-bar .ix-name em::after {{ content: "not on this scale"; margin-left: .5rem;
     font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .55rem;
@@ -1250,7 +1337,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     memSel.value = keepIfPossible;
   }}
 
-  function fmt(gb) {{ return gb >= 1000 ? (gb / 1000).toFixed(2) + " TB" : Math.round(gb) + " GB"; }}
+  function fmt(gb) {{
+    if (gb >= 1000) return (gb / 1000).toFixed(2) + " TB";
+    if (gb < 1) return Math.round(gb * 1000) + " MB";   // TTS models are sub-gigabyte
+    return Math.round(gb) + " GB";
+  }}
 
   function apply() {{
     chip = chipSel.value;
@@ -1307,12 +1398,19 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     function pick(ladder) {{
       var fits = ladder.filter(function (r) {{ return r.gb + OVERHEAD <= cluster; }});
       if (!fits.length) return null;
-      var full = fits.filter(function (r) {{ return r.kind !== "pruned" && r.bpw >= 4; }});
+      var full = fits.filter(function (r) {{
+        return r.kind === "native" || (r.kind !== "pruned" && r.bpw >= 4);
+      }});
       if (full.length) return full[full.length - 1];   // ladder is largest-first
       return fits[0];                                  // best available below 4 bpw
     }}
 
     function band(rung) {{
+      if (rung.kind === "native") {{
+        // Media checkpoints ship at a stated precision and bundle encoders and a
+        // VAE with the transformer, so a bits-per-weight band would be invented.
+        return {{ k: "full", label: "As published", why: "" }};
+      }}
       if (rung.kind === "pruned") {{
         return {{ k: "pruned", label: "Expert-pruned",
                  why: "This build was not quantised down, it was pruned: whole experts were scored and " +
@@ -1455,7 +1553,9 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
           link.setAttribute("href", "https://huggingface.co/" + r.repo);
         }}
         if (bpw) {{
-          bpw.textContent = r.kind === "pruned" ? "expert-pruned" : r.bpw.toFixed(2) + " bits/weight";
+          bpw.textContent = r.kind === "pruned" ? "expert-pruned"
+                          : r.kind === "native" ? "as published"
+                          : r.bpw.toFixed(2) + " bits/weight";
           bpw.className = "build-bpw b-" + pb.k;
         }}
 
@@ -1505,8 +1605,13 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     for (var ui = 0; ui < USE_CASES.length; ui++) {{
       if (USE_CASES[ui].id === ucId) {{ uc = USE_CASES[ui]; break; }}
     }}
+    // Models built for a different kind of output are not "unranked", they are
+    // irrelevant - a text model has no place in an image-generation table. The
+    // default view shows text models; the others appear with their category.
+    var wantMod = uc ? uc.mod : "text";
     document.querySelectorAll(".ix-row").forEach(function (r) {{
       r.classList.remove("uc-best", "uc-out-of-scope");
+      r.hidden = (r.getAttribute("data-mod") || "text") !== wantMod;
     }});
     if (!uc) {{
       if (ucOut) ucOut.innerHTML = "";
@@ -1589,14 +1694,16 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
         winner.row.classList.add("uc-best");
         var pk = winner.row.__pick;
         ucOut.innerHTML = "Best for <strong>" + uc.label.toLowerCase() + "</strong> on this cluster: " +
-          "<strong>" + pk.model + "</strong> via " + pk.engine + ", " + fmt(pk.gb) + " at " +
-          (pk.band === "pruned" ? "expert-pruned precision" : pk.bpw.toFixed(2) + " bits/weight") +
+          "<strong>" + pk.model + "</strong> via " + pk.engine + ", " + fmt(pk.gb) +
+          (pk.bpw === null ? ", as published" : " at " + pk.bpw.toFixed(2) + " bits/weight") +
           " &mdash; " + winner.entry[1] + " " + winner.entry[2] + "." +
-          "<span class='uc-why'>" + uc.axis + " Dimmed rows publish no number for this job. " +
-          "Ordered by bar where a comparable figure exists. Bars are each model's score as a " +
-          "share of the leader's <em>" + leadMetric + "</em>. " +
-          "Rows quoting a different suite on the same scale are included and are approximate; a row " +
-          "whose figure is not on that scale at all gets no bar rather than a fabricated one.</span>";
+          "<span class='uc-why'>" + uc.axis +
+          (leadVal === null ? " No comparable numeric benchmark is published for these, so there are no bars."
+                            : " Dimmed rows publish no number for this job. Ordered by bar where a " +
+                              "comparable figure exists; bars are each model's score as a share of the " +
+                              "leader's <em>" + leadMetric + "</em>. Rows quoting a different suite on the " +
+                              "same scale are included and are approximate; a row whose figure is not on " +
+                              "that scale at all gets no bar rather than a fabricated one.") + "</span>";
       }} else {{
         ucOut.innerHTML = "<strong>Nothing suitable fits this cluster.</strong>" +
           "<span class='uc-why'>Every model ranked for " + uc.label.toLowerCase() +

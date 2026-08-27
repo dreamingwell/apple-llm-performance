@@ -17,7 +17,7 @@ Status vocabulary, used for both the tab pill and the fit maths:
 ENGINES = [
     {"id": "llamacpp", "name": "llama.cpp", "fmt": "GGUF",
      "surface": "CLI + llama-server", "api": "OpenAI-compatible",
-     "api_kind": "api", "repo": "ggml-org/llama.cpp", "lic": "MIT",
+     "api_kind": "api", "mods": ["text"], "repo": "ggml-org/llama.cpp", "lic": "MIT",
      "api_detail": {
          "endpoints": "OpenAI: /v1/models, /v1/chat/completions, /v1/completions, /v1/responses, /v1/embeddings, plus token-counting routes for chat and responses. Anthropic: /v1/messages and /v1/messages/count_tokens. Also /slots prompt-cache save/restore, Prometheus /metrics, and real-time completion control.",
          "streaming": "SSE on every chat surface. Returns a standard `usage` object plus a `timings` block that reports `cache_n` - how many prompt tokens were reused from cache - which is the number you want when tuning an agent loop.",
@@ -32,7 +32,7 @@ ENGINES = [
              "an OpenAI-compatible endpoint, so nothing here is GUI-only."},
     {"id": "ollama", "name": "Ollama", "fmt": "MLX on Apple Silicon, GGUF elsewhere",
      "surface": "Background server + CLI", "api": "OpenAI-compatible, plus its own /api",
-     "api_kind": "api", "repo": "ollama/ollama", "lic": "MIT",
+     "api_kind": "api", "mods": ["text"], "repo": "ollama/ollama", "lic": "MIT",
      "api_detail": {
          "endpoints": "OpenAI: /v1/models, /v1/models/{model}, /v1/chat/completions, /v1/completions, /v1/embeddings, /v1/responses. Anthropic-compatible surface as well. Its own richer /api/* routes sit alongside.",
          "streaming": "Yes, with `stream_options`. The only engine here that publishes an explicit checkbox matrix of what it does and does not implement, which is worth more than most of the feature lists.",
@@ -47,7 +47,7 @@ ENGINES = [
              "architecture coverage for the models it serves through that path."},
     {"id": "lmstudio", "name": "LM Studio", "fmt": "GGUF and MLX",
      "surface": "Desktop app + `lms` CLI + server", "api": "OpenAI-compatible on :1234",
-     "api_kind": "api", "repo": None, "lic": "Proprietary, free to use",
+     "api_kind": "api", "mods": ["text"], "repo": None, "lic": "Proprietary, free to use",
      "api_detail": {
          "endpoints": "OpenAI: /v1/models, /v1/chat/completions, /v1/completions, /v1/responses, /v1/embeddings. Its own REST API and TypeScript/Python SDKs are more capable than the compatibility layer.",
          "streaming": "Yes. Tool calls stream properly as `delta.tool_calls[].function.arguments` fragments you accumulate across chunks - the correct OpenAI shape.",
@@ -61,7 +61,7 @@ ENGINES = [
              "curated quant within a day of a release. The `lms` CLI and the server run headless."},
     {"id": "omlx", "name": "oMLX", "fmt": "MLX",
      "surface": "Menu-bar app + server", "api": "OpenAI and Anthropic",
-     "api_kind": "api", "repo": "jundot/omlx", "lic": "Apache-2.0",
+     "api_kind": "api", "mods": ["text"], "repo": "jundot/omlx", "lic": "Apache-2.0",
      "api_detail": {
          "endpoints": "OpenAI: /v1/chat/completions, /v1/completions, /v1/embeddings, /v1/rerank, /v1/models. Anthropic: /v1/messages, with adaptive thinking.",
          "streaming": "Yes, including `stream_options.include_usage`, and SSE keep-alives so a long prefill does not read-timeout the client. It also scales reported token counts so Claude Code's auto-compact triggers at the right moment on a smaller-context model.",
@@ -77,7 +77,7 @@ ENGINES = [
              "a much slower generic path."},
     {"id": "vllmmetal", "name": "vLLM Metal", "fmt": "MLX",
      "surface": "CLI + the standard vLLM server", "api": "OpenAI, via vLLM core",
-     "api_kind": "api", "repo": "vllm-project/vllm-metal", "lic": "Apache-2.0",
+     "api_kind": "api", "mods": ["text"], "repo": "vllm-project/vllm-metal", "lic": "Apache-2.0",
      "api_detail": {
          "endpoints": "Whatever vLLM core exposes, because this is vLLM: /v1/chat/completions, "
                       "/v1/completions, /v1/embeddings, /v1/models, plus the pooling and rerank routes for "
@@ -109,7 +109,7 @@ ENGINES = [
              "curated list, not everything that exists."},
     {"id": "vllmmlx", "name": "vllm-mlx", "fmt": "MLX",
      "surface": "Server", "api": "OpenAI and Anthropic",
-     "api_kind": "api", "repo": "waybarrios/vllm-mlx", "lic": "Apache-2.0",
+     "api_kind": "api", "mods": ["text"], "repo": "waybarrios/vllm-mlx", "lic": "Apache-2.0",
      "api_detail": {
          "endpoints": "OpenAI: /v1/chat/completions, /v1/completions, /v1/embeddings, /v1/rerank, /v1/responses. Anthropic: /v1/messages with streaming, tool use and system prompts. Prometheus /metrics.",
          "streaming": "Yes on both surfaces. Usage is reported, but `cached_tokens` is not surfaced yet - an open PR - so you cannot see prefix-cache hits from the API.",
@@ -123,7 +123,7 @@ ENGINES = [
              "models, an architecture missing upstream is missing here, and mlx-lm's bugs arrive intact."},
     {"id": "mlxlm", "name": "mlx-lm", "fmt": "MLX",
      "surface": "CLI + `mlx_lm.server`", "api": "OpenAI-compatible, minimal",
-     "api_kind": "api", "repo": "ml-explore/mlx-lm", "lic": "MIT",
+     "api_kind": "api", "mods": ["text"], "repo": "ml-explore/mlx-lm", "lic": "MIT",
      "api_detail": {
          "endpoints": "OpenAI: POST /v1/chat/completions (and bare /chat/completions), POST /v1/completions, GET /v1/models, GET /health. No embeddings, no rerank, no responses.",
          "streaming": "Yes, SSE, with `stream_options.include_usage` and `prompt_tokens_details` for cached prompt tokens.",
@@ -138,7 +138,7 @@ ENGINES = [
              "simple batching - so it is a correctness reference more than a serving layer."},
     {"id": "ds4", "name": "DwarfStar (ds4)", "fmt": "purpose-built GGUF",
      "surface": "CLI + ds4-server + built-in agent", "api": "OpenAI and Anthropic",
-     "api_kind": "api", "repo": "antirez/ds4", "lic": "MIT",
+     "api_kind": "api", "mods": ["text"], "repo": "antirez/ds4", "lic": "MIT",
      "api_detail": {
          "endpoints": "OpenAI: /v1/models, /v1/models/{alias}, /v1/chat/completions, /v1/completions, /v1/responses. Anthropic: /v1/messages. The model aliases are compatibility only - they all report whatever GGUF was passed with `-m`.",
          "streaming": "SSE on the chat, Responses and Anthropic surfaces, with `stream_options.include_usage`. In thinking mode reasoning streams on its own channel instead of being mixed into the final text, and the Responses surface emits the full Codex event lifecycle - `response.output_text.delta`, function-call argument events, and terminal `response.completed` / `incomplete` / `failed`.",
@@ -155,6 +155,50 @@ ENGINES = [
 ]
 
 ENGINE_BY_ID = {e["id"]: e for e in ENGINES}
+
+# ---------------------------------------------------------------------------
+# Generative media engines. None of the LLM servers above can load a diffusion
+# or audio model, and none of these can serve a chat completion, so the two sets
+# never overlap - which is why engines and models both carry a modality and the
+# page only ever pairs like with like.
+# ---------------------------------------------------------------------------
+
+MEDIA_ENGINES = [
+    {"id": "mflux", "name": "mflux", "fmt": "MLX", "mods": ["image"],
+     "surface": "CLI + Python API", "api": "none - library and CLI",
+     "api_kind": "cli", "repo": "filipstrand/mflux", "lic": "MIT",
+     "what": "A line-by-line MLX port of a dozen image model families, written from scratch rather than "
+             "wrapping diffusers - FLUX.2, Z-Image, Qwen Image, Krea 2, Ideogram 4, FIBO and more, plus "
+             "SeedVR2 for upscaling and Depth Pro for depth. It is deliberately minimal and explicit, and it "
+             "is the most active image runtime on Apple Silicon by a distance. There is no server: you drive "
+             "it from the CLI or import it, so putting it behind an API is your job."},
+    {"id": "mlxaudio", "name": "MLX-Audio", "fmt": "MLX", "mods": ["audio"],
+     "surface": "CLI + Python API + web UI", "api": "local web interface",
+     "api_kind": "cli", "repo": "Blaizzy/mlx-audio", "lic": "MIT",
+     "what": "The centre of gravity for audio on Apple Silicon, and the largest catalogue on this page: "
+             "twenty-odd TTS families, a similar spread of speech-to-text, speaker diarisation, speech "
+             "enhancement and music generation. If an audio model has an MLX port at all, this is usually "
+             "where it lives."},
+    {"id": "mlxvideo", "name": "MLX-Video", "fmt": "MLX", "mods": ["video", "image"],
+     "surface": "CLI + Python API", "api": "none - library and CLI",
+     "api_kind": "cli", "repo": "Blaizzy/mlx-video", "lic": "MIT",
+     "what": "Inference and finetuning for image, video and audio generation models. Same author as "
+             "MLX-Audio. Worth checking the commit history before planning around it - it moves in bursts "
+             "rather than continuously."},
+    {"id": "diffusionkit", "name": "DiffusionKit", "fmt": "MLX + Core ML", "mods": ["image"],
+     "surface": "CLI + Python API", "api": "none - library and CLI",
+     "api_kind": "cli", "repo": "argmaxinc/DiffusionKit", "lic": "MIT",
+     "what": "Argmax's on-device image generation for Apple Silicon, covering both MLX and Core ML. Solid "
+             "engineering, but it has not been touched since April 2025, so it predates every model added "
+             "to this page and should be treated as a reference implementation rather than a live option."},
+]
+
+ENGINES = ENGINES + MEDIA_ENGINES
+ENGINE_BY_ID = {e["id"]: e for e in ENGINES}
+
+
+MODALITIES = ["text", "image", "video", "audio"]
+
 
 # Per-engine issue metadata: key -> (severity, headline, why it matters)
 EMETA = {
@@ -1048,6 +1092,68 @@ MATRIX = {
         "ds4": cell("none", "Out of scope", None, None,
             "Not one of the three checkpoints ds4 loads.", []),
     },
+    # ============================================ generative media ==========
+    "flux2k4": {
+        "mflux": cell("works", "Runs", None, None,
+            "mflux implements FLUX.2 natively - not a diffusers wrapper - and treats it as the fastest and "
+            "smallest family it carries, with edit capability. `mflux-generate` and you are going. GGUF "
+            "builds down to Q5 exist if 7.8 GB of bf16 is more than you want to hold.", []),
+        "mlxvideo": cell("degraded", "Possible, unverified", None, None,
+            "MLX-Video covers image models as well as video, but FLUX.2 is not called out and the project "
+            "moves in bursts. mflux is the maintained path for this.", []),
+        "diffusionkit": cell("blocked", "Predates it", None, None,
+            "DiffusionKit has not been updated since April 2025 and FLUX.2 shipped in January 2026.", []),
+    },
+    "flux2k9": {
+        "mflux": cell("works", "Runs", None, None,
+            "Same native FLUX.2 implementation as the 4B, just larger. No quantised builds published, so "
+            "plan for the full 52.9 GB.", []),
+        "mlxvideo": cell("degraded", "Possible, unverified", None, None,
+            "Not called out in the project's model list.", []),
+        "diffusionkit": cell("blocked", "Predates it", None, None,
+            "Unmaintained since April 2025.", []),
+    },
+    "zimage": {
+        "mflux": cell("works", "Best path", None, None,
+            "The model mflux opens its own README with, described there as fast, small and very good on "
+            "realism, with both distilled and base variants and training support. Apache-2.0 makes it the "
+            "one to reach for if the FLUX licence is a problem.", []),
+        "mlxvideo": cell("blocked", "Blocked", None, None,
+            "Not in the project's model list.", []),
+        "diffusionkit": cell("blocked", "Predates it", None, None,
+            "Z-Image shipped in November 2025, after DiffusionKit stopped.", []),
+    },
+    "ltx2": {
+        "mlxvideo": cell("degraded", "Runs, slow", None, None,
+            "The MLX route to text-to-video and image-to-video with synchronised audio. Two caveats worth "
+            "stating plainly: video generation on Apple Silicon is minutes per clip rather than seconds, and "
+            "MLX-Video's last push was several months before the models on this page - check it still tracks "
+            "the checkpoint you want before committing.", []),
+    },
+    "voicechat": {
+        "mlxaudio": cell("works", "Best path", None, None,
+            "mlx-community has published 8-bit (13.9 GB) and 4-bit (9.17 GB) builds, so a full-duplex voice "
+            "agent fits on a laptop. What makes this worth the footprint over a TTS model is that it is "
+            "end-to-end speech-to-speech - no ASR-then-LLM-then-TTS pipeline, no accumulated latency - and it "
+            "can call tools while the conversation is still going.", []),
+    },
+    "magpie": {
+        "mlxaudio": cell("works", "Runs", None, None,
+            "MLX 8-bit and 4-bit conversions exist from a community packager rather than mlx-community, so "
+            "check the build before trusting it. Pairs naturally with the Nemotron ASR models if you are "
+            "assembling a pipeline rather than using an end-to-end model.", []),
+    },
+    "kokoro": {
+        "mlxaudio": cell("works", "Best path", None, None,
+            "First in MLX-Audio's own table, four precisions published under mlx-community, eight languages. "
+            "For narration this is the default and the burden of proof is on anything you would pick "
+            "instead.", []),
+    },
+    "mmmusic3": {
+        "mlxaudio": cell("works", "Best path", None, None,
+            "Seven precisions published, from bf16 at 28.5 GB to 4-bit at 9.2 GB, plus MXFP4/MXFP8/NVFP4. "
+            "The only maintained MLX path to full song generation with lyrics.", []),
+    },
 }
 
 # Which engine each model card opens on, and the engine named in the index row.
@@ -1067,14 +1173,25 @@ BEST = {
     "qwenmax":  "llamacpp",
     "qcnext":   "llamacpp",
     "q38fnext": "llamacpp",
+    "flux2k4": "mflux", "flux2k9": "mflux", "zimage": "mflux",
+    "ltx2": "mlxvideo",
+    "voicechat": "mlxaudio", "magpie": "mlxaudio", "kokoro": "mlxaudio",
+    "mmmusic3": "mlxaudio",
 }
 
 # Tab order per model: best engine first, then the rest in roster order,
 # dropping cells marked "none".
 def engine_order(mid):
+    """Engines that could plausibly load this model, best first.
+
+    Filtered by modality: an image model never shows a chat server, and an LLM
+    never shows mflux. Without this every media card would carry eight columns
+    of "out of scope".
+    """
     best = BEST[mid]
     rest = [e["id"] for e in ENGINES
-            if e["id"] != best and MATRIX[mid].get(e["id"], {}).get("s") != "none"]
+            if e["id"] != best and e["id"] in MATRIX[mid]
+            and MATRIX[mid][e["id"]].get("s") != "none"]
     return [best] + rest
 
 
@@ -1199,7 +1316,8 @@ RELEASE_FEEDS = [
 # ---------------------------------------------------------------------------
 
 FAM = {"llamacpp": "gguf", "ollama": "gguf", "lmstudio": "gguf",
-       "omlx": "mlx", "vllmmetal": "mlx", "vllmmlx": "mlx", "mlxlm": "mlx", "ds4": "ds4"}
+       "omlx": "mlx", "vllmmetal": "mlx", "vllmmlx": "mlx", "mlxlm": "mlx", "ds4": "ds4",
+       "mflux": "mlx", "mlxaudio": "mlx", "mlxvideo": "mlx", "diffusionkit": "mlx"}
 
 # LM Studio ships both engines, so for a model whose MLX build is the better one
 # it should be judged on that ladder instead.
@@ -1311,7 +1429,7 @@ FIDELITY_NOTES = {
 # ---------------------------------------------------------------------------
 
 USE_CASES = [
-    {"id": "agentic", "label": "Agentic & tool use", "gate": "mild",
+    {"id": "agentic", "label": "Agentic & tool use", "gate": "mild", "mod": "text",
      "axis": "Tool-use and agent benchmarks. Scores are from different suites - they justify each "
              "placement rather than being directly comparable.",
      "rank": [("kimik3", "MCPMark-Verified", "94.5"), ("qwenmax", "Terminal-Bench 2.1", "86.6"),
@@ -1322,7 +1440,7 @@ USE_CASES = [
               ("qcnext", "Terminal-Bench 2.0", "36.2"), ("glm47f", "τ²-Bench", "79.5"),
               ("gptoss", "τ-Bench Retail", "67.8"), ("v4pro", "GDPval-AA", "1554"),
               ("v4flash", "GDPval-AA max effort", "1388")]},
-    {"id": "coding", "label": "Coding", "gate": "mild",
+    {"id": "coding", "label": "Coding", "gate": "mild", "mod": "text",
      "axis": "Ordered on SWE-bench Verified where published, since it is the one coding benchmark most "
              "of these models report.",
      "rank": [("v4pro", "SWE-bench Verified", "80.6%"), ("m3", "SWE-bench Verified", "80.5%"),
@@ -1333,18 +1451,18 @@ USE_CASES = [
               ("qwen38", "SWE-bench Pro", "61.7"), ("glm47f", "SWE-bench Verified", "59.2%"),
               ("gemma4", "SWE-bench Verified", "52.0%"), ("nemolight", "SWE-bench Verified", "51.56"),
               ("kimik3", "LiveBench Coding", "81.45")]},
-    {"id": "terminal", "label": "Terminal & CLI work", "gate": "mild",
+    {"id": "terminal", "label": "Terminal & CLI work", "gate": "mild", "mod": "text",
      "axis": "Terminal-Bench 2.1 only, so these are directly comparable. GLM-4.7 is excluded because "
              "its 41.0 is on v2.0, a different benchmark.",
      "rank": [("kimik3", "Terminal-Bench 2.1", "88.3"), ("qwenmax", "Terminal-Bench 2.1", "86.6"),
               ("glm52", "Terminal-Bench 2.1", "81.0"),
               ("qwen38", "Terminal-Bench 2.1", "73.0"), ("m3", "Terminal-Bench 2.1", "66.0"),
               ("glimmer", "Terminal-Bench 2.1", "51.7")]},
-    {"id": "computer", "label": "Computer use (GUI)", "gate": "mild",
+    {"id": "computer", "label": "Computer use (GUI)", "gate": "mild", "mod": "text",
      "axis": "OSWorld and AndroidWorld, which are different suites - AndroidWorld figures are comparable to each other, OSWorld ones are not comparable to OSWorld-Verified. Only a handful of these models report computer-use numbers at all.",
      "rank": [("kimik3", "OSWorld-Verified", "84.8"), ("q38fnext", "AndroidWorld", "84.5"),
               ("qwen38", "AndroidWorld", "81.9"), ("glimmer", "OSWorld-Verified", "65.9")]},
-    {"id": "concurrency", "label": "Many parallel streams", "gate": "mild",
+    {"id": "concurrency", "label": "Many parallel streams", "gate": "mild", "mod": "text",
      "axis": "Ranked by active parameters and KV cost per token, because at concurrency those decide "
              "throughput far more than the benchmark scores do.",
      "rank": [("qcnext", "3B active, 24 KiB/token", "cheapest overall"),
@@ -1353,7 +1471,7 @@ USE_CASES = [
               ("gptoss", "5.1B active, 36 KiB/token", "strong"), ("glimmer", "dense 30B, 13 KiB/token", "cheap KV"),
               ("qwen38", "dense 27.8B, 64 KiB/token", "good"), ("v4flash", "13B active, 48 KiB/token", "large but cheap"),
               ("m3", "23B active, 120 KiB/token", "expensive KV"), ("glm47", "32B active, 368 KiB/token", "KV-bound")]},
-    {"id": "longctx", "label": "Long context", "gate": "mild",
+    {"id": "longctx", "label": "Long context", "gate": "mild", "mod": "text",
      "axis": "Ranked by KV bytes per token against the advertised ceiling - the models with a 1M window "
              "and latent attention are the only ones where a long context is affordable.",
      "rank": [("kimik3", "1M ctx at 27 KiB/token", "29 GB full"), ("v4flash", "1M ctx at 48 KiB/token", "52 GB full"),
@@ -1363,4 +1481,27 @@ USE_CASES = [
               ("qwen38", "262k ctx at 64 KiB/token", "17 GB full"),
               ("glm47f", "203k ctx at 53 KiB/token", "11 GB full"),
               ("gemma4", "262k ctx at 160 KiB/token", "43 GB full")]},
+    {"id": "image", "label": "Image generation", "gate": "mild", "mod": "image",
+     "axis": "No shared benchmark exists for these the way SWE-bench exists for coding, so this order is "
+             "editorial: what the maintained runtime recommends, weighed against licence and footprint.",
+     "rank": [("zimage", "Apache-2.0, fast, strong realism", "mflux's own lead recommendation"),
+              ("flux2k4", "4B, edits as well as it generates", "smallest good option"),
+              ("flux2k9", "9B, better adherence", "bf16 only")]},
+    {"id": "video", "label": "Video generation", "gate": "mild", "mod": "video",
+     "axis": "One realistic option today. Video is where Apple Silicon is furthest behind - expect minutes "
+             "per clip.",
+     "rank": [("ltx2", "text/image-to-video with synced audio", "fp8 build fits")]},
+    {"id": "voice", "label": "Voice agents (speech-to-speech)", "gate": "mild", "mod": "audio",
+     "axis": "End-to-end speech models, where the model hears and speaks directly rather than being wired "
+             "between an ASR and a TTS.",
+     "rank": [("voicechat", "full-duplex, tools mid-turn", "~450 ms")]},
+    {"id": "narration", "label": "Narration & text-to-speech", "gate": "mild", "mod": "audio",
+     "axis": "Ordered on breadth of published MLX builds and language coverage; no common quality benchmark "
+             "is published for these.",
+     "rank": [("kokoro", "8 languages, 4 MLX precisions", "the default"),
+              ("magpie", "9 languages, NVIDIA voice stack", "community MLX build"),
+              ("voicechat", "speaks, but built for conversation", "oversized for narration")]},
+    {"id": "music", "label": "Music generation", "gate": "mild", "mod": "audio",
+     "axis": "Song generation from lyrics. One maintained MLX path.",
+     "rank": [("mmmusic3", "lyrics in, 44.1 kHz stereo out", "7 precisions")]},
 ]
