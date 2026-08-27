@@ -34,7 +34,7 @@ whatever tools you like. What we ask is the same thing we ask of ourselves:
 
 **We are especially interested in new and useful models.** If something has
 shipped open weights and runs on Apple silicon, we want it here — see
-[CONTRIBUTING.md](CONTRIBUTING.md) for the five files to touch.
+[CONTRIBUTING.md](CONTRIBUTING.md), or [AGENTS.md](AGENTS.md) if you are an agent.
 
 ## Engines covered
 
@@ -66,19 +66,23 @@ Every one of them speaks HTTP. None is desktop-only.
 
 ## Building it
 
-Standard library only. No install step, no network access.
+Standard library only. No install step, no dependencies.
 
 ```sh
+python3 tracker/validate.py   # checks every record in data/
 python3 tracker/build.py      # writes docs/index.html
 ```
 
+Both run in CI on every push and pull request, so a contribution's shape is
+machine-checked before anyone reads it.
+
 `docs/` is generated and deliberately **not** committed — Pages serves the
 artifact that `.github/workflows/deploy.yml` builds on every push to `main`, so
-a merged PR is a deployment and nobody has to resolve conflicts in a 620 KB
+a merged PR is a deployment and nobody has to resolve conflicts in a 780 KB
 generated HTML file.
 
 To refresh the tracked issue states (needs a token — the API allows 60
-unauthenticated requests an hour and this makes ~116):
+unauthenticated requests an hour and this makes ~117):
 
 ```sh
 GITHUB_TOKEN=$(gh auth token) python3 tracker/probe.py > tracker/watch-state.txt
@@ -87,32 +91,49 @@ GITHUB_TOKEN=$(gh auth token) python3 tracker/probe.py > tracker/watch-state.txt
 `.github/workflows/refresh.yml` does that twice a day and commits the result,
 which triggers a deploy. `tracker/watch.sh` is the same loop for running locally.
 
-To re-measure the quant ladders from Hugging Face (this one does hit the
-network, and takes a couple of minutes):
+To re-measure one model's quant ladder from Hugging Face (this one hits the
+network):
 
 ```sh
-python3 tracker/build_quants.py     # regenerates tracker/quants.py
+python3 tracker/measure.py --model qwen38
 ```
+
+It rewrites the `LADDER` block in that model's file and nothing else.
 
 ## What's where
 
+One record, one file. A model, an engine, a use case and an issue tracker each
+own exactly one file, so two people adding two models never touch the same file.
+
 ```
-tracker/engines.py        engine roster, the model x engine matrix, use-case
-                          rankings, fidelity bands, per-issue notes
-tracker/render_status.py  the model list (scores, architecture, licence) and
-                          the whole HTML template
-tracker/quants.py         GENERATED - measured quant ladders and KV geometry
-tracker/build_quants.py   regenerates quants.py from the Hugging Face API
+data/models/<id>.py       one model: identity, scores, per-engine status,
+                          measured quant ladder, KV geometry
+data/engines/<id>.py      one engine: what it is, its API, its cross-cutting issues
+data/use_cases/<id>.py    one "What for?" category and its curated ranking
+data/issues/<repo>.py     tracked issues for one upstream repository
+data/pr_keys.py           which issue keys are pull requests
+
+tracker/registry.py       loads data/ and assembles it; the only file that
+                          knows the schema
+tracker/validate.py       enforces the schema — CI runs this
+tracker/render_status.py  the HTML template and the page's prose
+tracker/bands.py          fidelity thresholds and per-model quant caveats
+tracker/build.py          renders docs/index.html
+tracker/measure.py        re-measures a quant ladder from the Hugging Face API
 tracker/probe.py          refreshes watch-state.txt from the GitHub API
 tracker/watch-state.txt   last polled state of every tracked issue
-tracker/build.py          renders docs/index.html
-tracker/watch.sh          local twice-daily watch loop
+tools/check_output.py     sanity-checks the rendered page — CI runs this
 assets/                   social card source and output
-docs/                     GENERATED, gitignored - the built site
+docs/                     GENERATED, gitignored — the built site
 ```
 
-`tracker/engines.py` and the `MODELS` list in `tracker/render_status.py` are the
-two files worth reading first. Everything else is plumbing.
+Start in `data/models/` — that's where the facts are. Everything in `tracker/`
+is plumbing around them.
+
+If you are an AI agent working on this repository, read
+[AGENTS.md](AGENTS.md) first. It is the maintenance contract: where to look for
+new models, how to derive each figure, and the pitfalls that have already
+bitten us here.
 
 ## How the numbers are derived
 
@@ -140,8 +161,9 @@ two files worth reading first. Everything else is plumbing.
   sorting by "score" would invent a comparison that does not exist. Each list is
   explicit, with the evidence for each placement, and the browser picks the
   highest-ranked model that actually fits at a usable precision.
-- **Fit** assumes a 90% wired-memory limit plus ~10 GB of framework overhead. It
-  answers "does this load", not "does this run well".
+- **Fit** assumes a 90% wired-memory limit plus framework overhead — ~10 GB for
+  an LLM server holding a paged KV pool, ~1.5 GB for an image or audio runtime.
+  It answers "does this load", not "does this run well".
 
 ## Limits worth stating plainly
 

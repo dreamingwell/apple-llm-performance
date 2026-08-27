@@ -1,0 +1,344 @@
+# AGENTS.md
+
+Instructions for AI agents maintaining this repository.
+
+Read this before touching anything. The repository is deliberately structured so
+that many agents can work on it at once without conflicting, and most of that
+structure only works if you follow the file-per-record rule below.
+
+**The one rule that matters most:** one record, one file. A model, an engine, a
+use case and an issue tracker each own exactly one file. If your change touches
+one model, it should touch one file under `data/models/`. If you find yourself
+editing a shared file to add a model, you have taken a wrong turn.
+
+**Before you open a PR:**
+
+```sh
+python3 tracker/validate.py     # must print "0 errors"
+python3 tracker/build.py        # must succeed
+python3 tools/check_output.py   # checks the rendered page
+```
+
+That is exactly what CI runs, plus an import smoke test. Warnings from
+`validate.py` do not block anything — they flag a record that is merely thin.
+
+---
+
+## 1. Why the structure is what it is
+
+The data used to live in two files: a 1,500-line `engines.py` holding every
+model's per-engine status, and a 1,900-line `render_status.py` holding both the
+model list and the entire HTML template. Two agents adding two different models
+conflicted every time, and an agent fixing CSS conflicted with an agent adding a
+benchmark score.
+
+Now:
+
+```
+data/
+  models/<id>.py        one model: identity, scores, per-engine status, quant ladder, KV
+  engines/<id>.py       one engine: what it is, its API, its cross-cutting issues
+  use_cases/<id>.py     one "What for?" category and its curated ranking
+  issues/<owner>__<repo>.py   tracked issues for one upstream repository
+  pr_keys.py            which issue keys are pull requests (small, shared)
+
+tracker/
+  registry.py           loads data/ and assembles it. The only file that knows the schema.
+  validate.py           enforces the schema. CI runs this.
+  render_status.py      the HTML template and the page's prose. No per-model data.
+  bands.py              fidelity thresholds and per-model quant caveats
+  build.py              renders docs/index.html
+  measure.py            re-measures one model's quant ladder from Hugging Face
+  probe.py              re-polls tracked issue states from GitHub
+  watch-state.txt       last polled state of every tracked issue
+  watch.sh              local twice-daily watch loop
+
+tools/
+  check_output.py       sanity-checks the rendered page
+
+.github/workflows/
+  validate.yml          the gate: validate, import-smoke, build, check output
+  deploy.yml            builds and publishes Pages on push to main
+  refresh.yml           re-polls issue states twice daily and commits changes
+```
+
+Conflict surface by task:
+
+| Task | Files you touch |
+|---|---|
+| Add a model | `data/models/<new>.py`, and one line in one `data/use_cases/*.py` per category it belongs to |
+| Correct a model's figure or prose | `data/models/<id>.py` only |
+| Add or update a tracked issue | `data/issues/<repo>.py` only |
+| Add an engine | `data/engines/<new>.py`, plus one cell in each `data/models/*.py` it can load |
+| Change the UI | `tracker/render_status.py` only |
+| Change the schema | `tracker/registry.py` **and** `tracker/validate.py`, in a commit of their own |
+
+Two agents adding two models never touch the same file. Two agents adding issues
+to two different upstream repos never touch the same file. That is the point.
+
+---
+
+## 2. Finding new models
+
+Look in these places, roughly in order of signal:
+
+1. **Hugging Face, filtered to the runtime's format.** The API is the fastest
+   check and needs no key:
+   ```sh
+   curl -s "https://huggingface.co/api/models?search=<name>&filter=mlx&sort=downloads&direction=-1&limit=10"
+   curl -s "https://huggingface.co/api/models?search=<name>&filter=gguf&sort=downloads&direction=-1&limit=10"
+   ```
+   `mlx-community/` and `ggml-org/` are first-party-ish signals. `unsloth/`,
+   `bartowski/` and `lmstudio-community/` are the serious third-party packagers.
+2. **The engines' own support lists**, which are the authority on what loads:
+   - llama.cpp: `src/llama-arch.cpp` — grep it for the architecture name
+   - mlx-lm: the `mlx_lm/models/` directory listing
+   - vLLM Metal: `docs/supported_models.md`
+   - mflux and MLX-Audio: the model tables in their READMEs
+   - Ollama: `https://ollama.com/library/<name>` returns 404 if absent
+3. **Release announcements** from the labs, for models too new to have quants.
+4. **Upstream feature requests**, which tell you a model is wanted but unsupported.
+
+A model earns a place if open weights have shipped **and** at least one engine on
+this page can plausibly load it. A model with weights and no runtime still earns a
+place if the gap is interesting — say so in the note and cite the tracking issue.
+
+### Classifying it
+
+**Modality** decides which engines it can pair with and which categories it can
+appear in. One of `text`, `image`, `video`, `audio`.
+
+**`PARAMS_B`** is total parameters in billions, not active. Beware: published
+counts sometimes exclude part of the checkpoint. Qwen3.8-Flash-Next is stated as
+125B but ships 180B on disk because of a 51B n-gram embedding table. Use what has
+to be resident, because that is what bits-per-weight is divided by.
+
+**Architecture** comes from `config.json`'s `model_type`, not from the model card
+prose. This is how you avoid the trap in section 5.
+
+### Getting benchmark scores
+
+Prefer, in order: the model card's own table → the lab's blog or technical report
+→ an aggregator such as Artificial Analysis → a reputable secondary writeup. Every
+score needs a link in `SOURCES`.
+
+Record the benchmark **name exactly**, including its version. `Terminal-Bench
+2.0` and `Terminal-Bench 2.1` are different tests and the page refuses to rank
+across them. If a card reports a range or several harnesses, take the one the
+card leads with and say which in the note.
+
+**Do not convert between benchmarks.** If a model reports SWE-bench Pro and the
+category is ordered on SWE-bench Verified, record Pro. The page handles the
+mismatch: it draws a bar only when two figures share a scale, and marks a row
+with a dagger when they do not.
+
+**If no benchmark exists, say so.** Image, video and audio models mostly have no
+comparable published numbers. Leave `SCORES` empty and let the category's `AXIS`
+explain that its ordering is editorial. An invented number is worse than none.
+
+---
+
+## 3. Adding a model, step by step
+
+1. **Create `data/models/<id>.py`.** The `<id>` is lowercase alphanumeric, must
+   match the filename, and never changes once published — it is the URL fragment
+   (`#qwen38`) and people share those links. Copy the closest existing model as
+   your template.
+2. **Fill the identity fields.** `NAME`, `ARCH`, `LICENSE`, `CONTEXT`, `HF`,
+   `PARAMS_B`, `MODALITY`, `NOTE`, `SOURCES`. For a non-text model use
+   `CONTEXT_LABEL` to relabel that spec — `Output`, `Coverage`, `Behaviour` — as
+   "Context" is meaningless for a diffusion model.
+3. **Write one `ENGINES` cell per engine that could load it.** Only engines whose
+   modality matches; the validator enforces this. Each cell needs a `status`
+   (`works` / `degraded` / `blocked` / `none`), a short `label` for the tab, a
+   `note` explaining the status, and `issues` citing anything relevant.
+4. **Set `BEST_ENGINE`** to the engine the card should open on. It must have a
+   cell and must not be `none`.
+5. **List `QUANT_SOURCES`**, then measure them:
+   ```sh
+   python3 tracker/measure.py --model <id>
+   ```
+   That writes `LADDER` into the model's own file and touches nothing else.
+   Never hand-write a ladder.
+6. **Fill `KV`.** For text models, count only layers whose cache grows with
+   context — see section 4. For everything else, all three fields are `None`/`""`.
+7. **Add it to the categories it has numbers for**, one line in each
+   `data/use_cases/*.py` `RANK` list. Leave it out of categories where it
+   publishes nothing; the page dims those rows rather than guessing.
+8. **Validate and build.**
+
+---
+
+## 4. Deriving the KV figure
+
+`bytes_per_token` is the fp16 KV cost of one token. Count **only layers whose
+cache grows with context**:
+
+- **Grouped-query attention:** `layers × kv_heads × head_dim × 2 × 2`
+  (the `× 2`s are K-and-V, then fp16 bytes).
+- **Latent attention** (MLA and the DSA variants): `layers × (kv_lora_rank +
+  qk_rope_head_dim) × 2`. One compressed vector per layer, not separate K and V —
+  which is why these models are so much cheaper per token.
+- **Sliding-window layers** are bounded by the window, so they do not scale with
+  context. Exclude them.
+- **Linear / Mamba / KDA / Gated-DeltaNet layers** hold a fixed recurrent state.
+  Exclude them.
+
+Read `layer_types` or `full_attention_interval` in `config.json` to find how many
+layers are actually full attention. Qwen3.8-27B has 64 layers but only 16 are
+full attention, so its figure is `16 × 4 × 256 × 2 × 2 = 65,536` bytes — exactly
+64 KiB/token. Getting this wrong by counting all 64 layers would overstate it
+fourfold.
+
+Put the reasoning in `derivation`. It is rendered on the page, and it is how the
+next agent checks your arithmetic.
+
+---
+
+## 5. Pitfalls — every one of these has already happened here
+
+**A published quant does not mean anything can load it.** `mlx-community` ships
+`DeepSeek-V4-Flash-4bit` whose card says `pip install mlx-lm`, but mlx-lm has no
+`deepseek_v4` model class. Always check the engine's architecture table or model
+directory, and check `config.json`'s `model_type` — not the card prose.
+
+**A quant's name is not its bits per weight.** GLM-4.7's `UD-IQ1_S` is really
+2.17 bpw, because the non-expert tensors are carried at higher precision. This is
+why ladders are measured, never estimated.
+
+**Bits per weight is meaningless for media checkpoints.** They bundle a
+transformer with text encoders and a VAE. Dividing repo bytes by the
+transformer's parameter count gave LTX-2 a figure of *65 bits per weight*. Media
+rungs use `kind="native"`, carry no `bpw`, and get no fidelity band.
+
+**Do not rank across benchmarks.** See section 2. The page's central argument is
+that you cannot, and a bar comparing a GDPval Elo of 1554 to a percentage would
+undermine everything else on it.
+
+**Do not rank a model on a benchmark that does not measure the job.** Nemotron
+3.5 Lightning was once ranked for *agentic* work on MMLU Pro, a general-knowledge
+test. That handed a model with no published agentic score a 94% agentic bar.
+
+**Framework overhead is modality-dependent.** ~10 GB for an LLM server holding a
+paged KV pool; ~1.5 GB for an image or audio runtime. A flat 10 GB made a 310 MB
+TTS model report "10 GB resident".
+
+**Only list issues that apply on Apple silicon.** Upstream trackers are dominated
+by CUDA, ROCm and Vulkan reports. Including them makes the lists useless. If an
+issue is backend-specific, check which backend before citing it.
+
+**Verify an issue is what you think it is.** `jundot/omlx#2137` was cited here as
+a custom-kernel warning. It is actually a closed GLM-5.2 prefill regression. Read
+the issue.
+
+**Never change a model's `id`.** It is the deep-link fragment.
+
+**Do not commit `docs/`.** It is generated and gitignored. CI builds and deploys
+it; committing it would conflict on every parallel PR.
+
+**Do not hand-edit `LADDER`.** Run `tracker/measure.py`.
+
+**Escaping traps in `render_status.py`.** The HTML lives in a `str.format`
+template, so every literal `{` or `}` in CSS or JS must be doubled. And never
+write `\"` inside it — the escape is consumed twice, once by the Python string
+and once by the template, and it silently emits broken JS. Use single-quoted JS
+strings instead. A CSS `content: "\2212"` was parsed by Python as an *octal*
+escape and shipped a control character to the page; the build now refuses to emit
+any C0/C1 character.
+
+---
+
+## 6. How the UI is laid out
+
+One page, two views, routed by the URL fragment.
+
+**List view** (no fragment): header, the CPU/memory/units picker, then "Models at
+a glance" — one row per model, filtered to the selected category's modality. Each
+row shows a bar behind the name scaled against the category leader, a status
+pill, the engine that wins for the current cluster, the chosen build's size, and
+the memory left over.
+
+**Detail view** (`#<model-id>`): the picker, a Back control, then one model card,
+then the reference panels. A second Back control sits below the card and scrolls
+to the picker.
+
+**A model card** is a head — name, verdict, architecture/licence/output, the
+best-fit line, the note, sources, and collapsed benchmark scores — above a
+vertical rail of engine tabs. Each engine pane shows that engine's interface,
+format, API and licence; the build chosen for the current cluster; what it costs
+resident and what is left; a fidelity warning when the build is below full
+precision; a table of concurrent contexts (text models only); the engine-specific
+note; and the tracked issues.
+
+**Blocked engines show only the reason and the issues** — no build, no size, no
+fidelity band, no context table. Quoting memory arithmetic for something that
+cannot load is noise.
+
+Everything cluster-dependent is computed in the browser from the payload embedded
+in each row and card, so changing the picker never reloads the page. The fragment
+is the view state, which makes deep links, the browser Back button and the
+on-page controls one mechanism.
+
+---
+
+## 7. Working alongside other agents
+
+- **One PR, one concern.** A model addition and a UI change do not belong
+  together; they touch different files for different reasons and a reviewer needs
+  to judge them separately.
+- **Never reformat a file you are not changing.** A whole-file reformat turns a
+  one-line diff into a conflict for everyone else.
+- **Rebase rather than merge** when your branch falls behind. The per-record
+  layout means real conflicts are rare; if you hit one, it is usually two agents
+  editing the same model, and the right answer is to read both versions rather
+  than take yours.
+- **Do not regenerate what you did not change.** `tracker/measure.py --model <id>`
+  touches one file. Running it over everything rewrites 23 files and conflicts
+  with every open PR.
+- **If two categories disagree about a model, that is fine.** A model can lead
+  coding and be absent from terminal work. Do not "fix" it by adding it
+  everywhere.
+- **State uncertainty in the data.** `status: "degraded"` with a note saying what
+  is unverified is a better contribution than a confident `works` you cannot
+  support.
+
+---
+
+## 8. House style for the prose
+
+The notes are the reason to read this page rather than a spec sheet.
+
+- Say what breaks and what it costs, not that something is "problematic".
+- Prefer the number to the adjective.
+- Where a claim rests on someone else's measurement, say whose.
+- Where something is unverified, say so.
+- Write for someone deciding how to spend money on hardware.
+- No marketing language, and no hedging that carries no information.
+
+---
+
+## 9. Validation reference
+
+`tracker/validate.py` enforces, and CI fails on, all of the following:
+
+- ids are lowercase alphanumeric and match their filename
+- modalities are known, and a model only has cells for engines that share its modality
+- statuses are `works` / `degraded` / `blocked` / `none`
+- every cell has a label and a note
+- every cited issue key exists in `data/issues/` and is well-formed
+- `BEST_ENGINE` exists in `ENGINES` and is not `none`
+- `PARAMS_B` is present and non-zero
+- `SOURCES` is non-empty and every entry is `(label, url)`
+- ladders are ordered largest-first, `quant` rungs carry a believable `bpw`
+  (0.5–20), `pruned` and `native` rungs carry none
+- `KV` has exactly the three expected keys; only text models declare a per-token
+  cost; a declared cost has a derivation and a max context
+- `DISPLAY_ORDER` is present and unique for engines and use cases
+- use-case ranks cite known models of the matching modality, with no duplicates
+- issue severities are `critical` / `high` / `medium` / `low` and every issue has
+  a stated consequence
+- `pr_keys.py` only lists keys that exist
+
+Warnings, which do not fail the build: a very short note, a missing ladder for a
+family an in-scope engine loads, an issue tracked but cited nowhere, a modality
+with no models or no category.

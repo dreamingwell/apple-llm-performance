@@ -23,7 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-import engines as E          # noqa: E402
+import registry as R         # noqa: E402
 import render_status as rs   # noqa: E402
 
 META = dict(rs.META)
@@ -79,7 +79,7 @@ def main():
     lines = []
     with ThreadPoolExecutor(max_workers=8) as pool:
         lines += [r for r in pool.map(probe_issue, sorted(META)) if r]
-        lines += [r for r in pool.map(probe_release, E.RELEASE_FEEDS) if r]
+        lines += [r for r in pool.map(probe_release, R.RELEASE_FEEDS) if r]
     if not lines:
         print("probe: nothing fetched, refusing to emit an empty state", file=sys.stderr)
         return 1

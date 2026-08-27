@@ -3,15 +3,20 @@
 The page is only as good as its facts. Corrections are more welcome than
 additions, and measurements are more welcome than either.
 
-Everything renders from plain Python data structures, so most contributions are
-a few lines in one file. `python3 tracker/build.py` regenerates the site with no
-dependencies and no network access.
+Everything renders from plain Python data structures, one file per record, so
+most contributions are a few lines in one file. There are no dependencies:
+`python3 tracker/validate.py` checks your change and `python3 tracker/build.py`
+regenerates the site.
+
+If you are an AI agent, read [AGENTS.md](AGENTS.md) instead — it is the same
+information at the depth an agent needs, plus the rules that keep concurrent
+contributions from colliding.
 
 ## Especially wanted
 
 **New and useful models.** If open weights have shipped and the thing runs on
-Apple silicon, we want it on the page. Adding one touches five files and is
-described below.
+Apple silicon, we want it on the page. Adding one is a new file in
+`data/models/` plus a line in each category it belongs to.
 
 **Numbers measured on real hardware.** Nothing on this page has been benchmarked
 on Apple silicon by us — it is all published specifications and arithmetic. If
@@ -39,28 +44,29 @@ Useful issues usually contain one of:
 
 ### Correcting a figure or a note
 
-Model-level facts — architecture, licence, context, benchmark scores, the
-summary paragraph — live in the `MODELS` list in `tracker/render_status.py`.
+Everything about a model — architecture, licence, context, benchmark scores, the
+summary paragraph, and its status on every engine — is in
+`data/models/<id>.py`. One model, one file.
 
-Engine-specific facts live in `MATRIX` in `tracker/engines.py`, keyed
-`[model_id][engine_id]`. Each cell carries its status, the prose explaining that
-status, and the issues cited for it.
-
-Keep model-level notes engine-neutral. Anything true only of one runtime belongs
-in that runtime's cell, or the two contradict each other as engines change.
+Keep the model-level `NOTE` engine-neutral. Anything true only of one runtime
+belongs in that runtime's cell in `ENGINES`, or the two contradict each other as
+engines change.
 
 ### Adding a model
 
-1. `tracker/build_quants.py` — add the parameter count to `PARAMS`, the source
-   repositories to `SOURCES`, and the KV geometry to `KV`. The KV entry counts
-   only layers whose cache grows with context; read the comment above the table.
-2. Run `python3 tracker/build_quants.py` to regenerate `tracker/quants.py`.
-3. `tracker/render_status.py` — add an entry to `MODELS`.
-4. `tracker/engines.py` — add a `MATRIX` row with a cell per engine, add the
-   model to `BEST`, and place it in the `USE_CASES` rankings it has published
-   numbers for. Leave it out of rankings where it hasn't; the page dims those
-   rows rather than guessing.
-5. `python3 tracker/build.py` and check the card.
+1. Copy the closest existing `data/models/<id>.py` and fill it in: identity
+   fields, `MODALITY`, `NOTE`, `SOURCES`, `PARAMS_B`, an `ENGINES` cell per
+   engine that could load it, `BEST_ENGINE`, `QUANT_SOURCES`, and `KV`.
+2. `python3 tracker/measure.py --model <id>` fills in `LADDER` from the Hugging
+   Face API. Don't hand-write it.
+3. Add a line to each `data/use_cases/*.py` `RANK` list the model has published
+   numbers for. Leave it out of the others; the page dims those rows rather than
+   guessing.
+4. `python3 tracker/validate.py` then `python3 tracker/build.py`, and look at
+   the card.
+
+The `KV` figure counts only layers whose cache grows with context — see the KV
+section of [AGENTS.md](AGENTS.md), which works through an example.
 
 Watch two things. Parameter counts sometimes exclude part of the checkpoint —
 Qwen3.8-Flash-Next is stated as 125B but ships 180B on disk because of a 51B
@@ -73,17 +79,19 @@ engine's architecture table or model directory, and check `config.json`'s
 
 ### Adding an engine
 
-Add an entry to `ENGINES` in `tracker/engines.py` — including its `api_detail`
-block — a `FAM` mapping for the quant format it loads, a `CROSS_BY_ENGINE` list,
-a `RELEASE_FEEDS` entry, and a cell in every `MATRIX` row. The last part is the
-work; there is no way around describing each model on the new engine.
+A new `data/engines/<id>.py` — identity, `MODALITIES`, `API_DETAIL`,
+`QUANT_FAMILY`, `RELEASE_FEED`, `CROSS_ISSUES`, and a `DISPLAY_ORDER` that
+decides where its tab sits — plus a cell in the `ENGINES` dict of every model it
+can load. The last part is the work; there is no way around describing each
+model on the new engine.
 
 ### Adding a tracked issue
 
-Add it to `EMETA` in `tracker/engines.py` with a severity, a headline and a
-sentence on why it matters, then cite its key from the relevant `MATRIX` cell or
-`CROSS_BY_ENGINE` list. `tracker/probe.py` derives its watchlist from that
-metadata, so it will start polling on the next run with no second edit.
+Add it to `data/issues/<owner>__<repo>.py` with a severity, a headline and a
+sentence on why it matters, then cite its key from the relevant model's engine
+cell or from that engine's `CROSS_ISSUES`. `tracker/probe.py` derives its
+watchlist from that metadata, so it starts polling on the next run with no
+second edit.
 
 Only list issues that apply on Apple silicon. Upstream threads are dominated by
 CUDA, ROCm and Vulkan reports that are irrelevant here, and including them makes
@@ -101,12 +109,20 @@ The notes are the reason to read the page rather than a spec sheet, so:
 ## Before you send it
 
 ```sh
+python3 tracker/validate.py    # must print "0 errors"
 python3 tracker/build.py
+python3 tools/check_output.py
 ```
 
-That is the whole test suite. It fails loudly on a malformed template, and it
-refuses to emit a page containing control characters — a real bug that shipped
-once, from a Python octal escape in a CSS rule.
+That is the whole test suite, and it is what CI runs. `validate.py` checks every
+record in `data/` and reports every problem it finds rather than the first.
+`build.py` fails loudly on a malformed template and refuses to emit a page
+containing control characters — a real bug that shipped once, from a Python
+octal escape in a CSS rule. `check_output.py` catches a template field that
+rendered as literal text instead of substituting.
+
+Warnings from `validate.py` don't block anything. They flag a record that is
+merely thin — a very short note, an issue tracked but cited nowhere.
 
 Open the result and check the card you touched at more than one cluster size.
 Several bugs in this page's history were only visible at a particular memory

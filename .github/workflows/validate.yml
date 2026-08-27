@@ -1,0 +1,48 @@
+name: validate
+
+# Every push and pull request. This is the gate that lets an agent contribute
+# without a human reading the whole diff: the schema is machine-checked, so a
+# reviewer only has to judge the claims, not the shape.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Every module imports
+        # probe.py once kept importing a module that had been deleted, so the
+        # twice-daily refresh broke while validate and build stayed green.
+        run: |
+          python3 -m compileall -q tracker tools data
+          for m in registry validate render_status build measure probe bands; do
+            python3 -c "import sys; sys.path.insert(0,'tracker'); import $m" || exit 1
+          done
+          echo "all modules import"
+
+      - name: Validate data/
+        run: python3 tracker/validate.py
+
+      - name: Build the page
+        run: python3 tracker/build.py
+
+      - name: Check the rendered output
+        run: python3 tools/check_output.py
+
+      - name: Generated output is not committed
+        run: |
+          if git ls-files --error-unmatch docs/index.html >/dev/null 2>&1; then
+            echo "error: docs/index.html is tracked. It is generated; CI publishes it."
+            exit 1
+          fi
