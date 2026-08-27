@@ -67,7 +67,7 @@ ml-explore/mlx-lm#1192|closed|The DeepSeek V4 port thread
 ml-explore/mlx-lm#1233|open|PR: DeepSeek V4 model class, still open
 ml-explore/mlx-lm#1242|open|Error loading mlx-community/gemma-4-e4b-it-4bit
 ml-explore/mlx-lm#1281|open|Request: add DeepSeek V4 to mlx_lm
-ml-explore/mlx-lm#1332|open|DeepSeek-V4 unbounded Metal residency during decode
+ml-explore/mlx-lm#1332|closed|DeepSeek-V4 unbounded Metal residency during decode
 ml-explore/mlx-lm#1335|open|Tool calls dropped when the tokenizer merges the tool-call start marker
 ml-explore/mlx-lm#1352|open|Gemma 4 with thinking enabled returns only reasoning, content empty
 ml-explore/mlx-lm#1401|open|PR: Add MiniMax-M3 (text backbone) - unmerged
@@ -118,6 +118,6 @@ waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tok
 ggml-org/llama.cpp@release|v0.3.0|latest release
 ollama/ollama@release|v0.33.1|latest release
 jundot/omlx@release|v0.6.3rc3|latest release
-vllm-project/vllm-metal@release|v0.3.0.dev20260826134128|latest release
+vllm-project/vllm-metal@release|v0.3.0.dev20260827104907|latest release
 waybarrios/vllm-mlx@release|v0.4.1|latest release
 ml-explore/mlx-lm@release|v0.31.3|latest release

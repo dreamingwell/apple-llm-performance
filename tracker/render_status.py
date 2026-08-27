@@ -987,6 +987,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     display: inline-flex; align-items: center; gap: .4rem; }}
   .back:hover {{ color: var(--ink); border-color: var(--accent); }}
   .detail .model {{ margin-bottom: 0; }}
+  .back-bottom {{ margin: 1.25rem 0 0; }}
   .detail {{ margin-bottom: 2.75rem; }}
   html, body, .wrap {{ overflow-anchor: none; }}
   .sub-stamp {{ color: var(--muted); white-space: nowrap; }}
@@ -1211,6 +1212,9 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       <span aria-hidden="true">&larr;</span> All models
     </button>
 {cards}
+    <button type="button" class="back back-bottom" id="back-bottom">
+      <span aria-hidden="true">&larr;</span> All models
+    </button>
   </div>
 
   <div class="panel wide">
@@ -1237,7 +1241,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       <li>Weights are the summed file sizes of the linked repository &mdash; safetensors for MLX builds, GGUF for the rest &mdash; measured, not estimated. A <strong>*</strong> marks the exception: a figure derived from parameter count because no build has been published anywhere.</li>
       <li><strong>The same model weighs different amounts on different engines.</strong> GGUF has quant tiers MLX does not, so llama.cpp can often fit a model MLX cannot &mdash; GLM-4.7 is 158.7 GB at UD-Q3_K_XL against 198.6 GB for the MLX 4-bit. Each engine tab states its own build and its own fit.</li>
       <li>Issue lists are scoped to the engine tab you are on, and are filtered for what actually applies on a Mac. A CUDA-only or ROCm-only report is not listed here even when it dominates the upstream thread.</li>
-      <li>Fit assumes a 90% wired-memory limit plus ~10 GB of framework overhead, and that pooling shards weights evenly. It answers "does this load", not "does this run well" &mdash; a model spread across machines still pays the Thunderbolt hop on every token.</li>
+      <li>Fit assumes a 90% wired-memory limit plus framework overhead &mdash; ~10 GB for an LLM server, which has a paged KV pool and Metal buffers to hold, and ~1.5 GB for an image or audio runtime, which does not &mdash; and that pooling shards weights evenly. It answers "does this load", not "does this run well" &mdash; a model spread across machines still pays the Thunderbolt hop on every token.</li>
     </ul>
     </details>
   </div>
@@ -1293,7 +1297,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   var USE_CASES = {usecases};
   var BAND_RANK = {{ full: 0, mild: 1, low: 2, pruned: 2, unusable: 3 }};
   var ORDER = Object.keys(MACHINES);
-  var MAX_UNITS = 6, PRACTICAL_UNITS = 4, OVERHEAD = 10, WIRED = 0.90;
+  var MAX_UNITS = 6, PRACTICAL_UNITS = 4, WIRED = 0.90;
+  // Framework overhead. The larger figure covers an LLM server's KV pool and
+  // Metal buffers; a diffusion or TTS runtime carries far less, and charging it
+  // 10 GB made a 310 MB model report "10 GB resident".
+  var OVERHEAD_TEXT = 10, OVERHEAD_MEDIA = 1.5, OVERHEAD = OVERHEAD_TEXT;
   var BANDS = {bands};
 
 
@@ -1373,7 +1381,9 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
         "Treat these rows as arithmetic, not a supported setup.";
     }} else {{ warn.hidden = true; }}
 
-    function fitDetail(w) {{
+    function fitDetail(w, over, kvWord) {{
+      var OVERHEAD = over === undefined ? OVERHEAD_TEXT : over;
+      var kv = kvWord === undefined ? " for KV" : kvWord;
       var resident = w + OVERHEAD;
       var nodes = Math.ceil(resident / perNode);
       if (resident > cluster) {{
@@ -1385,7 +1395,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
         var freeP = cluster - resident;
         return {{ tooBig: false, nodes: nodes, resident: resident, free: freeP, copies: 1,
                  short: fmt(freeP) + " free",
-                 text: "pooled across " + nodes + " of your " + n + ", " + fmt(freeP) + " left for KV" }};
+                 text: "pooled across " + nodes + " of your " + n + ", " + fmt(freeP) + " left" + kv }};
       }}
       // It fits on one machine, so every machine runs its own copy. Nothing is
       // pooled and nothing is shared - the capacity simply multiplies.
@@ -1393,8 +1403,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       return {{ tooBig: false, nodes: 1, resident: resident, free: free, copies: n,
                short: fmt(free) + " free",
                text: n > 1
-                 ? fmt(free) + " free for KV per machine \u2014 run as individual compute, not as a cluster"
-                 : fmt(free) + " free for KV" }};
+                 ? fmt(free) + " free" + kv + " per machine \u2014 run as individual compute, not as a cluster"
+                 : fmt(free) + " free" + kv }};
     }}
 
     // Pick the target build for this cluster - not simply the biggest thing that
@@ -1403,8 +1413,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     // Q8 buys almost nothing and costs the KV headroom that decides how much
     // context and how many concurrent streams you get. So: the CHEAPEST rung
     // that still clears 4 bits, and only if none does, the best of what is left.
-    function pick(ladder) {{
-      var fits = ladder.filter(function (r) {{ return r.gb + OVERHEAD <= cluster; }});
+    function pickIn(ladder, over) {{
+      var fits = ladder.filter(function (r) {{ return r.gb + over <= cluster; }});
       if (!fits.length) return null;
       var full = fits.filter(function (r) {{
         return r.kind === "native" || (r.kind !== "pruned" && r.bpw >= 4);
@@ -1412,6 +1422,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       if (full.length) return full[full.length - 1];   // ladder is largest-first
       return fits[0];                                  // best available below 4 bpw
     }}
+    function pick(ladder) {{ return pickIn(ladder, OVERHEAD_TEXT); }}
 
     function band(rung) {{
       if (rung.kind === "native") {{
@@ -1465,10 +1476,13 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       var pl;
       try {{ pl = JSON.parse(el.getAttribute("data-payload")); }} catch (e) {{ return; }}
       var engs = pl.engines || [];
+      var isText = (el.getAttribute("data-mod") || "text") === "text";
+      var over = isText ? OVERHEAD_TEXT : OVERHEAD_MEDIA;
+      var kvWord = pl.kv && pl.kv.bpt ? " for KV" : "";
 
       var chosen = null, rung = null;
       for (var i = 0; i < engs.length; i++) {{
-        var r = pick(engs[i].ladder);
+        var r = pickIn(engs[i].ladder, over);
         if (r) {{ chosen = engs[i]; rung = r; break; }}
       }}
       if (!chosen && engs.length) {{
@@ -1484,7 +1498,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
         return;
       }}
 
-      var f = fitDetail(rung.gb);
+      var f = fitDetail(rung.gb, over, kvWord);
       var bd = band(rung);
       var cls, label;
       if (chosen.s === "blocked" || chosen.s === "unknown") {{
@@ -1538,7 +1552,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
           ? "No engine here can load this yet \u2014 see the tabs below for why."
           : f.tooBig
             ? "Does not fit. Smallest build is " + chosen.name + " at " + fmt(rung.gb) + ", which " + f.text + "."
-            : "Best fit here: " + chosen.name + ", " + fmt(rung.gb) + " resident, " + f.text + ".";
+            : "Best fit here: " + chosen.name + ", " + fmt(rung.gb) + " of weights, " + f.text + ".";
       }}
 
       // Each engine tab reports its own rung on the same cluster.
@@ -1547,8 +1561,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
         if (!pane) return;
         var fit = pane.querySelector(".eng-fit");
         if (!fit || !fit.hasAttribute("data-has-ladder")) return;
-        var r = pick(eng.ladder) || eng.ladder[eng.ladder.length - 1];
-        var pf = fitDetail(r.gb), pb = band(r);
+        var r = pickIn(eng.ladder, over) || eng.ladder[eng.ladder.length - 1];
+        var pf = fitDetail(r.gb, over, kvWord), pb = band(r);
 
         fit.classList.toggle("toolarge", pf.tooBig);
         fit.textContent = pf.tooBig
@@ -1751,7 +1765,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       backEl = document.getElementById("back"),
       cards = [].slice.call(document.querySelectorAll(".model"));
 
-  function route() {{
+  function route(pin) {{
     // Swapping views changes the document height, and Chrome's scroll anchoring
     // reacts by moving the viewport to keep its anchor element stable - which is
     // what made this jump even with the anchor click prevented. Pin the scroll
@@ -1768,9 +1782,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     if (detailEl) detailEl.hidden = !found;
     // Restore now and again after layout: the adjustment does not always land in
     // the same tick as the attribute change.
-    var pin = function () {{ if (window.scrollY !== y) window.scrollTo(0, y); }};
-    pin();
-    requestAnimationFrame(pin);
+    if (pin !== false) {{
+      var hold = function () {{ if (window.scrollY !== y) window.scrollTo(0, y); }};
+      hold();
+      requestAnimationFrame(hold);
+    }}
     return found;
   }}
 
@@ -1784,6 +1800,19 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       route();
     }});
   }}
+  var backBottomEl = document.getElementById("back-bottom");
+  if (backBottomEl) {{
+    backBottomEl.addEventListener("click", function () {{
+      history.pushState(null, "", location.pathname + location.search);
+      // Skip the scroll pin here: from the bottom of a long card, holding
+      // position would leave the reader staring at the reference panels.
+      route(false);
+      var rig = document.getElementById("rig");
+      if (rig) {{
+        window.scrollTo(0, Math.max(0, rig.getBoundingClientRect().top + window.scrollY - 14));
+      }}
+    }});
+  }}
   if (backEl) {{
     backEl.addEventListener("click", function () {{
       // Keep the cluster and use-case selections, drop the card.
@@ -1791,8 +1820,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       route();
     }});
   }}
-  window.addEventListener("hashchange", route);
-  window.addEventListener("popstate", route);
+  window.addEventListener("hashchange", function () {{ route(); }});
+  window.addEventListener("popstate", function () {{ route(); }});
 
   chipSel.value = chip;
   fillMem(mem);
