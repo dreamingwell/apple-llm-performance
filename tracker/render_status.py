@@ -716,20 +716,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .sub {{ color: var(--muted); margin: 0; max-width: 48rem; }}
   html {{ scroll-behavior: smooth; }}
   @media (prefers-reduced-motion: reduce) {{ html {{ scroll-behavior: auto; }} }}
-  #rig-sentinel {{ height: 1px; margin: 0; }}
   .rig {{ background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
-    padding: 1.1rem 1.3rem; margin: 0 0 1.25rem;
-    position: sticky; top: 0; z-index: 30; }}
-  /* Once it detaches, drop the prose and the rounded top so it reads as a bar
-     rather than a card that has escaped. */
-  .rig.stuck {{ border-radius: 0 0 10px 10px; border-top-color: transparent;
-    box-shadow: 0 6px 18px -8px rgba(0,0,0,.35); padding: .7rem 1.3rem; }}
-  .rig.stuck .rig-out, .rig.stuck .rig-warn {{ display: none; }}
-  .rig.stuck .rig-controls {{ align-items: center; }}
-  @media (prefers-color-scheme: dark) {{
-    :root:not([data-theme="light"]) .rig.stuck {{ box-shadow: 0 6px 18px -8px rgba(0,0,0,.7); }}
-  }}
-  :root[data-theme="dark"] .rig.stuck {{ box-shadow: 0 6px 18px -8px rgba(0,0,0,.7); }}
+    padding: 1.1rem 1.3rem; margin: 0 0 1.25rem; }}
   .rig select optgroup {{ font-weight: 600; }}
   .rig-controls {{ display: flex; gap: 1.1rem; flex-wrap: wrap; align-items: flex-end; }}
   .rig-f {{ display: flex; flex-direction: column; gap: .28rem; min-width: 0; }}
@@ -795,8 +783,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     .ix-size, .ix-meta {{ text-align: left; }}
     .ix-eng {{ order: 5; }}
   }}
-  .model {{ margin-bottom: 2.5rem; scroll-margin-top: 5.75rem; }}
-  .nofit-row {{ scroll-margin-top: 5.75rem; }}
+  .model {{ margin-bottom: 2.5rem; scroll-margin-top: 1rem; }}
+  .nofit-row {{ scroll-margin-top: 1rem; }}
   .model-head {{ background: var(--surface); border: 1px solid var(--line);
     border-top: 3px solid var(--medium); border-radius: 10px 10px 0 0; padding: 1.35rem 1.5rem 1.15rem; }}
   .model.v-degraded .model-head {{ border-top-color: var(--warn); }}
@@ -885,6 +873,12 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .gh:hover {{ color: var(--ink); border-color: var(--accent); }}
   .gh svg {{ flex: none; }}
   @media (max-width: 620px) {{ header {{ padding-top: 2.2rem; }} }}
+  .back {{ appearance: none; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 500;
+    color: var(--ink-2); background: var(--surface); border: 1px solid var(--line);
+    border-radius: 999px; padding: .35rem .9rem .35rem .75rem; margin: 0 0 1.1rem;
+    display: inline-flex; align-items: center; gap: .4rem; }}
+  .back:hover {{ color: var(--ink); border-color: var(--accent); }}
+  .detail .model {{ margin-bottom: 0; }}
   .sub-stamp {{ color: var(--muted); white-space: nowrap; }}
   .ix-eng {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .72rem;
     color: var(--muted); white-space: nowrap; }}
@@ -933,6 +927,15 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .eng-pane {{ background: var(--surface); padding: 1.15rem 1.2rem 1.2rem;
     display: flex; flex-direction: column; gap: .8rem; min-width: 0; }}
   .model-fit {{ margin: 0 0 .35rem; }}
+  .panel-fold > summary {{ cursor: pointer; list-style: none; display: flex; align-items: center;
+    gap: .45rem; }}
+  .panel-fold > summary::-webkit-details-marker {{ display: none; }}
+  .panel-fold > summary::before {{ content: "+"; font-size: .95rem; line-height: 1;
+    color: var(--accent); width: .7rem; }}
+  .panel-fold[open] > summary::before {{ content: "\\2212"; }}
+  .panel-fold > summary h2 {{ margin: 0; }}
+  .panel-fold > summary:hover h2 {{ color: var(--ink-2); }}
+  .panel-fold > ul {{ margin-top: 1.1rem; }}
   .scores-wrap {{ margin-top: .9rem; border-top: 1px solid var(--line-soft); padding-top: .7rem; }}
   .scores-wrap > summary {{ cursor: pointer; font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
@@ -1064,7 +1067,6 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     <span class="sub-stamp">Updated <time class="ago" datetime="{now_iso}">{now}</time>.</span></p>
   </header>
 
-  <div id="rig-sentinel" aria-hidden="true"></div>
   <form class="rig" id="rig" aria-label="Cluster configuration">
     <div class="rig-controls">
       <label class="rig-f"><span>CPU Model</span>
@@ -1081,7 +1083,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     <p class="rig-warn" id="rig-warn" hidden></p>
   </form>
 
-  <nav class="index" aria-label="Model index">
+  <nav class="index" id="list" aria-label="Model index">
     <div class="ix-top">
       <h2 class="ix-head">Models at a glance</h2>
       <label class="uc-f"><span>What for?</span>
@@ -1092,7 +1094,13 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     <div class="ix-rows">{index}
     </div>
   </nav>
+
+  <div class="detail" id="detail" hidden>
+    <button type="button" class="back" id="back">
+      <span aria-hidden="true">&larr;</span> All models
+    </button>
 {cards}
+  </div>
 
   <div class="panel wide">
     <h2>General engine information</h2>
@@ -1107,7 +1115,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   </div>
 
   <div class="panel">
-    <h2>Reading the scores</h2>
+    <details class="panel-fold">
+      <summary><h2>Reading the scores</h2></summary>
     <ul>
       <li><strong>Terminal-Bench 2.0 and 2.1 are different benchmarks.</strong> GLM-4.7's 41.0 and Qwen3-Coder-Next's 36.2 are on v2.0; Qwen3.8-27B's 73.0 and GLM-5.2's 81.0 are on v2.1. Do not rank across the two &mdash; they are shown labelled, not normalised.</li>
       <li>Scores are vendor-reported or aggregator-reported, not reproduced here. Treat them as a shortlist filter, then verify the shortlist on your own context-rot harness.</li>
@@ -1117,6 +1126,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       <li>Issue lists are scoped to the engine tab you are on, and are filtered for what actually applies on a Mac. A CUDA-only or ROCm-only report is not listed here even when it dominates the upstream thread.</li>
       <li>Fit assumes a 90% wired-memory limit plus ~10 GB of framework overhead, and that pooling shards weights evenly. It answers "does this load", not "does this run well" &mdash; a model spread across machines still pays the Thunderbolt hop on every token.</li>
     </ul>
+    </details>
   </div>
 
   <p class="disclaimer">
@@ -1527,7 +1537,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     var p = new URLSearchParams();
     p.set("chip", chip); p.set("mem", g); p.set("n", n);
     if (ucId) p.set("uc", ucId);
-    history.replaceState(null, "", location.pathname + "?" + p.toString());
+    history.replaceState(null, "", location.pathname + "?" + p.toString() + (location.hash || ""));
   }}
 
   var ucSel = document.getElementById("uc-sel"), ucOut = document.getElementById("uc-out");
@@ -1545,13 +1555,37 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     ucSel.addEventListener("change", apply);
   }}
 
-  var sentinel = document.getElementById("rig-sentinel");
-  var rigEl = document.getElementById("rig");
-  if (sentinel && rigEl && "IntersectionObserver" in window) {{
-    new IntersectionObserver(function (entries) {{
-      rigEl.classList.toggle("stuck", !entries[0].isIntersecting);
-    }}, {{ threshold: 1 }}).observe(sentinel);
+  // The hash is the view: no hash shows the list, #model-id shows that card.
+  // Keeping the state in the URL means deep links, the browser Back button and
+  // the on-page Back control are all the same mechanism.
+  var listEl = document.getElementById("list"),
+      detailEl = document.getElementById("detail"),
+      backEl = document.getElementById("back"),
+      cards = [].slice.call(document.querySelectorAll(".model"));
+
+  function route(scroll) {{
+    var want = (location.hash || "").replace(/^#/, "");
+    var found = null;
+    cards.forEach(function (c) {{
+      var mine = c.id === want;
+      c.hidden = !mine;
+      if (mine) found = c;
+    }});
+    if (listEl) listEl.hidden = !!found;
+    if (detailEl) detailEl.hidden = !found;
+    if (scroll) window.scrollTo(0, 0);
+    return found;
   }}
+
+  if (backEl) {{
+    backEl.addEventListener("click", function () {{
+      // Drop the hash but keep the cluster and use-case selections.
+      history.pushState(null, "", location.pathname + location.search);
+      route(true);
+    }});
+  }}
+  window.addEventListener("hashchange", function () {{ route(true); }});
+  window.addEventListener("popstate", function () {{ route(true); }});
 
   chipSel.value = chip;
   fillMem(mem);
@@ -1560,6 +1594,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   memSel.addEventListener("change", apply);
   nSel.addEventListener("change", apply);
   apply();
+  route(false);
 }})();
 </script>
 
