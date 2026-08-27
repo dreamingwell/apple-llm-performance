@@ -159,6 +159,10 @@ REPO_LABELS = {
     "ollama/ollama": "ollama",
     "lmstudio-ai/lmstudio-bug-tracker": "LM Studio",
     "vllm-project/vllm-metal": "vLLM Metal",
+    "Blaizzy/mlx-video": "MLX-Video",
+    "Blaizzy/mlx-audio": "MLX-Audio",
+    "filipstrand/mflux": "mflux",
+    "argmaxinc/DiffusionKit": "DiffusionKit",
 }
 
 

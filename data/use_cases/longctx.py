@@ -16,7 +16,8 @@ AXIS = ('Ranked by KV bytes per token against the advertised ceiling - the model
 
 # Curated ordering, best first. Each entry is (model_id, metric_name, value).
 # Membership is editorial; see AGENTS.md before reordering.
-RANK = [['kimik3', '1M ctx at 27 KiB/token', '29 GB full'],
+RANK = [['glm53f', '1M ctx at 11 KiB/token', '12 GB full, blocked'],
+ ['kimik3', '1M ctx at 27 KiB/token', '29 GB full'],
  ['v4flash', '1M ctx at 48 KiB/token', '52 GB full'],
  ['v4pro', '1M ctx at 69 KiB/token', '74 GB full'],
  ['glm52', '1M ctx at 88 KiB/token', '94 GB full'],

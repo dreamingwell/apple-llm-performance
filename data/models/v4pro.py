@@ -9,7 +9,7 @@ NAME = 'DeepSeek V4 Pro'
 ARCH = 'MoE 1.6T total / 49B active · DSA sparse attention'
 LICENSE = 'MIT'
 CONTEXT = '1M'
-HF = 'deepseek-ai/DeepSeek-V4-Pro'
+HF = 'deepseek-ai/DeepSeek-V4-Pro-0813'
 PARAMS_B = 1600
 
 NOTE = ('Same architecture as Flash at roughly five times the size, which makes it a capacity problem '

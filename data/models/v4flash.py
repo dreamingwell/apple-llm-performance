@@ -9,7 +9,7 @@ NAME = 'DeepSeek V4 Flash'
 ARCH = 'MoE 284B total / 13B active · DSA sparse attention'
 LICENSE = 'MIT'
 CONTEXT = '1M'
-HF = 'deepseek-ai/DeepSeek-V4-Flash'
+HF = 'deepseek-ai/DeepSeek-V4-Flash-0731'
 PARAMS_B = 284
 
 NOTE = ('The best shape on this page for Apple hardware: 13B active reads roughly 7.5 GB per token, '

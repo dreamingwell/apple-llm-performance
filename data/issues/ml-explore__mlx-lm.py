@@ -6,7 +6,11 @@ One record, one file. See AGENTS.md for the schema and the rules.
 REPO = 'ml-explore/mlx-lm'
 
 # number -> severity / headline / why it matters.
-ISSUES = {1162: {'severity': 'high',
+ISSUES = {
+    1788: {'severity': 'high',
+           'headline': 'Add Qwen3.8-Flash-Next (qwen4_exp) model support',
+           'why': 'Open. Until it merges mlx-lm has no qwen4_exp class, so every MLX engine that '
+                  'builds on mlx-lm refuses the weights regardless of which quant you point at it.'},1162: {'severity': 'high',
         'headline': 'Qwen3-Next hybrid cache silently fails, breaking the prompt cache',
         'why': 'Silent, and it removes prefix reuse - the single biggest win on multi-turn '
                'agent traffic. Every MLX server that wraps mlx-lm inherits it, so the model '

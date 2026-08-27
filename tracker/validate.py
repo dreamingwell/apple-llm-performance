@@ -284,12 +284,37 @@ def check_global():
             warn("data/use_cases", f"no use case with modality {mod!r}")
 
 
+# --------------------------------------------------------------- code shape
+# The renderer imports its data from the registry. If it also defines one of
+# those names at module level, the local definition silently wins and the data/
+# files stop mattering - which is exactly how a hand-maintained PR_KEYS set and
+# a 30-entry issue table survived the split and shadowed the real ones.
+def check_no_shadowing():
+    import ast
+    path = os.path.join(HERE, "render_status.py")
+    tree = ast.parse(open(path, encoding="utf-8").read())
+    imported = set()
+    assigned = {}
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module == "registry":
+            imported.update(a.asname or a.name for a in node.names)
+        elif isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name):
+                    assigned[t.id] = node.lineno
+    for name in sorted(imported & set(assigned)):
+        err(f"tracker/render_status.py:{assigned[name]}",
+            f"{name} is imported from the registry and then reassigned here; "
+            "the local value would shadow data/ and render stale facts")
+
+
 def main():
     check_engines()
     check_models()
     check_use_cases()
     check_issues()
     check_global()
+    check_no_shadowing()
 
     for wmsg in WARNINGS:
         print(f"warning: {wmsg}")

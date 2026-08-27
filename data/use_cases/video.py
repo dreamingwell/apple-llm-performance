@@ -16,4 +16,5 @@ AXIS = ('One realistic option today. Video is where Apple Silicon is furthest be
 
 # Curated ordering, best first. Each entry is (model_id, metric_name, value).
 # Membership is editorial; see AGENTS.md before reordering.
-RANK = [['ltx2', 'text/image-to-video with synced audio', 'fp8 build fits']]
+RANK = [['ltx2', 'text/image-to-video with synced audio', 'fp8 build fits'],
+        ['ltx25', 'newer, better, and has MLX weights', 'no engine here loads it yet']]

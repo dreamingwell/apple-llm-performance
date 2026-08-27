@@ -6,7 +6,17 @@ One record, one file. See AGENTS.md for the schema and the rules.
 REPO = 'ggml-org/llama.cpp'
 
 # number -> severity / headline / why it matters.
-ISSUES = {25171: {'severity': 'high',
+ISSUES = {
+    27742: {'severity': 'medium',
+            'headline': 'model: add Qwen3.8-Flash-Next (qwen4exp)',
+            'why': 'Merged 2026-08-27, which is what unblocked this architecture. It is on master '
+                   'only - no tagged release carries it yet, so a packaged build will not load the '
+                   'weights until the next release cuts.'},
+    27752: {'severity': 'high',
+            'headline': 'model: add GLM-5.3-Flash (glm5next)',
+            'why': 'One of three competing open PRs for the same architecture (#27752, #27754, '
+                   '#27773). Quants are already published, so the weights are waiting on whichever '
+                   'of these lands.'},25171: {'severity': 'high',
          'headline': "DeepSeek V4 Flash 'forgets everything' mid-conversation",
          'why': 'Reported as context silently dropping earlier turns. On an agent that is the '
                 'worst possible failure mode, because the run continues confidently on a '
@@ -98,8 +108,8 @@ ISSUES = {25171: {'severity': 'high',
          'why': 'Filed against a community abliterated finetune rather than the base weights, '
                 'so it may say more about that conversion than about the architecture. Worth '
                 'knowing before you blame the model.'},
- 27741: {'severity': 'high',
-         'headline': 'Feature request: support Qwen3.8-Flash-Next',
-         'why': 'The whole blocker for this model. Its config reports `qwen4_exp` - a preview '
-                'of the Qwen4 architecture - and no runtime on this page implements it yet. '
-                'Watch this thread rather than the quant repositories.'}}
+ 27741: {'severity': 'medium',
+            'headline': 'Feature request: support Qwen3.8-Flash-Next',
+            'why': 'The request thread, still open even though the implementing PR (#27742) merged '
+                   'on 2026-08-27. Worth watching for the follow-up fixes rather than as a blocker; '
+                   'the remaining gap for this model is MLX, not llama.cpp.'}}

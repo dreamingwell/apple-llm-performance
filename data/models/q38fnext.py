@@ -17,8 +17,10 @@ NOTE = ('Qwen calls this an experimental preview of the architecture behind Qwen
  'shared benchmark, and its SWE-bench Multilingual of 81.0 leads the page outright. Three '
  'genuinely new pieces - Qwen Sparse Attention at micro-block granularity, gated residuals, '
  'and a 51B n-gram embedding table designed to be offloaded. That last one is why the '
- 'checkpoint is 180B on disk against a stated 125B. None of it runs on Apple silicon yet: the '
- 'architecture is `qwen4_exp` and no runtime here implements it.')
+ 'checkpoint is 180B on disk against a stated 125B. llama.cpp merged the `qwen4exp` '
+ 'architecture on 2026-08-27, so this is runnable on Apple silicon for the first time - '
+ 'from a master build, not a release, and the GGUF ladder filled out from a single 1-bit '
+ 'tier to Q4_K_XL within days. Every MLX engine here is still waiting on mlx-lm.')
 
 SOURCES = [('Model card with full tables', 'https://huggingface.co/Qwen/Qwen3.8-Flash-Next'),
  ('Qwen blog', 'https://qwen.ai/blog?id=qwen3.8-flash-next')]
@@ -40,37 +42,51 @@ QUANT_SOURCES = {'gguf': ['unsloth/Qwen3.8-Flash-Next-GGUF']}
 
 # Measured by tracker/measure.py - do not hand-edit. gb is summed repo bytes;
 # bpw is gb*8/PARAMS_B and is omitted for pruned or native-precision builds.
-LADDER = {'gguf': [{'bpw': 4.95,
-           'gb': 111.3,
+LADDER = {'gguf': [{'label': 'Qwen3.8-Flash-Next-BF16',
+           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF',
+           'gb': 354.03,
            'kind': 'quant',
-           'label': 'Qwen3.8-Flash-Next-UD-Q4_K_XL',
-           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF'},
-          {'bpw': 4.16,
-           'gb': 93.7,
+           'bpw': 15.73},
+          {'label': 'Qwen3.8-Flash-Next-Q8_0',
+           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF',
+           'gb': 188.23,
            'kind': 'quant',
-           'label': 'Qwen3.8-Flash-Next-UD-IQ4_XS',
-           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF'},
-          {'bpw': 4.0,
-           'gb': 90.0,
+           'bpw': 8.37},
+          {'label': 'Qwen3.8-Flash-Next-UD-Q6_K_XL',
+           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF',
+           'gb': 169.17,
            'kind': 'quant',
-           'label': 'Qwen3.8-Flash-Next-UD-Q3_K_XL',
-           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF'},
-          {'bpw': 3.64,
-           'gb': 82.0,
+           'bpw': 7.52},
+          {'label': 'Qwen3.8-Flash-Next-UD-Q5_K_XL',
+           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF',
+           'gb': 158.29,
            'kind': 'quant',
-           'label': 'Qwen3.8-Flash-Next-UD-IQ3_XXS',
-           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF'},
-          {'bpw': 3.51,
-           'gb': 78.9,
+           'bpw': 7.03},
+          {'label': 'Qwen3.8-Flash-Next-UD-Q4_K_XL',
+           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF',
+           'gb': 111.33,
            'kind': 'quant',
-           'label': 'Qwen3.8-Flash-Next-UD-Q2_K_XL',
-           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF'},
-          {'bpw': 3.31,
-           'gb': 74.5,
+           'bpw': 4.95},
+          {'label': 'Qwen3.8-Flash-Next-UD-Q3_K_XL',
+           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF',
+           'gb': 89.99,
            'kind': 'quant',
-           'label': 'Qwen3.8-Flash-Next-UD-IQ1_M',
-           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF'}],
- 'mlx': []}
+           'bpw': 4.0},
+          {'label': 'Qwen3.8-Flash-Next-UD-IQ3_XXS',
+           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF',
+           'gb': 81.96,
+           'kind': 'quant',
+           'bpw': 3.64},
+          {'label': 'Qwen3.8-Flash-Next-UD-Q2_K_XL',
+           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF',
+           'gb': 78.87,
+           'kind': 'quant',
+           'bpw': 3.51},
+          {'label': 'Qwen3.8-Flash-Next-UD-IQ1_M',
+           'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF',
+           'gb': 74.54,
+           'kind': 'quant',
+           'bpw': 3.31}]}
 
 # Bytes of KV per token at fp16, the context ceiling, and how it was derived.
 # None for models with no growing cache (diffusion, TTS).
@@ -80,44 +96,39 @@ KV = {'bytes_per_token': 24576,
                '2048 budget, so this is an upper bound; the other 36 are Gated DeltaNet'}
 
 # Per-engine status. Keys must be engines whose modality matches MODALITY.
-ENGINES = {'llamacpp': {'status': 'blocked',
-              'label': 'Blocked',
-              'note': 'This is a preview of the Qwen4 architecture, not a Qwen3 variant: the '
-                      "config reports `qwen4_exp`, and llama.cpp's architecture table has "
-                      '`qwen3next` but nothing for qwen4. Support is an open feature request. '
-                      'One GGUF has been published - a single UD-IQ1_S tier at 72.5 GB - but '
-                      'mainline has no loader for it, so the file exists ahead of the runtime.',
-              'issues': ['ggml-org/llama.cpp#27741']},
+ENGINES = {'llamacpp': {'status': 'degraded',
+              'label': 'Master only',
+              'note': "Support landed on 2026-08-27: `qwen4exp` is now in "
+                      "`src/llama-arch.cpp`. It is on master only - no tagged release carries it "
+                      "yet, so a packaged build or a distro binary will still refuse the weights. "
+                      "Build from source until the next release cuts. Three further PRs are open "
+                      "against the same architecture for fixes, so treat the implementation as "
+                      "new rather than settled.",
+              'issues': ['ggml-org/llama.cpp#27742', 'ggml-org/llama.cpp#27741']},
  'ollama': {'status': 'blocked',
             'label': 'Blocked',
-            'note': 'Not in the library, and it inherits the same missing architecture '
-                    'underneath.',
-            'issues': []},
+            'note': "Not in the library. llama.cpp gained the architecture on 2026-08-27, so this is now waiting on an Ollama bump to a build that carries it rather than on the architecture itself.",
+              'issues': []},
  'lmstudio': {'status': 'blocked',
               'label': 'Blocked',
-              'note': 'Nothing curated in either format. Both of its engines are downstream of '
-                      'the two projects that do not implement this architecture yet.',
+              'note': "Nothing curated in either format. Its llama.cpp engine will pick this up once LM Studio ships a build from master; its MLX engine stays blocked until mlx-lm merges a qwen4_exp class.",
               'issues': []},
  'omlx': {'status': 'blocked',
           'label': 'Blocked',
-          'note': 'No MLX conversion exists and mlx-lm has no qwen4 model class, so there is '
-                  'nothing to load. oMLX does ship native Qwen3.5 kernels, which is a '
-                  'reasonable signal that it would pick this up once upstream does.',
-          'issues': []},
+          'note': "Serves mlx-lm, which has no qwen4 model class yet. oMLX does ship native Qwen3.5 kernels, which is a reasonable signal that it would pick this up once upstream does.",
+              'issues': ['ml-explore/mlx-lm#1788']},
  'vllmmlx': {'status': 'blocked',
              'label': 'Blocked',
-             'note': 'Wraps mlx-lm, which has no qwen4 class. Nothing to wrap.',
-             'issues': []},
+             'note': "Wraps mlx-lm, which has no qwen4 class. Nothing to wrap until that PR merges.",
+              'issues': ['ml-explore/mlx-lm#1788']},
  'mlxlm': {'status': 'blocked',
            'label': 'Blocked',
-           'note': 'The models directory carries qwen3_next but nothing for qwen4. This is the '
-                   'upstream gap every MLX engine on this page inherits.',
-           'issues': []},
+           'note': "The models directory carries `qwen3_next` but nothing for qwen4. A PR adding `qwen4_exp` is open and unmerged, and it is the gate for every MLX engine on this page - llama.cpp has already moved, MLX has not.",
+              'issues': ['ml-explore/mlx-lm#1788']},
  'vllmmetal': {'status': 'blocked',
                'label': 'Blocked',
-               'note': 'The matrix covers Qwen3.5 through 3.8, not the qwen4_exp preview '
-                       'architecture. Same upstream gap every MLX engine here has.',
-               'issues': []},
+               'note': "The matrix covers Qwen3.5 through 3.8, not the qwen4_exp preview architecture, and the compute layer is MLX so it inherits the same missing model class.",
+              'issues': ['ml-explore/mlx-lm#1788']},
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',

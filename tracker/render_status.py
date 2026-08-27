@@ -7,7 +7,7 @@ import os, re, html, datetime, hashlib, json
 from registry import (ENGINES, ENGINE_BY_ID, EMETA, MATRIX, BEST, engine_order,
                       repo_label, CROSS_BY_ENGINE, RELEASE_FEEDS, FAM,
                       LADDERS, KV, PARAMS, USE_CASES, MODELS, modality, SCLASS,
-                      ENGINE_PROSE_LINKS)
+                      ENGINE_PROSE_LINKS, PR_KEYS)
 from bands import BANDS, FAM_OVERRIDE, FIDELITY_NOTES
 
 
@@ -28,9 +28,6 @@ STATE = os.path.join(HERE, "watch-state.txt")
 # key -> (severity, headline, why it matters)
 META = dict(EMETA)
 
-
-PR_KEYS = {"waybarrios/vllm-mlx#731", "waybarrios/vllm-mlx#732", "waybarrios/vllm-mlx#729",
-           "waybarrios/vllm-mlx#725", "ml-explore/mlx-lm#1401", "ml-explore/mlx-lm#1233"}
 
 # works/degraded/blocked/none -> the CSS verdict classes the page already uses
 
