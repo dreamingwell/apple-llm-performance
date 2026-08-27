@@ -15,6 +15,13 @@ API = 'none - library and CLI'
 LICENSE = 'MIT'
 REPO = 'argmaxinc/DiffusionKit'
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://github.com/argmaxinc/DiffusionKit'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['DiffusionKit']
+
 RELEASE_FEED = None
 
 WHAT = ("Argmax's on-device image generation for Apple Silicon, covering both MLX and Core ML. Solid "

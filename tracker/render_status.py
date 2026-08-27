@@ -6,7 +6,8 @@ import os, re, html, datetime, hashlib, json
 # split so two agents editing two different models never touch the same file.
 from registry import (ENGINES, ENGINE_BY_ID, EMETA, MATRIX, BEST, engine_order,
                       repo_label, CROSS_BY_ENGINE, RELEASE_FEEDS, FAM,
-                      LADDERS, KV, PARAMS, USE_CASES, MODELS, modality, SCLASS)
+                      LADDERS, KV, PARAMS, USE_CASES, MODELS, modality, SCLASS,
+                      ENGINE_PROSE_LINKS)
 from bands import BANDS, FAM_OVERRIDE, FIDELITY_NOTES
 
 
@@ -162,13 +163,50 @@ def scores(pairs):
         for k, v in pairs)
 
 
-def prose(text):
-    """HTML-escape, then render inline `code` spans and [text](url) links."""
+# Text that must not be linkified: an existing anchor, a code span, or any tag.
+_SKIP = re.compile(r"(<a\b[^>]*>.*?</a>|<code>.*?</code>|<[^>]+>)", re.S)
+
+# An engine name is only a mention if it stands alone. The lookarounds keep
+# "ds4-server" and "mlx-lm.server" from being clipped mid-token.
+_ENGINE_MENTIONS = [
+    (re.compile(rf"(?<![\w.-]){re.escape(alias)}(?![\w-])"), eid, site)
+    for alias, eid, site in ENGINE_PROSE_LINKS]
+
+
+def link_engines(out):
+    """Link the first mention of each engine to its own website.
+
+    First mention only: the notes name an engine repeatedly, and linking every
+    occurrence turns a paragraph into a wall of blue. Existing links, code spans
+    and tag interiors are left alone, so a hand-written [text](url) always wins.
+    """
+    seen = set()
+    parts = _SKIP.split(out)
+    for i, part in enumerate(parts):
+        if i % 2:                     # the captured skip-group; leave verbatim
+            continue
+        for pat, eid, site in _ENGINE_MENTIONS:
+            if eid in seen:
+                continue
+            new_part, n = pat.subn(
+                lambda m: f'<a href="{site}" target="_blank" rel="noopener">{m.group(0)}</a>',
+                part, count=1)
+            if n:
+                seen.add(eid)
+                part = new_part
+        parts[i] = part
+    return "".join(parts)
+
+
+def prose(text, engines=True):
+    """HTML-escape, then render inline `code` spans, [text](url) links, and
+    link the first mention of each inference engine to its own website."""
     out = re.sub(r"`([^`]+)`", lambda m: f"<code>{m.group(1)}</code>", html.escape(text))
     out = re.sub(r"\*\*([^*]+)\*\*", lambda m: f"<strong>{m.group(1)}</strong>", out)
-    return re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)",
-                  lambda m: f'<a href="{m.group(2)}" target="_blank" rel="noopener">{m.group(1)}</a>',
-                  out)
+    out = re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)",
+                 lambda m: f'<a href="{m.group(2)}" target="_blank" rel="noopener">{m.group(1)}</a>',
+                 out)
+    return link_engines(out) if engines else out
 
 
 API_ROWS = [("endpoints", "Endpoints"), ("streaming", "Streaming"), ("tools", "Tool calling"),

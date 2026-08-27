@@ -15,6 +15,13 @@ API = 'OpenAI-compatible, plus its own /api'
 LICENSE = 'MIT'
 REPO = 'ollama/ollama'
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://ollama.com'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['Ollama']
+
 RELEASE_FEED = {'repo': 'ollama/ollama', 'scheme': 'release', 'note': ''}
 
 WHAT = ('One-command pulls from a curated library, running as a launch-agent server. Since v0.30 (May '

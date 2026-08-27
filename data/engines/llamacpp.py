@@ -15,6 +15,13 @@ API = 'OpenAI-compatible'
 LICENSE = 'MIT'
 REPO = 'ggml-org/llama.cpp'
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://github.com/ggml-org/llama.cpp'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['llama.cpp']
+
 RELEASE_FEED = {'repo': 'ggml-org/llama.cpp',
  'scheme': 'semver',
  'note': 'also publishes hourly b##### builds'}

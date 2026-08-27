@@ -15,6 +15,13 @@ API = 'OpenAI, via vLLM core'
 LICENSE = 'Apache-2.0'
 REPO = 'vllm-project/vllm-metal'
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://github.com/vllm-project/vllm-metal'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['vLLM Metal']
+
 RELEASE_FEED = {'repo': 'vllm-project/vllm-metal', 'scheme': 'release', 'note': ''}
 
 WHAT = ('vLLM itself, running on Apple Silicon. This is a plugin in the vllm-project org that keeps '

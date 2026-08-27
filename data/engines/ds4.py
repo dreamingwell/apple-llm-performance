@@ -15,6 +15,13 @@ API = 'OpenAI and Anthropic'
 LICENSE = 'MIT'
 REPO = 'antirez/ds4'
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://github.com/antirez/ds4'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['DwarfStar', 'ds4']
+
 RELEASE_FEED = {'repo': 'antirez/ds4',
  'scheme': 'none',
  'note': 'untagged by design (ds4#839); build from main'}

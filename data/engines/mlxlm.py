@@ -15,6 +15,13 @@ API = 'OpenAI-compatible, minimal'
 LICENSE = 'MIT'
 REPO = 'ml-explore/mlx-lm'
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://github.com/ml-explore/mlx-lm'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['mlx-lm']
+
 RELEASE_FEED = {'repo': 'ml-explore/mlx-lm', 'scheme': 'release', 'note': ''}
 
 WHAT = ("Apple's own reference implementation, and the substrate almost everything MLX-shaped depends "

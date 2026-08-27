@@ -37,7 +37,8 @@ Now:
 ```
 data/
   models/<id>.py        one model: identity, scores, per-engine status, quant ladder, KV
-  engines/<id>.py       one engine: what it is, its API, its cross-cutting issues
+  engines/<id>.py       one engine: what it is, its API, its website, its
+                        cross-cutting issues
   use_cases/<id>.py     one "What for?" category and its curated ranking
   issues/<owner>__<repo>.py   tracked issues for one upstream repository
   pr_keys.py            which issue keys are pull requests (small, shared)
@@ -231,6 +232,19 @@ issue is backend-specific, check which backend before citing it.
 a custom-kernel warning. It is actually a closed GLM-5.2 prefill regression. Read
 the issue.
 
+**Engine names in prose are auto-linked — don't hand-link them.** Every engine
+carries a `SITE` and a `PROSE_ALIASES` list, and the renderer links the first
+mention of each engine in each block of prose to that site. Writing your own
+`[mlx-lm](https://…)` is not wrong (a hand-written link always wins) but it is
+redundant, and it will go stale when the engine moves. Just write the name.
+
+Two consequences worth knowing. An alias is matched only as a whole token, so
+`ds4-server` and `mlx-lm.server` are deliberately left alone — they are binaries,
+not the project. And bare **`vLLM` is not an alias for vLLM Metal**: in these
+notes it means upstream vLLM, and aliasing it would link six correct references
+to the wrong project. If you add an engine whose short name is ambiguous like
+that, leave it out of `PROSE_ALIASES` and write the full name in the prose.
+
 **Never change a model's `id`.** It is the deep-link fragment.
 
 **Do not commit `docs/`.** It is generated and gitignored. CI builds and deploys
@@ -334,6 +348,8 @@ The notes are the reason to read this page rather than a spec sheet.
 - `KV` has exactly the three expected keys; only text models declare a per-token
   cost; a declared cost has a derivation and a max context
 - `DISPLAY_ORDER` is present and unique for engines and use cases
+- every engine has a `SITE` URL and a non-empty `PROSE_ALIASES`, and no two
+  engines claim the same alias — an ambiguous name would link to the wrong engine
 - use-case ranks cite known models of the matching modality, with no duplicates
 - issue severities are `critical` / `high` / `medium` / `low` and every issue has
   a stated consequence
@@ -341,4 +357,5 @@ The notes are the reason to read this page rather than a spec sheet.
 
 Warnings, which do not fail the build: a very short note, a missing ladder for a
 family an in-scope engine loads, an issue tracked but cited nowhere, a modality
-with no models or no category.
+with no models or no category, and an alias that is neither the engine's own name
+nor used in any note (which means it will never link, and is usually a typo).

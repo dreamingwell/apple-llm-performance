@@ -15,6 +15,13 @@ API = 'local web interface'
 LICENSE = 'MIT'
 REPO = 'Blaizzy/mlx-audio'
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://github.com/Blaizzy/mlx-audio'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['MLX-Audio']
+
 RELEASE_FEED = None
 
 WHAT = ('The centre of gravity for audio on Apple Silicon, and the largest catalogue on this page: '

@@ -15,6 +15,13 @@ API = 'none - library and CLI'
 LICENSE = 'MIT'
 REPO = 'filipstrand/mflux'
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://github.com/filipstrand/mflux'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['mflux']
+
 RELEASE_FEED = None
 
 WHAT = ('A line-by-line MLX port of a dozen image model families, written from scratch rather than '

@@ -15,6 +15,13 @@ API = 'OpenAI-compatible on :1234'
 LICENSE = 'Proprietary, free to use'
 REPO = None
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://lmstudio.ai'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['LM Studio']
+
 RELEASE_FEED = {'repo': None,
  'scheme': 'none',
  'note': 'closed source; no public tag feed, see the in-app release notes'}

@@ -15,6 +15,13 @@ API = 'OpenAI and Anthropic'
 LICENSE = 'Apache-2.0'
 REPO = 'jundot/omlx'
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://github.com/jundot/omlx'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['oMLX']
+
 RELEASE_FEED = {'repo': 'jundot/omlx', 'scheme': 'release', 'note': ''}
 
 WHAT = ('MLX serving built for agent clients: continuous batching, a hot/cold KV cache that spills '

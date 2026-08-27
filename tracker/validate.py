@@ -24,6 +24,7 @@ import registry as R  # noqa: E402
 ERRORS = []
 WARNINGS = []
 
+ALIAS_OWNER = {}
 SEVERITIES = {"critical", "high", "medium", "low"}
 KINDS = {"quant", "pruned", "native"}
 ID_RE = re.compile(r"^[a-z][a-z0-9]*$")
@@ -59,9 +60,22 @@ def check_engines():
             err(w, f"DISPLAY_ORDER {order} already used by {seen_order[order]}")
         else:
             seen_order[order] = m.ID
-        for field in ("NAME", "FORMAT", "INTERFACE", "API", "LICENSE", "WHAT"):
+        for field in ("NAME", "FORMAT", "INTERFACE", "API", "LICENSE", "WHAT", "SITE"):
             if not getattr(m, field, None):
                 err(w, f"missing or empty {field}")
+        if getattr(m, "SITE", "") and not str(m.SITE).startswith("http"):
+            err(w, f"SITE {m.SITE!r} must be a URL; it is linked from the prose")
+        aliases = getattr(m, "PROSE_ALIASES", None)
+        if not aliases:
+            err(w, "PROSE_ALIASES must list the names this engine goes by in the notes")
+        for alias in aliases or []:
+            if not alias or not alias.strip():
+                err(w, "PROSE_ALIASES contains an empty name")
+            elif alias in ALIAS_OWNER and ALIAS_OWNER[alias] != m.ID:
+                err(w, f"alias {alias!r} is also claimed by {ALIAS_OWNER[alias]!r}; "
+                       "an ambiguous name would link to the wrong engine")
+            else:
+                ALIAS_OWNER[alias] = m.ID
         if len(getattr(m, "WHAT", "")) < 80:
             warn(w, "WHAT is very short; it is the reader's only description of this engine")
         feed = getattr(m, "RELEASE_FEED", None)
@@ -242,6 +256,21 @@ def check_global():
     if orphans:
         warn("data/issues", f"{len(orphans)} issues are tracked but cited nowhere: "
                             + ", ".join(orphans[:6]) + ("..." if len(orphans) > 6 else ""))
+    prose_blocks = [m.NOTE for m in R.MODEL_MODULES]
+    prose_blocks += [c["note"] for m in R.MODEL_MODULES for c in m.ENGINES.values()]
+    prose_blocks += [m.WHAT for m in R.ENGINE_MODULES]
+    haystack = "\n".join(prose_blocks)
+    for alias, eid, _site in R.ENGINE_PROSE_LINKS:
+        # An alias drawn from the engine's own name is legitimate even when no
+        # note happens to use it yet. Anything else that matches nothing is a
+        # typo, and will silently never link.
+        if alias in R.ENGINE_BY_ID[eid]["name"]:
+            continue
+        if not re.search(rf"(?<![\w.-]){re.escape(alias)}(?![\w-])", haystack):
+            warn(f"data/engines/{eid}.py",
+                 f"PROSE_ALIASES lists {alias!r}, which is neither this engine's name "
+                 "nor used in any note; nothing will ever link")
+
     for key in sorted(R.PR_KEYS):
         if key not in R.EMETA:
             err("data/pr_keys.py", f"{key} is listed as a PR but has no issue entry")

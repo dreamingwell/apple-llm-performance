@@ -15,6 +15,13 @@ API = 'OpenAI and Anthropic'
 LICENSE = 'Apache-2.0'
 REPO = 'waybarrios/vllm-mlx'
 
+# Canonical website, linked wherever this engine is named in prose.
+SITE = 'https://github.com/waybarrios/vllm-mlx'
+
+# The names this engine actually goes by in the notes. Bare 'vLLM' is
+# deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
+PROSE_ALIASES = ['vllm-mlx']
+
 RELEASE_FEED = {'repo': 'waybarrios/vllm-mlx', 'scheme': 'release', 'note': ''}
 
 WHAT = ("A paged KV cache and continuous batching over mlx-lm's model classes. Unaffiliated with "

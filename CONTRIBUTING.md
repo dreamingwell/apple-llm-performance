@@ -80,9 +80,10 @@ engine's architecture table or model directory, and check `config.json`'s
 ### Adding an engine
 
 A new `data/engines/<id>.py` — identity, `MODALITIES`, `API_DETAIL`,
-`QUANT_FAMILY`, `RELEASE_FEED`, `CROSS_ISSUES`, and a `DISPLAY_ORDER` that
-decides where its tab sits — plus a cell in the `ENGINES` dict of every model it
-can load. The last part is the work; there is no way around describing each
+`QUANT_FAMILY`, `RELEASE_FEED`, `CROSS_ISSUES`, a `SITE` and `PROSE_ALIASES`
+(the renderer links the first mention of each engine in each note to its site,
+so you never hand-link an engine name), and a `DISPLAY_ORDER` that decides where
+its tab sits — plus a cell in the `ENGINES` dict of every model it can load. The last part is the work; there is no way around describing each
 model on the new engine.
 
 ### Adding a tracked issue

@@ -65,6 +65,14 @@ ENGINE_MODULES.sort(key=lambda m: (getattr(m, "DISPLAY_ORDER", 9999), m.ID))
 ENGINES = [_engine(m) for m in ENGINE_MODULES]
 ENGINE_BY_ID = {e["id"]: e for e in ENGINES}
 
+ENGINE_SITES = {m.ID: m.SITE for m in ENGINE_MODULES}
+
+# Longest alias first, so "vLLM Metal" is matched before a shorter alias could
+# claim part of it, and "MLX-Audio" before anything that is a prefix of it.
+ENGINE_PROSE_LINKS = sorted(
+    ((alias, m.ID, m.SITE) for m in ENGINE_MODULES for alias in m.PROSE_ALIASES),
+    key=lambda t: -len(t[0]))
+
 FAM = {m.ID: m.QUANT_FAMILY for m in ENGINE_MODULES}
 CROSS_BY_ENGINE = {m.ID: list(m.CROSS_ISSUES) for m in ENGINE_MODULES}
 RELEASE_FEEDS = [dict(m.RELEASE_FEED, engine=m.ID)
