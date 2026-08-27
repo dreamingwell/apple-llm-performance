@@ -775,7 +775,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .ix-bar {{ position: absolute; left: -.35rem; top: 50%; transform: translateY(-50%);
     height: 1.45rem; width: 0; border-radius: 3px; background: var(--accent);
     opacity: .13; transition: width .18s ease; pointer-events: none; }}
-  .ix-row.uc-best .ix-bar {{ background: var(--ok); opacity: .18; }}
+  .ix-row.uc-best .ix-bar {{ background: var(--ok); opacity: .2; }}
+  /* no comparable figure on the leader's scale */
+  .ix-row.no-bar .ix-name em::after {{ content: "not on this scale"; margin-left: .5rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .55rem;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }}
   @media (prefers-reduced-motion: reduce) {{ .ix-bar {{ transition: none; }} }}
   .ix-status {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .66rem;
     font-weight: 600; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
@@ -1508,6 +1512,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       if (ucOut) ucOut.innerHTML = "";
       document.querySelectorAll(".ix-row").forEach(function (r) {{
         r.style.order = "";
+        r.classList.remove("no-bar");
         var bar = r.querySelector(".ix-bar");
         if (bar) bar.style.width = "0";
       }});
@@ -1546,12 +1551,16 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
           break;
         }}
       }}
+      // Compare anything on the leader's scale, not only its exact suite. SWE-bench
+      // Pro against SWE-bench Verified is imprecise; an Elo of 1554 against a
+      // percentage is meaningless. So: both values have to sit in the same band.
+      var sameScale = function (a, b) {{
+        return (a <= 100) === (b <= 100);
+      }};
       var barFor = function (mid) {{
-        if (!leadVal || pos[mid] === undefined) return 0;
-        var e = uc.rank[pos[mid]];
-        if (e[1] !== leadMetric) return 0;      // different benchmark, no bar
-        var v = num(e[2]);
-        if (v === null) return 0;
+        if (!leadVal || pos[mid] === undefined) return null;
+        var v = num(uc.rank[pos[mid]][2]);
+        if (v === null || !sameScale(v, leadVal)) return null;
         return Math.max(0, Math.min(100, (v / leadVal) * 100));
       }};
       document.querySelectorAll(".ix-row").forEach(function (r) {{
@@ -1561,9 +1570,20 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
         var usable = ranked && r.__pick && !r.__pick.tooBig &&
                      BAND_RANK[r.__pick.band] <= BAND_RANK[uc.gate];
         // three tiers: usable in rank order, then ranked-but-unusable, then unranked
-        r.style.order = usable ? pos[mid] : (ranked ? 200 + pos[mid] : 400);
+        var w0 = usable ? barFor(mid) : null;
+        // Sort the usable tier by bar length so the chart reads monotonically;
+        // rows with no comparable figure keep their curated place behind them.
+        r.style.order = usable
+          ? (w0 === null ? 1050 + pos[mid] : Math.round((100 - w0) * 10))
+          : (ranked ? 2000 + pos[mid] : 4000);
         var bar = r.querySelector(".ix-bar");
-        if (bar) bar.style.width = usable ? barFor(mid).toFixed(1) + "%" : "0";
+        if (bar) {{
+          var w = usable ? barFor(mid) : null;
+          bar.style.width = w === null ? "0" : w.toFixed(1) + "%";
+          // A row with no comparable number should read as "not measured here",
+          // not as a zero-length bar that looks like a rendering fault.
+          r.classList.toggle("no-bar", usable && w === null);
+        }}
       }});
       if (winner) {{
         winner.row.classList.add("uc-best");
@@ -1573,8 +1593,10 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
           (pk.band === "pruned" ? "expert-pruned precision" : pk.bpw.toFixed(2) + " bits/weight") +
           " &mdash; " + winner.entry[1] + " " + winner.entry[2] + "." +
           "<span class='uc-why'>" + uc.axis + " Dimmed rows publish no number for this job. " +
-          "Bars compare each model to the leader on <em>" + leadMetric + "</em> specifically - " +
-          "a row quoting a different benchmark gets no bar, because the two do not compare.</span>";
+          "Ordered by bar where a comparable figure exists. Bars are each model's score as a " +
+          "share of the leader's <em>" + leadMetric + "</em>. " +
+          "Rows quoting a different suite on the same scale are included and are approximate; a row " +
+          "whose figure is not on that scale at all gets no bar rather than a fabricated one.</span>";
       }} else {{
         ucOut.innerHTML = "<strong>Nothing suitable fits this cluster.</strong>" +
           "<span class='uc-why'>Every model ranked for " + uc.label.toLowerCase() +

@@ -1321,7 +1321,7 @@ USE_CASES = [
               ("glimmer", "MCP Atlas", "75.5"), ("m3", "MCP Atlas", "74.2"),
               ("qcnext", "Terminal-Bench 2.0", "36.2"), ("glm47f", "τ²-Bench", "79.5"),
               ("gptoss", "τ-Bench Retail", "67.8"), ("v4pro", "GDPval-AA", "1554"),
-              ("v4flash", "GDPval-AA max effort", "1388"), ("nemolight", "MMLU Pro", "81.94")]},
+              ("v4flash", "GDPval-AA max effort", "1388")]},
     {"id": "coding", "label": "Coding", "gate": "mild",
      "axis": "Ordered on SWE-bench Verified where published, since it is the one coding benchmark most "
              "of these models report.",
