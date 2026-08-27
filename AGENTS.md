@@ -81,24 +81,90 @@ to two different upstream repos never touch the same file. That is the point.
 
 ## 2. Finding new models
 
-Look in these places, roughly in order of signal:
+There are two different jobs here, and they want different sources. **Discovery**
+is "what shipped that we don't have yet". **Confirmation** is "can anything on
+this page actually load it". Discovery sources are noisy and must never be
+trusted on their own; confirmation sources are authoritative.
 
-1. **Hugging Face, filtered to the runtime's format.** The API is the fastest
-   check and needs no key:
-   ```sh
-   curl -s "https://huggingface.co/api/models?search=<name>&filter=mlx&sort=downloads&direction=-1&limit=10"
-   curl -s "https://huggingface.co/api/models?search=<name>&filter=gguf&sort=downloads&direction=-1&limit=10"
-   ```
-   `mlx-community/` and `ggml-org/` are first-party-ish signals. `unsloth/`,
-   `bartowski/` and `lmstudio-community/` are the serious third-party packagers.
-2. **The engines' own support lists**, which are the authority on what loads:
-   - llama.cpp: `src/llama-arch.cpp` — grep it for the architecture name
-   - mlx-lm: the `mlx_lm/models/` directory listing
-   - vLLM Metal: `docs/supported_models.md`
-   - mflux and MLX-Audio: the model tables in their READMEs
-   - Ollama: `https://ollama.com/library/<name>` returns 404 if absent
-3. **Release announcements** from the labs, for models too new to have quants.
-4. **Upstream feature requests**, which tell you a model is wanted but unsupported.
+### Discovery: sources that announce new models
+
+Every URL below was checked live on 2026-08-27. All are pollable without a key
+unless noted. Recheck rather than assume — feeds move.
+
+**Poll these first. They are structured, and they are where a new model shows up
+before anyone writes about it.**
+
+| Source | Query | What it is good for |
+|---|---|---|
+| Hugging Face trending | `https://huggingface.co/api/models?sort=trendingScore&direction=-1&limit=50` | The single highest-signal feed. A brand-new flagship trends within hours, at three-digit download counts. |
+| Hugging Face, newest by format | `.../api/models?filter=mlx&sort=createdAt&direction=-1&limit=50` (also `filter=gguf`) | New *quants*, which is the thing that decides whether a model is usable here. |
+| mlx-community uploads | `.../api/models?author=mlx-community&sort=createdAt&direction=-1&limit=50` | Apple-silicon-specific. If it appears here, someone has already converted it. |
+| Ollama, newest | `https://ollama.com/search?o=newest` | A curated catalogue with a short list — parse `/library/<name>` hrefs. Very low noise. |
+| llama.cpp arch list | `https://api.github.com/repos/ggml-org/llama.cpp/commits?path=src/llama-arch.cpp` | An architecture gaining support, from the authoritative file. Also names the arch string. |
+| mlx-lm model classes | `https://api.github.com/repos/ml-explore/mlx-lm/commits?path=mlx_lm/models` | Same, for MLX. Note mlx-lm's *releases* lag badly (v0.31.3 is from April), so commits are the signal, not tags. |
+| llama.cpp model PRs | `https://api.github.com/search/issues?q=repo:ggml-org/llama.cpp+label:model+is:pr+is:merged&sort=created&order=desc` | Support landing, with the discussion attached. Filter on `label:model` — a bare "add support" text search is mostly CUDA and CI PRs. |
+
+**Where the labs announce.** Use these for a model too new to have quants, and
+for the licence and the benchmark table, which the HF card often abbreviates.
+
+- Qwen — https://qwen.ai/blog and https://qwenlm.github.io/blog/
+- DeepSeek — https://api-docs.deepseek.com/news/news
+- Z.ai / Zhipu (GLM) — https://z.ai/blog/<model-slug>; the HF org
+  https://huggingface.co/zai-org is the more reliable poll
+- Moonshot (Kimi) — https://moonshotai.github.io/
+- MiniMax — https://www.minimax.io/news
+- Google / Gemma — https://blog.google/technology/google-deepmind/
+- Mistral — https://mistral.ai/news
+- NVIDIA (Nemotron) — https://developer.nvidia.com/blog/category/generative-ai/
+- Allen AI (OLMo, Molmo) — https://allenai.org/blog
+
+**Community and aggregators.** Human signal: fastest to notice a model is
+*interesting*, and the only place that reports whether it actually works. Never
+take a figure from here — follow it to the primary source.
+
+- **r/LocalLLaMA** is the highest-value one, and posts flaired *New Model* are
+  the feed. `https://www.reddit.com/r/LocalLLaMA/new/.rss` works but rate-limits
+  hard (HTTP 429 on a second request); back off, and do not build a tight poll
+  on it.
+- **Artificial Analysis** — https://artificialanalysis.ai/models — independent
+  re-runs, so a cross-check on a lab's own claimed numbers.
+- **LMArena** — https://lmarena.ai/leaderboard — Elo, which is not comparable
+  with any benchmark on this page. Useful for noticing a model, useless for
+  ranking one here.
+- **Simon Willison** — https://simonwillison.net/tags/llm-release/ — annotated,
+  and reliably flags when a release is less than it claims.
+- **Hugging Face daily papers** — `https://huggingface.co/api/daily_papers` —
+  early warning for an architecture, weeks before weights.
+
+### Confirmation: can anything here load it?
+
+Discovery tells you a model exists. These say whether it belongs on the page,
+and they overrule any announcement:
+
+- llama.cpp: `src/llama-arch.cpp` — grep for the architecture name
+- mlx-lm: the `mlx_lm/models/` directory listing — a missing `<model_type>.py`
+  means mlx-lm cannot load it, whatever the quant's card claims
+- vLLM Metal: `docs/supported_models.md`
+- mflux, MLX-Audio, MLX-Video, DiffusionKit: the model tables in their READMEs
+- Ollama: `https://ollama.com/library/<name>` 404s if absent
+
+To go the other way — you have a name and want its quants — search by format:
+
+```sh
+curl -s "https://huggingface.co/api/models?search=<name>&filter=mlx&sort=downloads&direction=-1&limit=10"
+curl -s "https://huggingface.co/api/models?search=<name>&filter=gguf&sort=downloads&direction=-1&limit=10"
+```
+
+`mlx-community/` and `ggml-org/` are first-party-ish. `unsloth/`, `bartowski/`
+and `lmstudio-community/` are the serious third-party packagers. Those repo names
+go straight into `QUANT_SOURCES`.
+
+Match on `config.json`'s `model_type`, not the model's marketing name. As of
+2026-08-27 `deepseek_v4`, `glm5_next`, `qwen4exp` and `minimax_m3` all have **no**
+mlx-lm model class, while `mlx-community` publishes quants for several of them.
+
+**Upstream feature requests** are the fourth state: not supported, but wanted.
+Those are worth a row with a `blocked` cell and the issue cited.
 
 A model earns a place if open weights have shipped **and** at least one engine on
 this page can plausibly load it. A model with weights and no runtime still earns a
