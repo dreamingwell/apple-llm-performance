@@ -834,6 +834,15 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .uc-out {{ margin: 0 0 .9rem; font-size: .87rem; color: var(--ink-2); }}
   .uc-out strong {{ color: var(--ink); font-weight: 600; }}
   .uc-out .uc-why {{ display: block; margin-top: .2rem; font-size: .78rem; color: var(--muted); }}
+  .uc-fold {{ margin-top: .3rem; }}
+  .uc-fold > summary {{ cursor: pointer; list-style: none; display: inline-flex; align-items: center;
+    gap: .3rem; font-size: .78rem; color: var(--accent); border-bottom: 1px dotted currentColor;
+    width: fit-content; }}
+  .uc-fold > summary::-webkit-details-marker {{ display: none; }}
+  .uc-fold > summary::after {{ content: "\\203A"; font-size: .9em; transition: transform .15s ease; }}
+  .uc-fold[open] > summary::after {{ transform: rotate(90deg); }}
+  .uc-fold > summary:hover {{ color: var(--ink-2); }}
+  .uc-fold .uc-why {{ margin-top: .45rem; }}
   .ix-row.uc-best {{ background: var(--ok-tint); box-shadow: inset 3px 0 0 0 var(--ok); }}
   .ix-row.uc-best:hover, .ix-row.uc-best:focus-visible {{ background: var(--ok-tint); }}
   .ix-row.uc-best .ix-name::after {{ content: "best here"; margin-left: .5rem;
@@ -1696,6 +1705,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
           "<strong>" + pk.model + "</strong> via " + pk.engine + ", " + fmt(pk.gb) +
           (pk.bpw === null ? ", as published" : " at " + pk.bpw.toFixed(2) + " bits/weight") +
           " &mdash; " + winner.entry[1] + " " + winner.entry[2] + "." +
+          "<details class='uc-fold'><summary>How are these ranked?</summary>" +
           "<span class='uc-why'>" + uc.axis +
           (leadVal === null ? " No comparable numeric benchmark is published for these, so there are no bars."
                             : " Dimmed rows publish no number for this job. Ordered by bar where a " +
@@ -1703,7 +1713,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
                               "leader's <em>" + leadMetric + "</em>. Rows quoting a different suite on the " +
                               "same scale are included and are approximate; a row marked \u2020 quotes a " +
                               "figure that is not on that scale at all, so it gets no bar rather than a " +
-                              "fabricated one.") + "</span>";
+                              "fabricated one.") + "</span></details>";
       }} else {{
         ucOut.innerHTML = "<strong>Nothing suitable fits this cluster.</strong>" +
           "<span class='uc-why'>Every model ranked for " + uc.label.toLowerCase() +
