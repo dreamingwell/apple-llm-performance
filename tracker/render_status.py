@@ -405,7 +405,7 @@ def index_rows(rows):
         out.append(f"""
         <a class="ix-row v-{SCLASS[c['s']]}" href="#{m['id']}" data-model="{m['id']}"
            data-sw="{SCLASS[c['s']]}" data-swlabel="{html.escape(c['label'])}" data-payload="{payload}">
-          <span class="ix-name">{html.escape(m['name'])}</span>
+          <span class="ix-name"><i class="ix-bar" aria-hidden="true"></i><em>{html.escape(m['name'])}</em></span>
           <span class="ix-status v-{SCLASS[c['s']]}">{html.escape(c['label'])}</span>
           <span class="ix-eng">{html.escape(ENGINE_BY_ID[eid]['name'])}</span>
           <span class="ix-size">{gb:.0f} GB</span>
@@ -611,7 +611,7 @@ def render():
         sc = SCLASS[c["s"]]
         payload = html.escape(json.dumps(model_payload(m)), quote=True)
         cards.append(f"""
-    <section class="model v-{sc}" id="{m['id']}" data-model="{m['id']}" data-sw="{sc}"
+    <section class="model v-{sc}" id="card-{m['id']}" data-model="{m['id']}" data-sw="{sc}"
              data-swlabel="{html.escape(c['label'])}" data-payload="{payload}">
       <div class="model-head">
         <div class="model-id">
@@ -767,7 +767,16 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .ix-row.v-degraded {{ border-left-color: var(--warn); }}
   .ix-row.v-blocked {{ border-left-color: var(--critical); }}
   .ix-row.v-nofit, .ix-row.v-unknown {{ border-left-color: var(--low); }}
-  .ix-name {{ font-weight: 600; font-size: .92rem; letter-spacing: -.01em; }}
+  .ix-name {{ font-weight: 600; font-size: .92rem; letter-spacing: -.01em;
+    position: relative; display: flex; align-items: center; min-width: 0; }}
+  .ix-name em {{ font-style: normal; position: relative; }}
+  /* Scored against the leader for the selected job, so the top row is always
+     full. Width is set from JS; models with no number for that job get none. */
+  .ix-bar {{ position: absolute; left: -.35rem; top: 50%; transform: translateY(-50%);
+    height: 1.45rem; width: 0; border-radius: 3px; background: var(--accent);
+    opacity: .13; transition: width .18s ease; pointer-events: none; }}
+  .ix-row.uc-best .ix-bar {{ background: var(--ok); opacity: .18; }}
+  @media (prefers-reduced-motion: reduce) {{ .ix-bar {{ transition: none; }} }}
   .ix-status {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .66rem;
     font-weight: 600; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
     padding: .14rem .5rem; border-radius: 4px; border: 1px solid; justify-self: start; }}
@@ -879,6 +888,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     display: inline-flex; align-items: center; gap: .4rem; }}
   .back:hover {{ color: var(--ink); border-color: var(--accent); }}
   .detail .model {{ margin-bottom: 0; }}
+  .detail {{ margin-bottom: 2.75rem; }}
+  html, body, .wrap {{ overflow-anchor: none; }}
   .sub-stamp {{ color: var(--muted); white-space: nowrap; }}
   .ix-eng {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .72rem;
     color: var(--muted); white-space: nowrap; }}
@@ -936,6 +947,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .panel-fold > summary h2 {{ margin: 0; }}
   .panel-fold > summary:hover h2 {{ color: var(--ink-2); }}
   .panel-fold > ul {{ margin-top: 1.1rem; }}
+  .panel-fold > .panel-lead {{ margin-top: 1.1rem; }}
   .scores-wrap {{ margin-top: .9rem; border-top: 1px solid var(--line-soft); padding-top: .7rem; }}
   .scores-wrap > summary {{ cursor: pointer; font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
@@ -1103,7 +1115,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   </div>
 
   <div class="panel wide">
-    <h2>General engine information</h2>
+    <details class="panel-fold">
+      <summary><h2>General engine information</h2></summary>
     <p class="panel-lead">What each engine is, what its API actually implements, and the defects that follow
     you whichever model you load on it. All seven speak OpenAI on <code>/v1/chat/completions</code> with SSE
     streaming, and none is desktop-only &mdash; but &ldquo;OpenAI-compatible&rdquo; covers a wide range, and the
@@ -1112,6 +1125,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     is implemented. Five of the seven also serve Anthropic <code>/v1/messages</code>, so Claude Code can point
     at them directly.</p>
     {cross}
+    </details>
   </div>
 
   <div class="panel">
@@ -1492,7 +1506,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     }});
     if (!uc) {{
       if (ucOut) ucOut.innerHTML = "";
-      document.querySelectorAll(".ix-row").forEach(function (r) {{ r.style.order = ""; }});
+      document.querySelectorAll(".ix-row").forEach(function (r) {{
+        r.style.order = "";
+        var bar = r.querySelector(".ix-bar");
+        if (bar) bar.style.width = "0";
+      }});
     }} else {{
       var inScope = {{}};
       uc.rank.forEach(function (r) {{ inScope[r[0]] = true; }});
@@ -1509,6 +1527,33 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       // re-sequences without touching the DOM.
       var pos = {{}};
       uc.rank.forEach(function (r, i) {{ pos[r[0]] = i; }});
+
+      // Bar widths are a ratio against the leader, but only where that ratio
+      // means something: the two rows have to be quoting the SAME benchmark.
+      // Scoring 87.4 on one suite against 1554 on another is not a comparison,
+      // and this page's whole argument is that you cannot rank across suites.
+      var num = function (v) {{
+        var m = String(v).match(/-?[0-9]+([.][0-9]+)?/);
+        return m ? parseFloat(m[0]) : null;
+      }};
+      var leadMetric = null, leadVal = null;
+      for (var li = 0; li < uc.rank.length; li++) {{
+        var lrow = document.querySelector('.ix-row[data-model="' + uc.rank[li][0] + '"]');
+        if (lrow && lrow.__pick && !lrow.__pick.tooBig &&
+            BAND_RANK[lrow.__pick.band] <= BAND_RANK[uc.gate]) {{
+          leadMetric = uc.rank[li][1];
+          leadVal = num(uc.rank[li][2]);
+          break;
+        }}
+      }}
+      var barFor = function (mid) {{
+        if (!leadVal || pos[mid] === undefined) return 0;
+        var e = uc.rank[pos[mid]];
+        if (e[1] !== leadMetric) return 0;      // different benchmark, no bar
+        var v = num(e[2]);
+        if (v === null) return 0;
+        return Math.max(0, Math.min(100, (v / leadVal) * 100));
+      }};
       document.querySelectorAll(".ix-row").forEach(function (r) {{
         var mid = r.getAttribute("data-model");
         var ranked = pos[mid] !== undefined;
@@ -1517,6 +1562,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
                      BAND_RANK[r.__pick.band] <= BAND_RANK[uc.gate];
         // three tiers: usable in rank order, then ranked-but-unusable, then unranked
         r.style.order = usable ? pos[mid] : (ranked ? 200 + pos[mid] : 400);
+        var bar = r.querySelector(".ix-bar");
+        if (bar) bar.style.width = usable ? barFor(mid).toFixed(1) + "%" : "0";
       }});
       if (winner) {{
         winner.row.classList.add("uc-best");
@@ -1525,7 +1572,9 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
           "<strong>" + pk.model + "</strong> via " + pk.engine + ", " + fmt(pk.gb) + " at " +
           (pk.band === "pruned" ? "expert-pruned precision" : pk.bpw.toFixed(2) + " bits/weight") +
           " &mdash; " + winner.entry[1] + " " + winner.entry[2] + "." +
-          "<span class='uc-why'>" + uc.axis + " Dimmed rows publish no number for this job.</span>";
+          "<span class='uc-why'>" + uc.axis + " Dimmed rows publish no number for this job. " +
+          "Bars compare each model to the leader on <em>" + leadMetric + "</em> specifically - " +
+          "a row quoting a different benchmark gets no bar, because the two do not compare.</span>";
       }} else {{
         ucOut.innerHTML = "<strong>Nothing suitable fits this cluster.</strong>" +
           "<span class='uc-why'>Every model ranked for " + uc.label.toLowerCase() +
@@ -1563,29 +1612,48 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       backEl = document.getElementById("back"),
       cards = [].slice.call(document.querySelectorAll(".model"));
 
-  function route(scroll) {{
+  function route() {{
+    // Swapping views changes the document height, and Chrome's scroll anchoring
+    // reacts by moving the viewport to keep its anchor element stable - which is
+    // what made this jump even with the anchor click prevented. Pin the scroll
+    // position across the swap.
+    var y = window.scrollY;
     var want = (location.hash || "").replace(/^#/, "");
     var found = null;
     cards.forEach(function (c) {{
-      var mine = c.id === want;
+      var mine = c.id === "card-" + want;
       c.hidden = !mine;
       if (mine) found = c;
     }});
     if (listEl) listEl.hidden = !!found;
     if (detailEl) detailEl.hidden = !found;
-    if (scroll) window.scrollTo(0, 0);
+    // Restore now and again after layout: the adjustment does not always land in
+    // the same tick as the attribute change.
+    var pin = function () {{ if (window.scrollY !== y) window.scrollTo(0, y); }};
+    pin();
+    requestAnimationFrame(pin);
     return found;
   }}
 
-  if (backEl) {{
-    backEl.addEventListener("click", function () {{
-      // Drop the hash but keep the cluster and use-case selections.
-      history.pushState(null, "", location.pathname + location.search);
-      route(true);
+  if (listEl) {{
+    listEl.addEventListener("click", function (ev) {{
+      var row = ev.target.closest ? ev.target.closest(".ix-row") : null;
+      if (!row || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button !== 0) return;
+      ev.preventDefault();
+      history.pushState(null, "", location.pathname + location.search +
+                        "#" + row.getAttribute("data-model"));
+      route();
     }});
   }}
-  window.addEventListener("hashchange", function () {{ route(true); }});
-  window.addEventListener("popstate", function () {{ route(true); }});
+  if (backEl) {{
+    backEl.addEventListener("click", function () {{
+      // Keep the cluster and use-case selections, drop the card.
+      history.pushState(null, "", location.pathname + location.search);
+      route();
+    }});
+  }}
+  window.addEventListener("hashchange", route);
+  window.addEventListener("popstate", route);
 
   chipSel.value = chip;
   fillMem(mem);
@@ -1594,7 +1662,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   memSel.addEventListener("change", apply);
   nSel.addEventListener("change", apply);
   apply();
-  route(false);
+  route();
 }})();
 </script>
 
