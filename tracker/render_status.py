@@ -864,9 +864,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     opacity: .16; transition: width .18s ease; pointer-events: none; }}
   .ix-row.uc-best .ix-bar {{ opacity: .28; }}
   /* no comparable figure on the leader's scale */
-  .ix-row.no-bar .ix-name em::after {{ content: "not on this scale"; margin-left: .5rem;
-    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .55rem;
-    letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }}
+  .ix-row.no-bar .ix-name em::after {{ content: "\\2020"; margin-left: .3rem;
+    font-size: .8em; color: var(--muted); vertical-align: super; line-height: 0; }}
   @media (prefers-reduced-motion: reduce) {{ .ix-bar {{ transition: none; }} }}
   .ix-status {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .66rem;
     font-weight: 600; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
@@ -1685,9 +1684,9 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
         if (bar) {{
           var w = usable ? barFor(mid) : null;
           bar.style.width = w === null ? "0" : w.toFixed(1) + "%";
-          // A row with no comparable number should read as "not measured here",
-          // not as a zero-length bar that looks like a rendering fault.
-          r.classList.toggle("no-bar", usable && w === null);
+          // Only meaningful when the category has a numeric leader to compare
+          // against; with no benchmark at all, nothing is "off scale".
+          r.classList.toggle("no-bar", usable && w === null && leadVal !== null);
         }}
       }});
       if (winner) {{
@@ -1702,8 +1701,9 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
                             : " Dimmed rows publish no number for this job. Ordered by bar where a " +
                               "comparable figure exists; bars are each model's score as a share of the " +
                               "leader's <em>" + leadMetric + "</em>. Rows quoting a different suite on the " +
-                              "same scale are included and are approximate; a row whose figure is not on " +
-                              "that scale at all gets no bar rather than a fabricated one.") + "</span>";
+                              "same scale are included and are approximate; a row marked \u2020 quotes a " +
+                              "figure that is not on that scale at all, so it gets no bar rather than a " +
+                              "fabricated one.") + "</span>";
       }} else {{
         ucOut.innerHTML = "<strong>Nothing suitable fits this cluster.</strong>" +
           "<span class='uc-why'>Every model ranked for " + uc.label.toLowerCase() +
