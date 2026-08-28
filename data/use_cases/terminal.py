@@ -20,5 +20,6 @@ RANK = [['kimik3', 'Terminal-Bench 2.1', '88.3'],
  ['qwenmax', 'Terminal-Bench 2.1', '86.6'],
  ['glm52', 'Terminal-Bench 2.1', '81.0'],
  ['qwen38', 'Terminal-Bench 2.1', '73.0'],
+ ['ornith15', 'Terminal-Bench 2.1', '67.8'],
  ['m3', 'Terminal-Bench 2.1', '66.0'],
  ['glimmer', 'Terminal-Bench 2.1', '51.7']]

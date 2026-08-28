@@ -19,6 +19,7 @@ AXIS = ('Ordered on SWE-bench Verified where published, since it is the one codi
 RANK = [['v4pro', 'SWE-bench Verified', '80.6%'],
  ['m3', 'SWE-bench Verified', '80.5%'],
  ['qwenmax', 'SWE-bench Pro', '67.7'],
+ ['ornith15', 'SWE-bench Verified', '79.0'],
  ['glimmer', 'SWE-bench Verified', '76.0'],
  ['qcnext', 'SWE-bench Verified', '74.2%'],
  ['gptoss', 'SWE-bench Verified', '62.4%'],

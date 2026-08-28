@@ -17,6 +17,7 @@ AXIS = ('Ranked by active parameters and KV cost per token, because at concurren
 # Curated ordering, best first. Each entry is (model_id, metric_name, value).
 # Membership is editorial; see AGENTS.md before reordering.
 RANK = [['qcnext', '3B active, 24 KiB/token', 'cheapest overall'],
+ ['ornith15', '3B active, 20 KiB/token', 'cheapest that runs today'],
  ['q38fnext', '6B active, 24 KiB/token', 'cheap but blocked'],
  ['glm47f', '3B active, 53 KiB/token', 'cheapest'],
  ['nemolight', '3B active, 6 KiB/token', 'cheapest KV'],
