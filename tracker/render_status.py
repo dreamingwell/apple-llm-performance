@@ -918,11 +918,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     <details class="panel-fold">
       <summary><h2>Reading the scores</h2></summary>
     <ul>
-      <li><strong>Terminal-Bench 2.0 and 2.1 are different benchmarks.</strong> GLM-4.7's 41.0 and Qwen3-Coder-Next's 36.2 are on v2.0; Qwen3.8-27B's 73.0 and GLM-5.2's 81.0 are on v2.1. Do not rank across the two &mdash; they are shown labelled, not normalised.</li>
+      <li><strong>Terminal-Bench 2.0 and 2.1 are different benchmarks.</strong> Qwen3-Coder-Next's 36.2 is on v2.0; Qwen3.8-27B's 73.0 and GLM-5.2's 81.0 are on v2.1. Do not rank across the two &mdash; they are shown labelled, not normalised.</li>
       <li>Scores are vendor-reported or aggregator-reported, not reproduced here. Treat them as a shortlist filter, then verify the shortlist on your own context-rot harness.</li>
       <li>Nothing on this page has been measured on M5 Ultra hardware. Everything else is published numbers.</li>
       <li>Weights are the summed file sizes of the linked repository &mdash; safetensors for MLX builds, GGUF for the rest &mdash; measured, not estimated. A <strong>*</strong> marks the exception: a figure derived from parameter count because no build has been published anywhere.</li>
-      <li><strong>The same model weighs different amounts on different engines.</strong> GGUF has quant tiers MLX does not, so llama.cpp can often fit a model MLX cannot &mdash; GLM-4.7 is 158.7 GB at UD-Q3_K_XL against 198.6 GB for the MLX 4-bit. Each engine tab states its own build and its own fit.</li>
+      <li><strong>The same model weighs different amounts on different engines.</strong> GGUF has quant tiers MLX does not, so llama.cpp can often fit a model MLX cannot &mdash; Qwen3-Coder-Next's GGUF ladder reaches down to 18.9 GB while its MLX ladder stops at 42.4 GB. Each engine tab states its own build and its own fit.</li>
       <li>Issue lists are scoped to the engine tab you are on, and are filtered for what actually applies on a Mac. A CUDA-only or ROCm-only report is not listed here even when it dominates the upstream thread.</li>
       <li>Fit assumes a 90% wired-memory limit plus framework overhead &mdash; ~10 GB for an LLM server, which has a paged KV pool and Metal buffers to hold, and ~1.5 GB for an image or audio runtime, which does not &mdash; and that pooling shards weights evenly. It answers "does this load", not "does this run well" &mdash; a model spread across machines still pays the Thunderbolt hop on every token.</li>
     </ul>

@@ -12,7 +12,7 @@ every model file and will collide with every open pull request.
 
 gb is summed repo bytes. bpw is gb*8/PARAMS_B, which is the *effective* bits per
 weight rather than whatever the quant is named - the two diverge badly on MoE
-models, where GLM-4.7's "UD-IQ1_S" is really 2.17 bpw because the non-expert
+models, where GLM-5.2's "UD-IQ1_S" is really 2.33 bpw because the non-expert
 tensors are carried at higher precision.
 
 Rungs whose loss is structural rather than numeric (REAP expert pruning) are

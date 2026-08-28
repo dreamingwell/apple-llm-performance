@@ -141,7 +141,7 @@ bitten us here.
   safetensors for MLX builds, GGUF for the rest. Measured, not estimated.
 - **Bits per weight** is `bytes * 8 / total parameters`, so it is the effective
   figure rather than whatever the quant is named. Those diverge badly on MoE
-  models: GLM-4.7's `UD-IQ1_S` is really 2.17 bpw, because the non-expert
+  models: GLM-5.2's `UD-IQ1_S` is really 2.33 bpw, because the non-expert
   tensors are carried at higher precision.
 - **Expert-pruned builds** (REAP and similar) carry no bits-per-weight number at
   all. Their loss is structural — whole experts deleted — and a bits figure

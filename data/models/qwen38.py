@@ -12,8 +12,8 @@ CONTEXT = '262k (to 1M)'
 HF = 'Qwen/Qwen3.8-27B'
 PARAMS_B = 27.8
 
-NOTE = ("Stronger on paper than its size suggests: LiveCodeBench-v6 of 90.3 beats GLM-4.7's 84.9, and "
- "SWE-bench Pro of 61.7 is within noise of GLM-5.2's 62.1 at 1/27th the scale. Its hybrid "
+NOTE = ("Stronger on paper than its size suggests: SWE-bench Pro of 61.7 is within noise of "
+ "GLM-5.2's 62.1 at 1/27th the scale, and LiveCodeBench-v6 of 90.3 is the highest here. Its hybrid "
  'Gated DeltaNet layout is also the most engine-sensitive thing here - the same weights get '
  'working multi-token speculative decoding on one engine and a k=1 cap on another, so which '
  'runtime you pick changes the throughput more than which quant you pick.')

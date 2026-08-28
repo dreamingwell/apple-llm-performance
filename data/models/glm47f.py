@@ -12,8 +12,8 @@ CONTEXT = '131k'
 HF = 'zai-org/GLM-4.7-Flash'
 PARAMS_B = 31
 
-NOTE = ('3B active, so decode is bandwidth-cheap and KV space is abundant - the opposite tradeoff to '
- 'GLM-4.7 from the same family and the same license. The natural cheap tier to route '
+NOTE = ('3B active out of 31B, so decode is bandwidth-cheap and KV space is abundant - the opposite '
+ 'tradeoff to the large GLM tiers, on the same MIT license. The natural cheap tier to route '
  'low-stakes work to, and the easiest thing on this page to get running on any engine.')
 
 SOURCES = [('Model card (all scores)', 'https://huggingface.co/zai-org/GLM-4.7-Flash')]
@@ -134,8 +134,8 @@ ENGINES = {'llamacpp': {'status': 'works',
  'vllmmlx': {'status': 'works',
              'label': 'Runs',
              'note': '3B active, so decode is bandwidth-cheap and KV space is abundant - the '
-                     'opposite tradeoff to GLM-4.7 on the same mature code path and quant '
-                     'family.',
+                     'opposite tradeoff to the large GLM tiers, on the same mature code path '
+                     'and quant family.',
              'issues': ['waybarrios/vllm-mlx#725']},
  'mlxlm': {'status': 'works',
            'label': 'Runs',

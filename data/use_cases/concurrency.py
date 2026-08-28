@@ -24,5 +24,4 @@ RANK = [['qcnext', '3B active, 24 KiB/token', 'cheapest overall'],
  ['glimmer', 'dense 30B, 13 KiB/token', 'cheap KV'],
  ['qwen38', 'dense 27.8B, 64 KiB/token', 'good'],
  ['v4flash', '13B active, 48 KiB/token', 'large but cheap'],
- ['m3', '23B active, 120 KiB/token', 'expensive KV'],
- ['glm47', '32B active, 368 KiB/token', 'KV-bound']]
+ ['m3', '23B active, 120 KiB/token', 'expensive KV']]

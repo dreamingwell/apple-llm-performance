@@ -13,7 +13,7 @@ HF = 'Qwen/Qwen3-Coder-Next'
 PARAMS_B = 80
 
 NOTE = ('The best fit-to-capability ratio on this page. 3B active out of 80B total gets SWE-bench '
- 'Verified 74.2% - within a couple of points of GLM-4.7 at a quarter the footprint - and '
+ 'Verified 74.2% - within a point of GLM-5.2 at a fraction of the footprint - and '
  'Apache-2.0 with a 38-tier GGUF ladder means it runs on almost anything. Note the caveats: '
  'its Terminal-Bench figure is on v2.0, so it cannot be ranked against the v2.1 numbers '
  'elsewhere here, and it is non-thinking only. KV is 24 KiB/token, among the cheapest here, so '

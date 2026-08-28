@@ -11,8 +11,8 @@ LABEL = 'Terminal & CLI work'
 MODALITY = 'text'
 FIDELITY_GATE = 'mild'
 
-AXIS = ('Terminal-Bench 2.1 only, so these are directly comparable. GLM-4.7 is excluded because its '
- '41.0 is on v2.0, a different benchmark.')
+AXIS = ('Terminal-Bench 2.1 only, so these are directly comparable. Models whose only published '
+ 'figure is on v2.0 are left out rather than mixed in - it is a different benchmark.')
 
 # Curated ordering, best first. Each entry is (model_id, metric_name, value).
 # Membership is editorial; see AGENTS.md before reordering.

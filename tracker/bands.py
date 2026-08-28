@@ -84,7 +84,4 @@ FIDELITY_NOTES = {('v4flash', 'ds4'): "ds4's 2-bit builds are the exception to t
                      'three quarters of its experts deleted.',
  ('qcnext', 'mlx'): 'The MLX ladder stops at 4-bit (44.8 GB) - there is no 3-bit rung - while '
                     'the GGUF ladder runs all the way down to 18.9 GB. On a 32 or 48 GB machine '
-                    'that difference decides whether the model fits at all.',
- ('glm47', 'mlx'): 'The MLX ladder has no 3-bit rung, so it steps straight from 4-bit at 198.6 '
-                   'GB down to expert-pruned REAP builds. The GGUF ladder is finer-grained in '
-                   'exactly the range that matters on a 256 GB machine.'}
+                    'that difference decides whether the model fits at all.'}

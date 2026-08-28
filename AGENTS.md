@@ -269,8 +269,8 @@ next agent checks your arithmetic.
 `deepseek_v4` model class. Always check the engine's architecture table or model
 directory, and check `config.json`'s `model_type` — not the card prose.
 
-**A quant's name is not its bits per weight.** GLM-4.7's `UD-IQ1_S` is really
-2.17 bpw, because the non-expert tensors are carried at higher precision. This is
+**A quant's name is not its bits per weight.** GLM-5.2's `UD-IQ1_S` is really
+2.33 bpw, because the non-expert tensors are carried at higher precision. This is
 why ladders are measured, never estimated.
 
 **Bits per weight is meaningless for media checkpoints.** They bundle a
