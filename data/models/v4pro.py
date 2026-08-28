@@ -107,10 +107,11 @@ ENGINES = {'vllmmetal': {'status': 'blocked',
               'issues': []},
  'omlx': {'status': 'blocked',
           'label': 'Blocked',
-          'note': "oMLX's DeepSeek V4 path exists, but nobody has published a PRO conversion, "
-                  'and the residency and MXFP4 problems open against Flash would apply at four '
-                  'times the size.',
-          'issues': ['jundot/omlx#3121', 'jundot/omlx#2469']},
+          'note': "oMLX's DeepSeek V4 path exists, but nobody has published a PRO conversion. "
+                   'The residency problem filed against Flash has since been fixed, but the '
+                   'MXFP4 float32 crash is still open and would apply here at four times the '
+                   'size.',
+          'issues': ['jundot/omlx#2469']},
  'vllmmlx': {'status': 'blocked',
              'label': 'Blocked',
              'note': 'Same wall as Flash: no deepseek_v4 in mlx-lm to wrap, and no PRO quant '

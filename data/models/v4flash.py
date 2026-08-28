@@ -180,17 +180,16 @@ ENGINES = {'vllmmetal': {'status': 'blocked',
               'issues': []},
  'omlx': {'status': 'degraded',
           'label': 'Runs, degraded',
-          'note': 'oMLX does load DeepSeek V4 Flash, which no mlx-lm-derived engine can - so '
-                  'it has its own path. Speed is the problem: 4-17 tok/s on a 128 GB M5 Max, '
-                  'traced to the bundled MLX keeping a single residency set so weights fault '
-                  'instead of staying wired. On top of that, MXFP4 crashes on float32 '
-                  'activations, the prefix cache drops out with a signature mismatch, and '
-                  'thinking leaks into content on truncated turns. ds4 gets roughly ten times '
-                  'the decode rate on comparable hardware.',
-          'issues': ['jundot/omlx#3121',
-                     'jundot/omlx#2469',
-                     'jundot/omlx#2493',
-                     'jundot/omlx#2606']},
+          'note': 'oMLX does load DeepSeek V4 Flash, which no mlx-lm-derived engine can, so it '
+                   'has its own path. The residency thrash that held decode to 4-17 tok/s on a '
+                   '128 GB M5 Max was closed as fixed on 2026-08-28 with the v0.6.3 release; '
+                   'nobody has published a decode figure since, so the old number is historical '
+                   'and the new one is unmeasured. Three defects behind this status are still '
+                   'open: MXFP4 crashes on float32 activations, the prefix cache drops out with '
+                   'a signature mismatch and takes a severe slowdown with it, and thinking leaks '
+                   'into content on truncated turns. ds4 remains the faster path on comparable '
+                   'hardware.',
+          'issues': ['jundot/omlx#3121', 'jundot/omlx#2469', 'jundot/omlx#2493', 'jundot/omlx#2606']},
  'vllmmlx': {'status': 'blocked',
              'label': 'Blocked',
              'note': 'The quant exists and the footprint is ideal - 13B active reads about 7.5 '
@@ -203,18 +202,13 @@ ENGINES = {'vllmmetal': {'status': 'blocked',
  'mlxlm': {'status': 'blocked',
            'label': 'Blocked',
            'note': 'The single most consequential gap in MLX. Several quants exist and their '
-                   'cards tell you to `pip install mlx-lm`, but there is no `deepseek_v4.py` '
-                   'in mlx-lm - support is PR #1233, still open. The residency-growth issue '
-                   "that aborts decode after about 11k tokens is filed against that PR's head, "
-                   'not against a released version. If you want an MLX-shaped route anyway, '
-                   '[ssd-moe/deepseek-v4-flash-mlx](https://github.com/ssd-moe/deepseek-v4-flash-mlx) '
-                   'is a custom MLX offload engine that streams experts from SSD to run this '
-                   "on a 48 GB Mac at about 4.5-5 tok/s - a different tradeoff from ds4's own "
-                   'SSD streaming, and far slower than either resident path.',
-           'issues': ['ml-explore/mlx-lm#1233',
-                      'ml-explore/mlx-lm#1332',
-                      'ml-explore/mlx-lm#1192',
-                      'ml-explore/mlx-lm#1281',
-                      'ml-explore/mlx-lm#1443',
-                      'ml-explore/mlx-lm#1662',
-                      'ml-explore/mlx-lm#1404']}}
+                    'cards tell you to `pip install mlx-lm`, but there is no `deepseek_v4.py` in '
+                    'mlx-lm - support is PR #1233, still open. The residency growth that used to '
+                    'abort decode at around 11k tokens is no longer the blocker: #1784 and #1790 '
+                    'fixed it upstream on 2026-08-27. Only the missing model class stands '
+                    'between this and running. If you want an MLX-shaped route meanwhile, [ssd- '
+                    'moe/deepseek-v4-flash-mlx](https://github.com/ssd-moe/deepseek-v4-flash- '
+                    'mlx) is a custom MLX offload engine that streams experts from SSD to run '
+                    "this on a 48 GB Mac at about 4.5-5 tok/s - a different tradeoff from ds4's "
+                    'own SSD streaming, and far slower than either resident path.',
+           'issues': ['ml-explore/mlx-lm#1233', 'ml-explore/mlx-lm#1332', 'ml-explore/mlx-lm#1192', 'ml-explore/mlx-lm#1281', 'ml-explore/mlx-lm#1443', 'ml-explore/mlx-lm#1662', 'ml-explore/mlx-lm#1404']}}

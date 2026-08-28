@@ -83,6 +83,8 @@ ISSUES = {
  1662: {'severity': 'high',
         'headline': "Models that discard update_and_fetch's return leak one Metal buffer per "
                     'layer per generation',
-        'why': 'The general form of the DeepSeek V4 residency growth. Any model class written '
-               'with that mistake leaks for as long as the process lives, so it shows up as a '
-               'long-run failure, not a first-run one.'}}
+        'why': 'Fixed upstream. #1784 makes decode evaluate cache state periodically and #1790 '
+               'fixes the unevaluated graph in deepseek specifically; both merged, and this '
+               'closed 2026-08-27. It was the general form of the DeepSeek V4 residency growth - '
+               'any model class written that way leaked for the life of the process, aborting at '
+               'around 11k generated tokens rather than failing on the first run.'}}

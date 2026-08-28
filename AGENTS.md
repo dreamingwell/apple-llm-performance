@@ -136,6 +136,49 @@ take a figure from here — follow it to the primary source.
 - **Hugging Face daily papers** — `https://huggingface.co/api/daily_papers` —
   early warning for an architecture, weeks before weights.
 
+### When a tracked status changes, update the page in the same pass
+
+`refresh.yml` polls every tracked issue twice a day and commits
+`tracker/watch-state.txt`. The page turns that into an open/closed pill
+automatically — but **the pill is not the update**. The prose around it still
+asserts whatever was true when it was written, and a status of `blocked` or
+`degraded` still reflects the old world.
+
+So when you see a state change, act on it. Do not report it and wait to be
+asked. A change that has been detected and not applied is worse than not polling
+at all, because the page now carries a defect the maintainer knows is stale.
+
+Work it through in this order:
+
+1. **Read how it closed, not just that it closed.** `state_reason: completed` is
+   a fix; `not_planned` is a won't-fix and changes nothing about the defect. Use
+   the timeline API to find the PR or commit that closed it —
+   `/issues/<n>/timeline` — and cite that in the `why`.
+2. **Check the fix shipped, not just landed.** Merged to master is not in a
+   release. If a packaged build still fails, the status is `degraded` with a
+   "Master only" style label, not `works`.
+3. **Do not upgrade a status on the strength of a closed issue alone.** If the
+   defect was a performance figure, closing the issue does not produce a new
+   figure. Say the old number is historical and the new one is unmeasured; do not
+   invent one, and do not quietly leave the old one looking current.
+4. **Follow every place the claim appears.** The engine cell's `status` and
+   `label`, its `note`, the model-level `NOTE` if it repeats the point, any
+   use-case `AXIS` that explained an exclusion, and the worked examples in
+   `render_status.py`.
+5. **Amend issue lists, never replace them.** A cell citing seven issues that
+   you rewrite down to two silently drops five. `validate.py` warns about issues
+   left cited nowhere — that warning is usually this mistake.
+6. **A closed issue is often still worth citing.** It dates the fix, which is
+   what a reader needs in order to know which build to get.
+
+Then validate, build, commit and deploy.
+
+Watch for one trap: a cross-reference in a timeline names an issue number
+without its repository. `ml-explore/mlx-lm#1662` cross-references a
+`#2042` that lives in `Blaizzy/mlx-vlm`, which is not an engine on this page.
+Always resolve `source.issue.repository.full_name` before believing a
+cross-reference is relevant.
+
 ### Confirmation: can anything here load it?
 
 Discovery tells you a model exists. These say whether it belongs on the page,

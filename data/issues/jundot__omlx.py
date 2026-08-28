@@ -145,6 +145,8 @@ ISSUES = {1195: {'severity': 'low',
  3121: {'severity': 'high',
         'headline': 'DeepSeek V4 Flash decodes at 4-17 tok/s on an M5 Max from residency '
                     'thrash',
-        'why': 'Traced to the bundled mlx 0.32.0 keeping a single residency set, so the '
-               'weights fault instead of staying wired. A fix is identified in the thread; '
-               'until it ships, expect a fraction of the speed ds4 gets on the same machine.'}}
+        'why': 'Closed as completed on 2026-08-28, alongside the v0.6.3 release. It was traced '
+               'to the bundled mlx keeping a single residency set, so weights faulted instead of '
+               'staying wired. No post-fix decode figure has been published, so treat the old '
+               '4-17 tok/s as historical rather than current - and the other DeepSeek defects on '
+               'this engine are still open.'}}

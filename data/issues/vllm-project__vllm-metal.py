@@ -30,6 +30,8 @@ ISSUES = {360: {'severity': 'medium',
               'not load here.'},
  646: {'severity': 'high',
        'headline': 'Mixed batches with top_k enabled on some requests crash the Metal sampler',
-       'why': 'Continuous batching means requests with different sampling parameters land in '
-              'the same batch, so this is reachable with ordinary mixed traffic rather than an '
-              'exotic configuration.'}}
+       'why': 'Fixed. PR #648 normalises disabled top_k rows to vocab_size and merged '
+              '2026-08-27, closing this. It mattered because continuous batching puts requests '
+              'with different sampling parameters in one batch, so it was reachable with '
+              'ordinary mixed traffic. Kept listed so the fix is dated: you want a build from '
+              '2026-08-27 or later.'}}
