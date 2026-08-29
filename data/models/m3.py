@@ -159,4 +159,12 @@ ENGINES = {'llamacpp': {'status': 'works',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'blocked',
+           'label': 'Unsupported architecture',
+           'note': 'The catalog carries a MiniMax entry, but it is `minimax_m2` and it is in '
+                   'the `recognized-backend-pending` tier with no backend behind it. '
+                   '`minimax_m3` does not match it, so there is nothing to fall back to. This '
+                   'is not the vision-tower problem that stops oMLX - MTPLX never gets as far '
+                   'as loading tensors.',
+           'issues': []}}

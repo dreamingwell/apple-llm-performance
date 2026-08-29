@@ -176,4 +176,19 @@ ENGINES = {'llamacpp': {'status': 'works',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'degraded',
+           'label': 'Runs, QA pending',
+           'note': "The exception to this engine's no-external-drafter rule, and the reason "
+                   'Gemma 4 is not blocked here: Google ships `gemma-4-31B-it-assistant` beside '
+                   'the model, and MTPLX has a backend that runs the two as a pair - 4-bit '
+                   "target verifying a 6-bit drafter. The CLI accepts Google's own repos "
+                   'directly, and the packaged bundle `Youssofal/Gemma4-MTPLX-Optimized-Speed` '
+                   'records its own acceptance at 830 of 846 drafts (98.1%) and 43.6-44.5 tok/s '
+                   "at block size 6. Treat both numbers as the vendor's: the file does not say "
+                   "which Mac produced them. Degraded rather than works because MTPLX's own "
+                   'registry marks this backend `runtime-runnable-qa-pending`, the bundle has '
+                   'not been rebuilt since 2026-06-07 against a 2.9.2 engine, and its Hugging '
+                   'Face download counter reads 0 against 52,441 for the Qwen 3.8 build - so '
+                   'nobody outside the project appears to have exercised it.',
+           'issues': ['youssofal/MTPLX#107']}}
