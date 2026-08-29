@@ -11,6 +11,9 @@ LICENSE = 'Apache-2.0'
 CONTEXT = '262k (to 1M)'
 HF = 'Qwen/Qwen3.8-27B'
 PARAMS_B = 27.8
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# dense, so every parameter is read for every token.
+ACTIVE_PARAMS_B = 27.8
 
 NOTE = ("Stronger on paper than its size suggests: SWE-bench Pro of 61.7 is within noise of "
  "GLM-5.2's 62.1 at 1/27th the scale, and LiveCodeBench-v6 of 90.3 is the highest here. Its hybrid "
@@ -118,6 +121,25 @@ LADDER = {'gguf': [{'label': 'Qwen3.8-27B-BF16',
 KV = {'bytes_per_token': 65536,
  'max_context': 262144,
  'derivation': '16 of 64 layers are full attention, one in every 4; the other 48 are linear'}
+
+# Published throughput measurements: someone else's numbers, with whose they are.
+# Never crowd-sourced and never estimated - see notes/tokens-per-second.md for the
+# bar a record has to clear, and tracker/throughput.py for what the page derives.
+SPEEDS = [
+ {'engine': 'omlx', 'chip': 'm3ultra', 'decode_tps': 36.5,
+  'who': 'jundot/omlx#2747 reporter, before the regression',
+  'url': 'https://github.com/jundot/omlx/issues/2747',
+  'note': 'Kept as the worked example of a report that cannot be used. It names the chip and '
+          'nothing else. On an M3 Ultra the 8-bit MLX build is bounded at 27.8 tok/s and the '
+          '4-bit at 51, so 36.5 is either a 4-bit run or the MTP path emitting more than one '
+          'token per weight read - and the thread does not say which. Without the build and '
+          'the context a tokens-per-second figure compares to nothing.'},
+ {'engine': 'omlx', 'chip': 'm3ultra', 'decode_tps': 24,
+  'who': 'jundot/omlx#2747 reporter, after the regression',
+  'url': 'https://github.com/jundot/omlx/issues/2747',
+  'note': 'The same reporter after the regression, with the same gaps. A third of decode lost '
+          'is worth tracking as a delta even where neither absolute figure is checkable.'},
+]
 
 # Per-engine status. Keys must be engines whose modality matches MODALITY.
 ENGINES = {'llamacpp': {'status': 'works',

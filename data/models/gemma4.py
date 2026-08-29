@@ -11,6 +11,9 @@ LICENSE = 'Apache-2.0'
 CONTEXT = '256k'
 HF = 'google/gemma-4-31b-it'
 PARAMS_B = 30.7
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# dense, so every parameter is read for every token.
+ACTIVE_PARAMS_B = 30.7
 
 NOTE = ('The clearest case on this page for looking past MLX. τ²-Bench 86.4% is the second-highest '
  'tool-use number here, Google publishes a quantisation-aware-trained q4_0 GGUF itself at 17.7 '
