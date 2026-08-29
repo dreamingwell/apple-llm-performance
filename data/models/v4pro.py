@@ -105,19 +105,27 @@ ENGINES = {'vllmmetal': {'status': 'blocked',
               'label': 'Runs',
               'note': 'GGUF engine only - there is no MLX model class for this architecture.',
               'issues': []},
- 'omlx': {'status': 'blocked',
-          'label': 'Blocked',
-          'note': "oMLX's DeepSeek V4 path exists, but nobody has published a PRO conversion. "
-                   'The residency problem filed against Flash has since been fixed, but the '
-                   'MXFP4 float32 crash is still open and would apply here at four times the '
-                   'size.',
+ 'omlx': {'status': 'degraded',
+          'label': 'Unverified',
+          'note': 'Correcting a claim this page carried until 2026-08-29: PRO conversions do '
+                   'exist - `mlx-community/DeepSeek-V4-Pro-4bit` at 837 GB and an inferencerlabs '
+                   'Q2.8 at 562 GB. oMLX has its own DeepSeek V4 path rather than going through '
+                   'mlx-lm, so there is no missing model class standing in the way. What is '
+                   'missing is anyone reporting having run it: at 562 GB the smaller of the two '
+                   'still needs memory pooled across machines, and the MXFP4 float32 crash filed '
+                   'against Flash would apply to the mxfp4 route. Treat as plausible and '
+                   'untested, not as blocked.',
           'issues': ['jundot/omlx#2469']},
  'vllmmlx': {'status': 'blocked',
              'label': 'Blocked',
-             'note': 'Same wall as Flash: no deepseek_v4 in mlx-lm to wrap, and no PRO quant '
-                     'if there were.',
+             'note': 'Same wall as Flash, and it is the real one: no `deepseek_v4` class in '
+                      'mlx-lm to wrap. PRO conversions do exist on the hub, which is why this is '
+                      'a code gap rather than a weights gap.',
              'issues': ['waybarrios/vllm-mlx#668', 'ml-explore/mlx-lm#1233']},
  'mlxlm': {'status': 'blocked',
            'label': 'Blocked',
-           'note': 'No model class, no published conversion.',
+           'note': 'No `deepseek_v4` model class, so mlx-lm cannot load this whatever you point '
+                    'it at. Conversions exist - a 4-bit at 837 GB and a Q2.8 at 562 GB - which '
+                    'is exactly the files-ahead-of-the-loader pattern this page keeps running '
+                    'into.',
            'issues': ['ml-explore/mlx-lm#1233', 'ml-explore/mlx-lm#1443']}}

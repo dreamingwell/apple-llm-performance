@@ -15,9 +15,9 @@ PARAMS_B = 30.7
 NOTE = ('The clearest case on this page for looking past MLX. τ²-Bench 86.4% is the second-highest '
  'tool-use number here, Google publishes a quantisation-aware-trained q4_0 GGUF itself at 17.7 '
  'GB, and llama.cpp, Ollama and LM Studio all load it today. The MLX side is the worst on this '
- 'page - no 4-bit quant of the 31B, and more open mlx-lm issues than any other architecture '
- 'tracked - which is exactly the sort of gap that makes an MLX-only view of Apple Silicon '
- 'misleading.')
+ 'page, and the weights are not why - 4-bit and QAT 4-bit conversions of the 31B both exist. '
+ 'It carries more open mlx-lm issues than any other architecture tracked here, which is '
+ 'exactly the sort of gap that makes an MLX-only view of Apple Silicon misleading.')
 
 SOURCES = [('Benchmark writeup', 'https://codersera.com/blog/gemma-4-complete-guide-2026/'),
  ('SWE-bench detail', 'https://www.gemma4.wiki/benchmark/gemma-4-swe-bench')]
@@ -126,19 +126,19 @@ ENGINES = {'llamacpp': {'status': 'works',
             'issues': ['ollama/ollama#17783']},
  'lmstudio': {'status': 'works',
               'label': 'Runs',
-              'note': 'The QAT build is curated under lmstudio-community. Since no 4-bit MLX '
-                      "quant of the 31B exists, LM Studio's GGUF engine is the path here, not "
-                      'its MLX one.',
+              'note': 'The QAT build is curated under lmstudio-community. Either engine can '
+                       'serve this - the GGUF ladder is the finer-grained one, and 4-bit MLX '
+                       'builds of the 31B do exist - but the MLX side inherits the open mlx-lm '
+                       'defects listed on the mlx-lm tab, so GGUF is the safer default.',
               'issues': []},
  'omlx': {'status': 'degraded',
           'label': 'Runs, degraded',
           'note': 'oMLX has real Gemma 4 traffic - a Gemma tool parser, and open reports of a '
-                  'post-0.6.1 performance regression, a practical context wall well short of '
-                  'the advertised 256k, and DFlash disabling the prefix cache. But the '
-                  'specific problem for the 31B is upstream: mlx-community publishes no 4-bit '
-                  'quant of it, only a bf16 drafter and a 12B coder finetune, so you would be '
-                  'converting it yourself against an mlx-lm path that has more open issues '
-                  'than any other architecture tracked here.',
+                   'post-0.6.1 performance regression, a practical context wall well short of '
+                   'the advertised 256k, and DFlash disabling the prefix cache. Weights are not '
+                   'the problem: mlx-community ships a 4-bit of the 31B at 18.4 GB and a QAT '
+                   '4-bit at 28.8 GB. The problem is underneath, on an mlx-lm path with more '
+                   'open issues than any other architecture tracked here.',
           'issues': ['jundot/omlx#2786',
                      'jundot/omlx#1794',
                      'jundot/omlx#2600',
@@ -146,11 +146,13 @@ ENGINES = {'llamacpp': {'status': 'works',
                      'ml-explore/mlx-lm#1352']},
  'vllmmlx': {'status': 'blocked',
              'label': 'Blocked',
-             'note': 'The worst MLX story on the page. No 4-bit quant of the 31B to load, and '
-                     'gemma4 carries more open mlx-lm issues than any other architecture here: '
-                     'generation hangs after prompt processing, empty content when thinking is '
-                     'on, a variant that is not recognised at all, and RotatingKVCache '
-                     'quantisation not implemented.',
+             'note': 'The worst MLX story on the page, and not for want of weights - mlx- '
+                      'community publishes both a 4-bit and a QAT 4-bit of the 31B. gemma4 '
+                      'carries more open mlx-lm issues than any other architecture here: '
+                      'generation hangs at 0% CPU right after prompt processing, thinking- '
+                      'enabled turns come back with reasoning and empty content, one variant '
+                      'will not load at all, and RotatingKVCache blocks `--kv-bits` on the '
+                      'sliding-window layers this model is built from.',
              'issues': ['ml-explore/mlx-lm#1493',
                         'ml-explore/mlx-lm#1352',
                         'ml-explore/mlx-lm#1242',

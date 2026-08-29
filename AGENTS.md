@@ -370,6 +370,20 @@ notes it means upstream vLLM, and aliasing it would link six correct references
 to the wrong project. If you add an engine whose short name is ambiguous like
 that, leave it out of `PROSE_ALIASES` and write the full name in the prose.
 
+**Prose goes stale against a ladder that re-measures itself.** `LADDER` is
+regenerated from Hugging Face; the notes beside it are hand-written and stay
+frozen. Two contradictions sat on the page for months: `gemma4` claimed no 4-bit
+MLX quant of the 31B existed while its own ladder listed two, and `v4pro` claimed
+nobody had published a PRO conversion while listing a 4-bit at 837 GB. Both were
+true when written.
+
+So whenever you touch a model, read its notes against its ladder and its issue
+states, not just against the thing you came to change. This is not lintable — a
+regex cannot tell "no `deepseek_v4` model class" from "no 4-bit quant", and one
+that tries produces a dozen false positives for every real hit. It is a habit,
+and it is the reason the maintenance procedure above says to follow a claim
+through every place it appears.
+
 **Never change a model's `id`.** It is the deep-link fragment.
 
 **Do not commit `docs/`.** It is generated and gitignored. CI builds and deploys
