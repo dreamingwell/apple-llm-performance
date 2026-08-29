@@ -6,7 +6,15 @@ One record, one file. See AGENTS.md for the schema and the rules.
 REPO = 'ggml-org/llama.cpp'
 
 # number -> severity / headline / why it matters.
-ISSUES = {
+ISSUES = {26694: {'severity': 'high',
+         'headline': 'DeepSeek V4 Flash degenerates into repetition and leaks special tokens '
+                     'in long agentic sessions on Metal',
+         'why': 'The one DeepSeek V4 Flash defect on this engine actually filed against Apple '
+                'silicon: a Mac Studio M3 Ultra with 256 GB, Metal with flash attention, serving '
+                'the unsloth UD-Q8_K_XL build at 262k context. It degrades over a long agentic '
+                'conversation rather than failing outright, which is the hard kind to notice. '
+                'Open since 2026-08-07.'},
+ 
     27742: {'severity': 'medium',
             'headline': 'model: add Qwen3.8-Flash-Next (qwen4exp)',
             'why': 'Merged 2026-08-27, which is what unblocked this architecture. It is on master '
@@ -16,12 +24,7 @@ ISSUES = {
             'headline': 'model: add GLM-5.3-Flash (glm5next)',
             'why': 'One of three competing open PRs for the same architecture (#27752, #27754, '
                    '#27773). Quants are already published, so the weights are waiting on whichever '
-                   'of these lands.'},25171: {'severity': 'high',
-         'headline': "DeepSeek V4 Flash 'forgets everything' mid-conversation",
-         'why': 'Reported as context silently dropping earlier turns. On an agent that is the '
-                'worst possible failure mode, because the run continues confidently on a '
-                'truncated history rather than stopping.'},
- 25522: {'severity': 'medium',
+                   'of these lands.'},25522: {'severity': 'medium',
          'headline': 'Gemma 4 crashes with MTP speculative decoding',
          'why': 'MTP is the reason to prefer the GGUF build - the checkpoint ships a draft '
                 'head. With MTP off the model runs, so this costs speed rather than '
@@ -30,22 +33,11 @@ ISSUES = {
          'headline': "Google's own Gemma 4 QAT GGUF aborts at vocab load",
          'why': 'Filed against the E2B variant. Relevant because the QAT repo is the '
                 'recommended download, so a vocab assert there affects the default path rather '
-                'than an exotic one.'},
- 25744: {'severity': 'medium',
-         'headline': 'DeepSeek V4 Flash: 200 s prefill for a 10-token prompt',
-         'why': 'A pathological cold-start path. Worth watching because a per-request fixed '
-                'cost of that size makes short agent turns unusable even when steady-state '
-                'decode is fine.'},
- 25751: {'severity': 'high',
+                'than an exotic one.'},25751: {'severity': 'high',
          'headline': 'Sliding-window attention on Gemma 4 forgets key details',
          'why': "Gemma 4's long context is built on SWA, so this bites exactly where the 256k "
                 'window is the reason you picked the model. Quality loss, not a crash, which '
-                'makes it harder to notice.'},
- 25796: {'severity': 'high',
-         'headline': 'DeepSeek V4 Flash errors out on tool calls with similar parameter names',
-         'why': 'Tools that share parameter names - the normal case across a bundle of file '
-                'and shell tools - can fail the whole request rather than one call.'},
- 25967: {'severity': 'high',
+                'makes it harder to notice.'},25967: {'severity': 'high',
          'headline': 'Duplicate GBNF rules with a large tool list break grammar parsing',
          'why': 'Constrained decoding is how tool calls are kept well-formed. Past some number '
                 'of tools the generated grammar fails to parse - which is to say the failure '
@@ -64,13 +56,7 @@ ISSUES = {
          'headline': 'DFlash drafter fails to bind when the GGUF encodes '
                      'attention.sliding_window',
          'why': 'Blocks speculative decoding on exactly the builds that carry a sliding-window '
-                "key. The target model still runs; you lose the draft head's speedup."},
- 26965: {'severity': 'critical',
-         'headline': 'DeepSeek V4 Flash tokenizer overflows its stack on long tool output',
-         'why': 'An agent loop feeds tool results straight back into the prompt, so this is '
-                'reachable on any run that reads a large file or a long test log. It takes the '
-                'server down rather than returning an error.'},
- 27066: {'severity': 'low',
+                "key. The target model still runs; you lose the draft head's speedup."},27066: {'severity': 'low',
          'headline': 'Adaptive-P sampling is broken on Muse Glimmer',
          'why': 'A sampler, not the model. Pin top-p explicitly and it is a non-issue; listed '
                 'because the default sampler config is what most launchers use.'},

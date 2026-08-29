@@ -91,12 +91,12 @@ ENGINES = {'vllmmetal': {'status': 'blocked',
                     'antirez/ds4#805']},
  'llamacpp': {'status': 'works',
               'label': 'Runs',
-              'note': 'Same `deepseek4` path as Flash, so it loads - and inherits the same '
-                      'agent-shaped defects, on a model large enough that you will not be '
-                      'iterating quickly while you hit them.',
-              'issues': ['ggml-org/llama.cpp#26965',
-                         'ggml-org/llama.cpp#25171',
-                         'ggml-org/llama.cpp#25796']},
+              'note': 'Same `deepseek4` path as Flash, so it loads on a stock build. No Apple- '
+                       'silicon defect is on file against Pro specifically - the four this page '
+                       'used to cite here were all CUDA reports on Windows and Linux, which say '
+                       'nothing about Metal. Treat it as untested rather than proven: at this '
+                       'size few people are running it on a Mac to find out.',
+              'issues': []},
  'ollama': {'status': 'works',
             'label': 'Runs',
             'note': 'In the library. Fit is the constraint, not availability.',

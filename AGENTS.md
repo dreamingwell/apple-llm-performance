@@ -334,8 +334,24 @@ paged KV pool; ~1.5 GB for an image or audio runtime. A flat 10 GB made a 310 MB
 TTS model report "10 GB resident".
 
 **Only list issues that apply on Apple silicon.** Upstream trackers are dominated
-by CUDA, ROCm and Vulkan reports. Including them makes the lists useless. If an
-issue is backend-specific, check which backend before citing it.
+by CUDA, ROCm and Vulkan reports. Including them makes the lists useless.
+
+This is the rule this repo has broken worst. Every one of the four llama.cpp
+issues once cited against DeepSeek V4 Flash was a CUDA report from a Windows or
+Linux box with an RTX card, and together they were the stated reason to prefer a
+different engine on a Mac. A reader on Reddit spotted it before we did.
+
+So check, mechanically, every time. llama.cpp's issue template has `### GGML
+backends`, `### Operating systems` and `### Hardware` fields — read all three
+from the issue body before citing it:
+
+```sh
+gh api repos/ggml-org/llama.cpp/issues/<n> --jq .body | head -20
+```
+
+Of 25 open DeepSeek V4 Flash issues on llama.cpp, exactly one was on Metal. The
+volume of an upstream tracker tells you nothing about Apple silicon, and a long
+issue list is not evidence — it is usually a filtering failure.
 
 **Verify an issue is what you think it is.** `jundot/omlx#2137` was cited here as
 a custom-kernel warning. It is actually a closed GLM-5.2 prefill regression. Read

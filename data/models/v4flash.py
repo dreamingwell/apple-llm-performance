@@ -15,8 +15,10 @@ PARAMS_B = 284
 NOTE = ('The best shape on this page for Apple hardware: 13B active reads roughly 7.5 GB per token, '
  'so bandwidth stops being the constraint and a 256 GB machine finally does useful work. It is '
  'also the clearest example of a model whose story depends entirely on the engine - '
- 'unreachable through the mainstream MLX servers, and the fastest thing here through the '
- 'engine written specifically for it.')
+ 'unreachable through the mainstream MLX servers, and carried by one engine written '
+ 'specifically for it. Read both engine tabs before committing: ds4 is the default here, '
+ 'but llama.cpp runs this on a stock build and the case between them is narrower than a '
+ 'single recommendation makes it look.')
 
 SOURCES = [('Artificial Analysis writeup',
   'https://artificialanalysis.ai/articles/deepseek-is-back-among-the-leading-open-weights-models-with-v4-pro-and-v4-flash')]
@@ -138,35 +140,32 @@ ENGINES = {'vllmmetal': {'status': 'blocked',
                'issues': ['vllm-project/vllm-metal#360']},
  'ds4': {'status': 'works',
          'label': 'Best path',
-         'note': 'This is what ds4 exists for, and it is the strongest single answer on this '
-                 'page. Purpose-built C and Metal kernels for one architecture, with measured '
-                 'Metal numbers rather than estimates: 790 tok/s prefill and 39.4 tok/s '
-                 'generation at 2k context on a 128 GB M5 Max at q2, still 27.6 tok/s at 64k. '
-                 "Choose your fit - 86.7 GB at IQ2_XXS, 156 GB keeping DeepSeek's native MXFP4 "
-                 'experts, 164.6 GB at Q4K. `ds4-server` speaks both OpenAI and Anthropic, '
-                 'persists KV to disk across restarts, and `--batched-session N` gives you '
-                 'real concurrent sessions. The open issues to read first are both '
-                 'agent-shaped: O(n squared) tokenization on large prompts, and stateless '
-                 'clients failing to extend the live KV session.',
-         'issues': ['antirez/ds4#853',
-                    'antirez/ds4#816',
-                    'antirez/ds4#836',
-                    'antirez/ds4#805',
-                    'antirez/ds4#851',
-                    'antirez/ds4#839']},
+         'note': 'Purpose-built C and Metal kernels for this one architecture, and the only '
+                  'engine here with published Metal numbers for it. Be precise about which '
+                  'numbers: the headline 790 tok/s prefill and 39.4 tok/s generation are q2 on a '
+                  '128 GB M5 Max. The build a 256 GB machine would actually load is q4, and the '
+                  'only q4 figure the project publishes is from its older sweep - 35.5 tok/s '
+                  'generation on a 512 GB M3 Ultra, against 36.9 for q2 on the same machine, so '
+                  'the quant costs little. There is no head-to-head against llama.cpp on Metal, '
+                  'by anyone. `ds4-server` speaks OpenAI and Anthropic, persists KV to disk '
+                  'across restarts, and `--batched-session N` gives real concurrent sessions. '
+                  'Its own costs are real: the BPE merge loop is O(n squared), so a 24k-token '
+                  'prompt burns 175-250 seconds of CPU before prefill even starts - measured on '
+                  'an M3 Ultra, and worse for agents than anything llama.cpp has on Metal - '
+                  'there are no tagged releases, and vision is unsupported.',
+         'issues': ['antirez/ds4#853', 'antirez/ds4#816', 'antirez/ds4#836', 'antirez/ds4#805', 'antirez/ds4#851', 'antirez/ds4#839']},
  'llamacpp': {'status': 'degraded',
               'label': 'Runs, degraded',
-              'note': '`deepseek4` landed in mainline, so this works without a fork - but the '
-                      'open issues are unusually well aimed at agent use. The tokenizer '
-                      'overflows its stack on long tool output, tool calls with similar '
-                      'parameter names error out, there is a report of the model silently '
-                      'forgetting earlier context, and one of a 200-second prefill for a '
-                      '10-token prompt. If you want this model, ds4 is the engine that was '
-                      'built for it.',
-              'issues': ['ggml-org/llama.cpp#26965',
-                         'ggml-org/llama.cpp#25171',
-                         'ggml-org/llama.cpp#25796',
-                         'ggml-org/llama.cpp#25744']},
+              'note': '`deepseek4` is in mainline, so this works on a stock build, and at 256 '
+                       'GB the GGUF ladder gives you more rungs to choose from than ds4 does. '
+                       'The reason it is not the default here is one open defect, and it is '
+                       'filed against exactly this case: a Mac Studio M3 Ultra with 256 GB '
+                       'running the unsloth UD-Q8_K_XL build on Metal degenerates into '
+                       'repetition and leaks special tokens over a long agentic session. It '
+                       'degrades rather than fails, so a short test will not show it. For one- '
+                       'shot or short-conversation use the two engines are much closer than this '
+                       'page previously implied.',
+              'issues': ['ggml-org/llama.cpp#26694']},
  'ollama': {'status': 'works',
             'label': 'Runs',
             'note': 'In the library as `deepseek-v4-flash`. The zero-effort route; the ceiling '
