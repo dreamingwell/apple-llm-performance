@@ -33,10 +33,24 @@ tell a reader to buy the wrong thing, which is worse than telling them nothing -
 so `data/hardware/` carries no eBay figures and the `ebay_sold` basis is
 currently unused.
 
+Before reaching for this at all, note the constraint that is not technical.
+eBay's API License Agreement limits how their data may be displayed: it requires
+eBay content in a public display to be kept visually isolated from non-eBay
+content, and restricts redistributing Restricted API data in raw or aggregated
+form. A median price rendered beside model specs and benchmark scores, in a
+public repository, is hard to square with either. That is a reading rather than
+legal advice - but it means an approved application is the beginning of the
+question, not the end of it, and it should be settled with eBay before any
+figure is published here.
+
+Do not work around the access controls. Completed listings on the website now
+require sign-in, and this project does not ask anyone to automate past that. A
+pull request adding scraped eBay data will be declined.
+
 The tool is kept because the filtering, outlier rejection and sample floor are
-the reusable part. If someone gets a Marketplace Insights application approved,
-point `search()` at `item_sales/search`, change the basis to `ebay_sold`, and
-the rest of this stands.
+the reusable part, and because this docstring is the record of what was measured
+so nobody repeats it. With approved Marketplace Insights access under your own
+agreement, `search()` points at `item_sales/search` and the rest stands.
 
 The filtering is deliberately strict, because a loose query is worse than no
 data. A search for "Mac Studio M3 Ultra 256GB" returns M4 Max machines, 96 GB
