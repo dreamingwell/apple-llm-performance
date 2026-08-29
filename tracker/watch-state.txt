@@ -55,7 +55,7 @@ jundot/omlx#2691|open|Request: an oQ4e-mtp quantisation of Qwen3.8-27B
 jundot/omlx#2747|open|Qwen3.8-27B single-stream decode regressed 36.5 to 24 tok/s on an M3 Ultra
 jundot/omlx#2786|open|Gemma 4 performance regressed after 0.6.1
 jundot/omlx#2854|open|No continuous-batching results published for Qwen3.8 and DFlash2
-jundot/omlx#2972|open|Process-global Qwen patches contaminate a resident engine after loading another model
+jundot/omlx#2972|closed|Process-global Qwen patches contaminate a resident engine after loading another model
 jundot/omlx#3006|open|GLM-5.2 prefill far below published figures on an M3 Ultra 512 GB
 jundot/omlx#3117|open|Qwen3.8 with the Neural Engine enabled produces zero tokens
 jundot/omlx#3121|closed|DeepSeek V4 Flash decodes at 4-17 tok/s on an M5 Max from residency thrash
@@ -120,8 +120,8 @@ waybarrios/vllm-mlx#730|open|Prefix-cache reuse silently disabled for hybrid arc
 waybarrios/vllm-mlx#731|open|PR: make prefix-cache rewind gate aware of non-KV hybrid leaves
 waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tokens_details.cached_tokens
 ggml-org/llama.cpp@release|v0.3.0|latest release
-ollama/ollama@release|v0.33.1|latest release
+ollama/ollama@release|v0.33.2|latest release
 jundot/omlx@release|v0.6.3|latest release
-vllm-project/vllm-metal@release|v0.3.0.dev20260828085745|latest release
+vllm-project/vllm-metal@release|v0.3.0.dev20260829020049|latest release
 waybarrios/vllm-mlx@release|v0.4.1|latest release
 ml-explore/mlx-lm@release|v0.31.3|latest release
