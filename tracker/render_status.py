@@ -7,7 +7,7 @@ import os, re, html, datetime, hashlib, json
 from registry import (ENGINES, ENGINE_BY_ID, EMETA, MATRIX, BEST, engine_order,
                       repo_label, CROSS_BY_ENGINE, RELEASE_FEEDS, FAM,
                       LADDERS, KV, PARAMS, USE_CASES, MODELS, modality, SCLASS,
-                      ENGINE_PROSE_LINKS, PR_KEYS)
+                      ENGINE_PROSE_LINKS, PR_KEYS, HARDWARE, PRICE_BASES)
 from bands import BANDS, FAM_OVERRIDE, FIDELITY_NOTES
 
 
@@ -414,8 +414,13 @@ def render():
                             "rank": [[r[0], r[1], r[2]] for r in u["rank"]]}
                            for u in USE_CASES])
     bands = json.dumps([[b[0], b[1], b[2], b[3]] for b in BANDS])
+    # Prices are per (chip, memory) and the picker multiplies by unit count in the
+    # browser, so the whole table ships rather than one selected figure.
+    prices = json.dumps(HARDWARE, sort_keys=True)
+    pricebases = json.dumps(PRICE_BASES, sort_keys=True)
 
     doc = TEMPLATE.format(now=now, now_iso=now_iso, usecases=usecases, bands=bands,
+                          prices=prices, pricebases=pricebases,
                           cards="".join(cards), index=index_rows(rows),
                           cross=cross_tabs(rows, releases))
     return doc.replace("/apple-llm-performance/card.jpg",
@@ -499,6 +504,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .rig select:focus-visible {{ outline: 2px solid var(--accent); outline-offset: 1px; }}
   .rig-out {{ margin: .9rem 0 0; font-size: .87rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }}
   .rig-out strong {{ color: var(--ink); font-weight: 600; }}
+  .rig-cost {{ margin: .45rem 0 0; font-size: .87rem; color: var(--ink-2);
+    font-variant-numeric: tabular-nums; }}
+  .rig-cost strong {{ color: var(--ink); font-weight: 600; }}
+  .rig-cost .rig-basis {{ color: var(--muted); }}
+  .rig-cost.unpriced {{ color: var(--muted); }}
   .rig-warn {{ margin: .5rem 0 0; font-size: .8rem; color: var(--critical);
     border-left: 2px solid var(--critical); padding-left: .6rem; }}
   .ix-status.v-toolarge {{ color: var(--low); border-color: var(--line); }}
@@ -875,6 +885,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       </label>
     </div>
     <p class="rig-out" id="rig-out"></p>
+    <p class="rig-cost" id="rig-cost"></p>
     <p class="rig-warn" id="rig-warn" hidden></p>
   </form>
 
@@ -986,12 +997,44 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   // 10 GB made a 310 MB model report "10 GB resident".
   var OVERHEAD_TEXT = 10, OVERHEAD_MEDIA = 1.5, OVERHEAD = OVERHEAD_TEXT;
   var BANDS = {bands};
+  // What each configuration costs, keyed chip -> memory size. Only machines with
+  // a sourced figure are in here; the picker says so plainly for the rest rather
+  // than showing a number nobody stood behind.
+  var PRICES = {prices};
+  var PRICE_BASES = {pricebases};
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // Everything here comes from data/, but it is interpolated into markup and into
+  // an href, so it is escaped as if it did not.
+  function esc(t) {{
+    return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }}
+
+  // Hand-rolled rather than toLocaleString, which would follow the reader's
+  // locale and print a euro grouping against a US dollar figure.
+  function money(v) {{
+    var head = String(v), tail = '';
+    while (head.length > 3) {{
+      tail = ',' + head.slice(-3) + tail;
+      head = head.slice(0, -3);
+    }}
+    return '$' + head + tail;
+  }}
+
+  function niceDate(iso) {{
+    var p = String(iso).split('-');
+    if (p.length !== 3) return iso;
+    return parseInt(p[2], 10) + ' ' + (MONTHS[parseInt(p[1], 10) - 1] || p[1]) + ' ' + p[0];
+  }}
 
 
   var chipSel = document.getElementById("rig-chip"),
       memSel  = document.getElementById("rig-mem"),
       nSel    = document.getElementById("rig-n"),
       out     = document.getElementById("rig-out"),
+      cost    = document.getElementById("rig-cost"),
       warn    = document.getElementById("rig-warn");
   if (!chipSel) return;
 
@@ -1053,6 +1096,29 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       fmt(g * n) + " pooled, about " + fmt(cluster) + " usable after the wired-memory limit. " +
       "Per-machine bandwidth " + (M.bw >= 1000 ? (M.bw / 1000).toFixed(1) + " TB/s" : M.bw + " GB/s") + "." +
       (n > 1 ? " Uses " + M.tb + " with " + M.link + " Gb/s connection speed." : "");
+
+    // What the selection costs. Per machine, times the unit count, with the kind
+    // of number it is and the date it was read said out loud - a list price and a
+    // used-market estimate are not the same claim.
+    var hw = PRICES[chip], entry = hw && hw.prices ? hw.prices[g] : null;
+    if (entry) {{
+      var line = '<strong>' + money(entry.usd * n) + '</strong> for ' +
+                 (n > 1 ? n + ' \u00d7 ' : 'a ') + esc(entry.config) +
+                 (n > 1 ? ', ' + money(entry.usd) + ' each' : '') + '. ';
+      line += '<span class="rig-basis"><a href="' + esc(entry.source[1]) +
+              '" target="_blank" rel="noopener">' +
+              esc(PRICE_BASES[entry.basis] || entry.basis) + '</a>, ' +
+              esc(niceDate(entry.as_of)) + '. Hardware only, before tax.</span>';
+      if (entry.note) line += ' ' + esc(entry.note);
+      cost.className = 'rig-cost';
+      cost.innerHTML = line;
+    }} else {{
+      var why = hw && hw.unpriced ? hw.unpriced[g] : null;
+      cost.className = 'rig-cost unpriced';
+      cost.innerHTML = 'No price on record for ' + esc(M.label) + ' ' + g + ' GB. ' +
+        (why ? esc(why) : 'Only machines Apple currently sells new are priced here, ' +
+                          'and no sourced used-market figure is on file for this one.');
+    }}
 
     if (n > 1 && !M.tb5) {{
       warn.hidden = false;

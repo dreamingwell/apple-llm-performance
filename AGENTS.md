@@ -41,6 +41,7 @@ data/
                         cross-cutting issues
   use_cases/<id>.py     one "What for?" category and its curated ranking
   issues/<owner>__<repo>.py   tracked issues for one upstream repository
+  hardware/<chip>.py    what one M-series chip costs, per memory size
   pr_keys.py            which issue keys are pull requests (small, shared)
 
 tracker/
@@ -71,6 +72,7 @@ Conflict surface by task:
 | Correct a model's figure or prose | `data/models/<id>.py` only |
 | Add or update a tracked issue | `data/issues/<repo>.py` only |
 | Add an engine | `data/engines/<new>.py`, plus one cell in each `data/models/*.py` it can load |
+| Price a machine | `data/hardware/<chip>.py` only |
 | Change the UI | `tracker/render_status.py` only |
 | Change the schema | `tracker/registry.py` **and** `tracker/validate.py`, in a commit of their own |
 
@@ -456,6 +458,12 @@ The notes are the reason to read this page rather than a spec sheet.
   (0.5–20), `pruned` and `native` rungs carry none
 - `KV` has exactly the three expected keys; only text models declare a per-token
   cost; a declared cost has a derivation and a max context
+- a hardware record names a chip the picker offers, with the picker's own label,
+  and prices only memory sizes that chip is sold in
+- every price has a positive whole-dollar figure, a known `basis`, the exact
+  machine it buys, an `as_of` date that is real and not in the future, and a
+  `(label, url)` source
+- a memory size is priced or listed in `UNPRICED` with a reason, never both
 - `DISPLAY_ORDER` is present and unique for engines and use cases
 - every engine has a `SITE` URL and a non-empty `PROSE_ALIASES`, and no two
   engines claim the same alias — an ambiguous name would link to the wrong engine
@@ -466,5 +474,55 @@ The notes are the reason to read this page rather than a spec sheet.
 
 Warnings, which do not fail the build: a very short note, a missing ladder for a
 family an in-scope engine loads, an issue tracked but cited nowhere, a modality
-with no models or no category, and an alias that is neither the engine's own name
-nor used in any note (which means it will never link, and is usually a typo).
+with no models or no category, an unpriced chip or memory size, and an alias that
+is neither the engine's own name nor used in any note (which means it will never
+link, and is usually a typo).
+
+---
+
+## 10. Pricing a machine
+
+`data/hardware/<chip>.py` says what one chip costs at each memory size the
+picker offers. The page multiplies by the unit count and puts the total in the
+header summary, so this is the number a reader weighs capability against.
+
+The `<chip>` is the picker's own id - `m5ultra`, `m4pro` - and `LABEL` must match
+the picker's label exactly. `PRICES` is keyed by memory size in gigabytes:
+
+```python
+PRICES = {
+    256: {
+        "usd": 9499,
+        "basis": "apple_new",
+        "config": "Mac Studio, 30-core CPU / 64-core GPU, 256 GB, 1 TB SSD",
+        "as_of": "2026-08-29",
+        "note": "optional; what is surprising about this figure",
+        "source": ("Apple Store configurator", "https://www.apple.com/shop/..."),
+    },
+}
+```
+
+- **Say which kind of number it is.** `basis` is `apple_new` - Apple's own list
+  price for a machine Apple currently sells - or `ebay_sold`, the median of
+  completed eBay sold listings, for hardware Apple has discontinued. Those are
+  different claims with different confidence, and the page labels them
+  differently. Never file a used-market estimate as a list price.
+- **For an `ebay_sold` figure, put the sample count and the observed range in the
+  `note`.** A median with no spread behind it is a guess wearing a number's
+  clothes.
+- **Price the cheapest Mac that offers that chip at that memory**, on the
+  smallest storage that configuration can be ordered with, so the figure tracks
+  the memory rather than an SSD upgrade - and name the machine in `config`, since
+  a Mac mini and a MacBook Pro with the same chip are not the same purchase.
+- **`as_of` is not optional.** A price with no date is a liability; the page
+  prints the date next to the figure.
+- **Omit rather than guess.** A configuration with no defensible figure is left
+  out and the page says so. If you know *why* there is no figure - Apple has not
+  announced one yet, say - put it in `UNPRICED` keyed by memory size and the page
+  prints your reason instead of its generic sentence.
+
+Apple's configurator pages carry the exact price in a `ld+json` `Product` offer,
+which is the cheapest reliable way to read one: fetch the configured URL and take
+`offers[0].price`. That URL is also the right thing to cite. eBay's completed-
+listing search rejects scripted fetches outright, including through text proxies,
+so a sold figure has to be gathered in a browser by hand.
