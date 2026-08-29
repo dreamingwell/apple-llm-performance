@@ -8,17 +8,14 @@ antirez/ds4#845|open|--layers maps a shard as N disjoint Metal buffers, about 77
 antirez/ds4#851|open|DeepSeek V4 Flash vision is not supported
 antirez/ds4#853|open|BPE merge loop is O(n squared): large prompts take minutes to tokenize
 antirez/ds4#860|open|ds4 crashes the machine on launch for one reporter
-ggml-org/llama.cpp#25171|open|DeepSeek V4 Flash 'forgets everything' mid-conversation
 ggml-org/llama.cpp#25522|open|Gemma 4 crashes with MTP speculative decoding
 ggml-org/llama.cpp#25739|open|Google's own Gemma 4 QAT GGUF aborts at vocab load
-ggml-org/llama.cpp#25744|open|DeepSeek V4 Flash: 200 s prefill for a 10-token prompt
 ggml-org/llama.cpp#25751|open|Sliding-window attention on Gemma 4 forgets key details
-ggml-org/llama.cpp#25796|open|DeepSeek V4 Flash errors out on tool calls with similar parameter names
 ggml-org/llama.cpp#25967|open|Duplicate GBNF rules with a large tool list break grammar parsing
 ggml-org/llama.cpp#26365|open|Kimi K3 full-size vision lives on a branch, not master
 ggml-org/llama.cpp#26382|open|Same K and V cache type enforced for models with no V cache
+ggml-org/llama.cpp#26694|open|DeepSeek V4 Flash degenerates into repetition and leaks special tokens in long agentic sessions 
 ggml-org/llama.cpp#26894|open|DFlash drafter fails to bind when the GGUF encodes attention.sliding_window
-ggml-org/llama.cpp#26965|open|DeepSeek V4 Flash tokenizer overflows its stack on long tool output
 ggml-org/llama.cpp#27066|open|Adaptive-P sampling is broken on Muse Glimmer
 ggml-org/llama.cpp#27139|open|Qwen3.8 tool-calling errors resolved by substituting the Qwen3.6 chat template
 ggml-org/llama.cpp#27141|open|nemotron_h_moe aborts in ggml_ssm_scan during context reservation
@@ -121,7 +118,7 @@ waybarrios/vllm-mlx#731|open|PR: make prefix-cache rewind gate aware of non-KV h
 waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tokens_details.cached_tokens
 ggml-org/llama.cpp@release|v0.3.0|latest release
 ollama/ollama@release|v0.33.2|latest release
-jundot/omlx@release|v0.6.3|latest release
+jundot/omlx@release|v0.6.4|latest release
 vllm-project/vllm-metal@release|v0.3.0.dev20260829020049|latest release
 waybarrios/vllm-mlx@release|v0.4.1|latest release
 ml-explore/mlx-lm@release|v0.31.3|latest release
