@@ -121,12 +121,18 @@ MATRIX = {
 #
 #   apple_new   Apple's own list price for a machine Apple currently sells. Read
 #               off the linked configurator URL.
+#   apple_refurb Apple's own price on the Certified Refurbished store. Same
+#               confidence class as apple_new - it is a list price, not a
+#               survey - but the stock rotates, so the entry is a snapshot and
+#               the machine may not be orderable by the time anyone reads it.
 #   ebay_sold   Median of completed eBay sold listings, for hardware Apple has
 #               discontinued. Put the sample count and the observed range in the
 #               entry's `note` - a median with no spread behind it is a guess
-#               wearing a number's clothes.
+#               wearing a number's clothes. Currently unused: the API that
+#               serves sold prices is access-restricted. See tools/ebay_prices.py.
 PRICE_BASES = {
     "apple_new": "Apple list price",
+    "apple_refurb": "Apple refurbished",
     "ebay_sold": "eBay sold, median",
 }
 

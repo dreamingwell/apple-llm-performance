@@ -482,6 +482,20 @@ link, and is usually a typo).
 
 ## 10. Pricing a machine
 
+Prices come from three places and the page must say which:
+
+- **`apple_new`** - Apple's configurator, for machines Apple still sells.
+- **`apple_refurb`** - Apple Certified Refurbished, for chips Apple has stopped
+  selling new. The same kind of number as a list price, so no median and no
+  sample count, but the stock rotates constantly, so every entry is a snapshot
+  with an `as_of`. Harvested by `tools/apple_refurb.js`, which needs two stages
+  because the listing grid does not carry memory - one title covers three memory
+  configurations at three prices.
+- **`ebay_sold`** - currently unused. eBay's sold prices come from the
+  Marketplace Insights API, which is access-restricted, and the site now
+  requires sign-in to view completed listings. `tools/ebay_prices.py` documents
+  what was tried and why active-listing asking prices are not a substitute.
+
 `data/hardware/<chip>.py` says what one chip costs at each memory size the
 picker offers. The page multiplies by the unit count and puts the total in the
 header summary, so this is the number a reader weighs capability against.
