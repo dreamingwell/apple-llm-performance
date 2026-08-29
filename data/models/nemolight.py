@@ -151,4 +151,19 @@ ENGINES = {'llamacpp': {'status': 'degraded',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'blocked',
+           'label': 'Forge only',
+           'note': 'NVIDIA shipped draft weights with this model and MTPLX has a Nemotron-H '
+                   'backend to use them, and it still does not run from the hub: all three '
+                   'mlx-community builds declare `num_nextn_predict_layers: 1` and ship no '
+                   'draft tensors, so the contract-gated Nemotron-H backend refuses them for '
+                   "want of a verified artifact. Building one from NVIDIA's BF16 weights "
+                   'crashes, because detection reads `mtp_hybrid_override_pattern` and ignores '
+                   'the `mtp_layers_block_type` NVIDIA actually publishes. The reporter added '
+                   'the missing key by hand and got the only Apple-silicon MTP figures anyone '
+                   'has for this model: 88.28% acceptance, 46.27 to 50.00 tok/s, a 1.081x gain. '
+                   'That is what the draft weights are worth here - well short of the 2x the '
+                   'engine gets on Qwen, and the backend rejects depths above 1 while Forge '
+                   'still offers three.',
+           'issues': ['youssofal/MTPLX#341']}}

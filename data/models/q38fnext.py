@@ -132,4 +132,18 @@ ENGINES = {'llamacpp': {'status': 'degraded',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'blocked',
+           'label': 'Artifacts ahead of the runtime',
+           'note': 'The most interesting blocked cell here, because the weights exist and the '
+                   'engine does not. MTPLX uploaded `Qwen3.8-Flash-Next-MTPLX-Optimized-Speed` '
+                   'and a Bare Speed sibling on 2026-08-27 and 28, tagged `qwen4_exp` and '
+                   'complete with `mtp.safetensors`, `mtplx_runtime.json` and a 51B '
+                   '`ngram-table.safetensors` - which would make this the only MLX path to the '
+                   'model on this page, since mlx-lm has no qwen4 class. But there is no qwen4 '
+                   'code in the v2.9.2 source tree or in the PyPI sdist, the two releases '
+                   'published before those uploads, and the lane is reported to load an '
+                   '`ngram-manifest.json` unconditionally that neither those artifacts nor any '
+                   'third-party build contains, with no Forge step that emits one. Nothing you '
+                   'can install today runs these files. Worth watching rather than dismissing.',
+           'issues': ['youssofal/MTPLX#390']}}

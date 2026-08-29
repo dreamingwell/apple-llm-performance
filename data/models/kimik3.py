@@ -145,4 +145,14 @@ ENGINES = {'llamacpp': {'status': 'works',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'blocked',
+           'label': 'Refused: remote code',
+           'note': 'Refused at the first gate, before architecture is even considered. The '
+                   'community REAP builds ship their own modelling classes and point at them '
+                   'with an `auto_map` in config.json, and MTPLX never passes '
+                   '`trust_remote_code` - a downloaded checkpoint does not get to execute '
+                   'Python on your machine. That is a deliberate policy rather than a gap, and '
+                   'it is the one thing on this page that no amount of upstream work on K3 will '
+                   'change: the fix has to come from a conversion that uses standard classes.',
+           'issues': []}}

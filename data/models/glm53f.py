@@ -136,4 +136,13 @@ ENGINES = {
                  'note': "ds4 is purpose-built for DeepSeek V4 and GLM-5.2. It does not carry this "
                          "architecture.",
                  'issues': []},
-}
+ 'mtplx': {'status': 'blocked',
+           'label': 'Unsupported architecture',
+           'note': '`glm5_next` is not in the architecture catalog, and it does not fall '
+                   'through to the GLM-4 entries either - the alias match is on the model type '
+                   'string, and `glm4_moe` does not appear in it. The published MLX builds do '
+                   'keep `num_nextn_predict_layers: 1`, so the engine recognises that a draft '
+                   'head is intended and exits with an unsupported-architecture message rather '
+                   'than a missing-head one. Same wall as every other MLX engine here, reached '
+                   'one step earlier.',
+           'issues': []}}
