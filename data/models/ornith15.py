@@ -153,4 +153,14 @@ ENGINES = {
                  'note': "ds4 is purpose-built for DeepSeek V4 and GLM-5.2 and does not carry this "
                          "architecture.",
                  'issues': []},
-}
+ 'mtplx': {'status': 'degraded',
+           'label': 'Runs, no MTP',
+           'note': "The `qwen3_5_moe` model type matches this engine's Qwen family gate, and "
+                   'the first-party MLX builds use the packed `switch_mlp` expert layout MTPLX '
+                   'requires, so they load cleanly. They carry no draft tensors, so decoding is '
+                   'autoregressive and the run is labelled unverified - identical output to '
+                   'mlx-lm at identical speed. The route to the speedup is `mtplx forge` '
+                   'against the BF16 weights, and getting there through the Mac app does not '
+                   'work: a user hit exactly this on Ornith 1.0 and the general form of it is '
+                   'still open.',
+           'issues': ['youssofal/MTPLX#123', 'youssofal/MTPLX#359']}}

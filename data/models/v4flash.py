@@ -210,4 +210,21 @@ ENGINES = {'vllmmetal': {'status': 'blocked',
                     'mlx) is a custom MLX offload engine that streams experts from SSD to run '
                     "this on a 48 GB Mac at about 4.5-5 tok/s - a different tradeoff from ds4's "
                     'own SSD streaming, and far slower than either resident path.',
-           'issues': ['ml-explore/mlx-lm#1233', 'ml-explore/mlx-lm#1332', 'ml-explore/mlx-lm#1192', 'ml-explore/mlx-lm#1281', 'ml-explore/mlx-lm#1443', 'ml-explore/mlx-lm#1662', 'ml-explore/mlx-lm#1404']}}
+           'issues': ['ml-explore/mlx-lm#1233', 'ml-explore/mlx-lm#1332', 'ml-explore/mlx-lm#1192', 'ml-explore/mlx-lm#1281', 'ml-explore/mlx-lm#1443', 'ml-explore/mlx-lm#1662', 'ml-explore/mlx-lm#1404']},
+ 'mtplx': {'status': 'degraded',
+           'label': 'Runs, no MTP',
+           'note': 'The surprise on this row. MTPLX carries a 4,300-line from-scratch MLX port '
+                   'of DeepSeek V4 - Hyper-Connections, compressed sparse attention, '
+                   "hash-routed MoE and grouped output-LoRA, transcribed from DeepSeek's "
+                   'reference implementation - so it loads the mlx-community checkpoints '
+                   'directly, with no mlx-lm model class involved. It shipped in 2.4.2 on '
+                   '2026-08-02. What you will not get is the speculative decoding this engine '
+                   'exists for: all four MLX repos measured above declare '
+                   '`num_nextn_predict_layers: 1` and then ship zero `mtp.*` tensors, so the '
+                   'run degrades to plain autoregressive with a message saying so. The project '
+                   'reports K=1-3 reaching 2.28x on a 2bit-DQ build carrying the draft weights; '
+                   'the only published MLX build that actually carries them is '
+                   '`Jundot/DeepSeek-V4-Flash-0731-oQ2e-mtp`, with 114 `mtp.0.*` tensors, and '
+                   'it is not on this ladder. The backend is labelled experimental in the '
+                   'registry.',
+           'issues': []}}

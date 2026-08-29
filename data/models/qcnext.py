@@ -169,4 +169,16 @@ ENGINES = {'llamacpp': {'status': 'works',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'degraded',
+           'label': 'Runs, no MTP',
+           'note': 'Recognised as the Qwen3-Next family, so it loads and serves - but every '
+                   'mlx-community build measured above has zero `mtp.*` tensors and no '
+                   '`num_nextn_predict_layers` in its config, which puts it on the `mtp_heads '
+                   'not found -> mtp_off` path: autoregressive decode with an "unverified" '
+                   'label. That is the same speed any other MLX server gives you, without the '
+                   'hybrid cache reuse those servers at least attempt. To get the draft head '
+                   'you would build the artifact yourself with `mtplx forge` from the BF16 '
+                   'weights, and note that Forge has an open failure on official Qwen '
+                   'checkpoints. Until then this is a runtime you are paying for and not using.',
+           'issues': ['youssofal/MTPLX#299']}}
