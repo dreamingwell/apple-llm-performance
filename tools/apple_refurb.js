@@ -58,9 +58,18 @@ function chipOf(title) {
         if (!chip || !ram || !price) continue;
         const gb = parseInt(ram, 10), usd = parseInt(price.replace(/,/g, ''), 10);
         const key = `${chip}:${gb}`;
-        // cheapest wins, which is the smallest storage at that memory
-        if (!out[key] || usd < out[key].usd) {
-          out[key] = { chip, gb, usd, ssd, title: title.replace(/ - Apple.*$/, '').trim(),
+        // A desktop beats a laptop even when the laptop is cheaper: this page is
+        // about sustained load, and only an actively cooled machine holds its
+        // clocks for a generation that runs for minutes. Price wins only within
+        // a chassis class.
+        const chassis = /MacBook Air/i.test(title) ? 'laptop_fanless'
+                      : /MacBook/i.test(title)     ? 'laptop'
+                      :                              'desktop';
+        const rank = { desktop: 0, laptop: 1, laptop_fanless: 2 }[chassis];
+        const cur = out[key];
+        if (!cur || rank < cur.rank || (rank === cur.rank && usd < cur.usd)) {
+          out[key] = { chip, gb, usd, ssd, chassis, rank,
+                       title: title.replace(/ - Apple.*$/, '').trim(),
                        url: 'https://www.apple.com' + href };
         }
       } catch (e) { /* a rotated-out product is normal, skip it */ }
