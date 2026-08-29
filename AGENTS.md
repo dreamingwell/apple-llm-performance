@@ -516,14 +516,14 @@ PRICES = {
 }
 ```
 
-- **Say which kind of number it is.** `basis` is `apple_new` - Apple's own list
-  price for a machine Apple currently sells - or `ebay_sold`, the median of
-  completed eBay sold listings, for hardware Apple has discontinued. Those are
-  different claims with different confidence, and the page labels them
-  differently. Never file a used-market estimate as a list price.
-- **For an `ebay_sold` figure, put the sample count and the observed range in the
-  `note`.** A median with no spread behind it is a guess wearing a number's
-  clothes.
+- **Say which kind of number it is.** `basis` is `apple_new` for a machine Apple
+  currently sells, or `apple_refurb` for Apple's own price on the Certified
+  Refurbished store. Both are list prices; neither is a market survey. They are
+  labelled differently on the page because refurbished stock rotates and a
+  refurbished entry is a snapshot. Never file one kind as the other.
+- **If a market-survey basis is ever used**, put the sample count and the
+  observed range in the `note`. A median with no spread behind it is a guess
+  wearing a number's clothes. See the eBay note below before adding one.
 - **Price the cheapest Mac that offers that chip at that memory**, on the
   smallest storage that configuration can be ordered with, so the figure tracks
   the memory rather than an SSD upgrade - and name the machine in `config`, since
@@ -535,8 +535,53 @@ PRICES = {
   announced one yet, say - put it in `UNPRICED` keyed by memory size and the page
   prints your reason instead of its generic sentence.
 
-Apple's configurator pages carry the exact price in a `ld+json` `Product` offer,
-which is the cheapest reliable way to read one: fetch the configured URL and take
-`offers[0].price`. That URL is also the right thing to cite. eBay's completed-
-listing search rejects scripted fetches outright, including through text proxies,
-so a sold figure has to be gathered in a browser by hand.
+### Where the numbers come from
+
+**Apple new.** The configurator pages carry the exact price in a `ld+json`
+`Product` offer, which is the cheapest reliable way to read one: fetch the
+configured URL and take `offers[0].price`. That URL is also the right thing to
+cite.
+
+**Apple refurbished.** `tools/apple_refurb.js` drives a browser over the
+Certified Refurbished store. It needs two stages because the listing grid ships
+no memory size at all - zero of 60 MacBook Pro titles contained one - and a
+single title covers several memory configurations at several prices, so each
+product page has to be opened. Re-run it when prices go stale; stock rotates, so
+expect entries to move in and out of `UNPRICED`.
+
+**eBay: read this before trying.** The `ebay_sold` basis exists in the schema and
+is deliberately unused. Two things stand in the way, and only one of them is
+technical.
+
+The technical one: sold prices are served by the Marketplace Insights API, which
+is a Limited Release requiring per-application approval from eBay. Ordinary
+client credentials are refused the `buy.marketplace.insights` scope at the token
+endpoint. The legacy `findCompletedItems` operation that used to serve this need
+has been retired.
+
+The one that matters more: **eBay's API License Agreement constrains how their
+data may be displayed**, and this page's design runs straight into it. The
+agreement requires eBay Content in a public display to be kept visually isolated
+from non-eBay content, and restricts redistributing Restricted API data in raw or
+aggregated form. A median price sitting in a header summary beside model specs
+and benchmark scores, committed to a public MIT repository, is difficult to
+reconcile with either. That is a reading of the agreement rather than legal
+advice, but it is the reason this is not a matter of finding a clever workaround.
+
+So, concretely, for contributors:
+
+- **Do not scrape eBay's website for this.** Completed-listing pages now sit
+  behind a sign-in wall, and automated access to them is not something this
+  project asks anyone to do. A pull request adding scraped eBay data will be
+  declined.
+- **If you have approved Marketplace Insights access** under your own agreement
+  with eBay, `tools/ebay_prices.py` has the filtering, outlier rejection and
+  sample floor already written; point `search()` at `item_sales/search`. Whether
+  the resulting figures can be published *here* is a licensing question to settle
+  with eBay first, not afterwards.
+- **Prefer a source with no such constraint.** Apple's own pricing carries none
+  of this, which is why it is what the page uses.
+
+`tools/ebay_prices.py` also records what active-listing asking prices measured
+when tried, and why they are not a substitute: they skew high, because the
+overpriced listings are exactly the ones that fail to sell and therefore stay up.
