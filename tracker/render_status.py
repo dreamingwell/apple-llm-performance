@@ -91,6 +91,51 @@ def ladder_for(eid, mid):
     return LADDERS.get(mid, {}).get(fam_for(eid, mid), [])
 
 
+# Packagers that split a GGUF over SPLIT_GB with llama-gguf-split and file the
+# shards under a folder named for the quant. Everyone else here publishes one
+# file at the repo root however large it gets - antirez ships a 464 GB
+# DeepSeek-V4-Pro in a single blob.
+SPLIT_PACKAGERS = ("unsloth/",)
+SPLIT_GB = 50.0
+
+
+def rung_url(fam, r):
+    """Where to send someone who has just been told to run this rung.
+
+    An MLX repo holds exactly one precision, so the repo *is* the build. A GGUF
+    repo holds every quant of a model at once - unsloth/Qwen3.8-27B-GGUF carries
+    27 of them - so linking the repo drops the reader in a file list and leaves
+    them to work out which of those files the page just recommended.
+
+    The rung's label is the GGUF's filename, so a single-file quant links to the
+    blob. A split quant has no single file to link, and its shards live in a
+    folder named for the quant suffix, so that folder is the link instead.
+    Checked against all 143 gguf rungs in data/models on 2026-08-29: 75 single
+    files, 68 folders, nothing unresolved.
+    """
+    base = f"https://huggingface.co/{r['repo']}"
+    if fam not in ("gguf", "ds4"):
+        return base
+    if r["gb"] > SPLIT_GB and r["repo"].startswith(SPLIT_PACKAGERS):
+        stem = re.sub(r"-GGUF$", "", r["repo"].split("/")[-1], flags=re.I)
+        if not r["label"].startswith(stem + "-"):
+            return base
+        return f"{base}/tree/main/{r['label'][len(stem) + 1:]}"
+    return f"{base}/blob/main/{r['label']}.gguf"
+
+
+def rungs_with_urls(fam, lad):
+    """Rungs as the browser sees them: the repo is resolved to the rung's own
+    URL here rather than shipped raw, because the page needs somewhere to send
+    the reader and the repo on its own is not it."""
+    out = []
+    for r in lad:
+        d = dict(r, url=rung_url(fam, r))
+        d.pop("repo", None)
+        out.append(d)
+    return out
+
+
 def engine_payload(m):
     """Every engine that can run this model, with its own quant ladder.
 
@@ -111,7 +156,7 @@ def engine_payload(m):
         out.append({"id": eid, "name": ENGINE_BY_ID[eid]["name"], "s": SCLASS[c["s"]],
                     "label": c["label"], "fam": fam_for(eid, mid),
                     "note": FIDELITY_NOTES.get((mid, fam_for(eid, mid)), ""),
-                    "ladder": lad})
+                    "ladder": rungs_with_urls(fam_for(eid, mid), lad)})
     out.sort(key=lambda d: (rank[d["s"]], 0 if d["id"] == best else 1,
                             -(d["ladder"][-1]["gb"] if d["ladder"] else 0)))
     return out
@@ -221,14 +266,21 @@ def api_block(e):
 
 
 def engine_build(mid, eid):
-    """The chosen rung is filled in by the browser; this is the static fallback."""
+    """The chosen rung is filled in by the browser; this is the static fallback.
+
+    The fallback names the smallest rung, which is the same default the glance
+    rows render, so a reader without JS still gets a real link to real weights
+    rather than an empty anchor pointing at "#".
+    """
     lad = ladder_for(eid, mid)
     if not lad:
         c = MATRIX[mid][eid]
         label = c["q"][0] if c.get("q") else "no build published for this engine"
         return f"""<div class="eng-build none"><span class="eng-build-k">Build</span><span>{html.escape(label)}</span></div>"""
+    r = lad[-1]
     return (f"""<div class="eng-build"><span class="eng-build-k">Build</span>"""
-            f"""<a class="build-link" href="#" target="_blank" rel="noopener"></a>"""
+            f"""<a class="build-link" href="{html.escape(rung_url(fam_for(eid, mid), r), quote=True)}" """
+            f"""target="_blank" rel="noopener">{html.escape(r['label'])}</a>"""
             f"""<span class="build-bpw"></span></div>""")
 
 
@@ -1254,8 +1306,10 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
 
         var link = pane.querySelector(".build-link"), bpw = pane.querySelector(".build-bpw");
         if (link) {{
+          // r.url is the rung's own weights - the GGUF file or, for a split
+          // quant, the folder its shards live in - not the repo that holds it.
           link.textContent = r.label;
-          link.setAttribute("href", "https://huggingface.co/" + r.repo);
+          link.setAttribute("href", r.url);
         }}
         if (bpw) {{
           bpw.textContent = r.kind === "pruned" ? "expert-pruned"
