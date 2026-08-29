@@ -18,6 +18,7 @@ PRICES = {
         "usd": 1299,
         "basis": "apple_new",
         "config": "MacBook Air 13-inch, 10-core CPU / 8-core GPU, 16 GB, 512 GB SSD",
+        "chassis": "laptop_fanless",
         "as_of": "2026-08-29",
         "note": "The Mac mini no longer ships a plain M5 - it starts at M6 - so the "
                 "cheapest M5 is a laptop.",
@@ -28,6 +29,7 @@ PRICES = {
         "usd": 1499,
         "basis": "apple_new",
         "config": "MacBook Air 13-inch, 10-core CPU / 10-core GPU, 24 GB, 512 GB SSD",
+        "chassis": "laptop_fanless",
         "as_of": "2026-08-29",
         "note": _GPU_TIED,
         "source": ("Apple Store configurator",
@@ -37,6 +39,7 @@ PRICES = {
         "usd": 1699,
         "basis": "apple_new",
         "config": "MacBook Air 13-inch, 10-core CPU / 10-core GPU, 32 GB, 512 GB SSD",
+        "chassis": "laptop_fanless",
         "as_of": "2026-08-29",
         "note": _GPU_TIED,
         "source": ("Apple Store configurator",

@@ -7,7 +7,7 @@ import os, re, html, datetime, hashlib, json
 from registry import (ENGINES, ENGINE_BY_ID, EMETA, MATRIX, BEST, engine_order,
                       repo_label, CROSS_BY_ENGINE, RELEASE_FEEDS, FAM,
                       LADDERS, KV, PARAMS, USE_CASES, MODELS, modality, SCLASS,
-                      ENGINE_PROSE_LINKS, PR_KEYS, HARDWARE, PRICE_BASES)
+                      ENGINE_PROSE_LINKS, PR_KEYS, HARDWARE, PRICE_BASES, CHASSIS)
 from bands import BANDS, FAM_OVERRIDE, FIDELITY_NOTES
 
 
@@ -418,9 +418,10 @@ def render():
     # browser, so the whole table ships rather than one selected figure.
     prices = json.dumps(HARDWARE, sort_keys=True)
     pricebases = json.dumps(PRICE_BASES, sort_keys=True)
+    chassisjs = json.dumps(CHASSIS, sort_keys=True)
 
     doc = TEMPLATE.format(now=now, now_iso=now_iso, usecases=usecases, bands=bands,
-                          prices=prices, pricebases=pricebases,
+                          prices=prices, pricebases=pricebases, chassis=chassisjs,
                           cards="".join(cards), index=index_rows(rows),
                           cross=cross_tabs(rows, releases))
     return doc.replace("/apple-llm-performance/card.jpg",
@@ -508,6 +509,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     font-variant-numeric: tabular-nums; }}
   .rig-cost strong {{ color: var(--ink); font-weight: 600; }}
   .rig-cost .rig-basis {{ color: var(--muted); }}
+  .rig-cost .rig-warn {{ color: var(--warn, var(--muted)); }}
   .rig-cost.unpriced {{ color: var(--muted); }}
   .rig-warn {{ margin: .5rem 0 0; font-size: .8rem; color: var(--critical);
     border-left: 2px solid var(--critical); padding-left: .6rem; }}
@@ -1002,6 +1004,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   // than showing a number nobody stood behind.
   var PRICES = {prices};
   var PRICE_BASES = {pricebases};
+  var CHASSIS = {chassis};
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -1110,6 +1113,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
               esc(PRICE_BASES[entry.basis] || entry.basis) + '</a>, ' +
               esc(niceDate(entry.as_of)) + '. Hardware only, before tax.</span>';
       if (entry.note) line += ' ' + esc(entry.note);
+      // Same chip, different box: the bandwidth is identical and the ceiling
+      // derived from it is identical, but only an actively cooled machine holds
+      // it over a generation that runs for minutes.
+      var warn = CHASSIS[entry.chassis];
+      if (warn) line += ' <span class="rig-warn">' + esc(warn) + '.</span>';
       cost.className = 'rig-cost';
       cost.innerHTML = line;
     }} else {{

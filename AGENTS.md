@@ -524,10 +524,21 @@ PRICES = {
 - **If a market-survey basis is ever used**, put the sample count and the
   observed range in the `note`. A median with no spread behind it is a guess
   wearing a number's clothes. See the eBay note below before adding one.
-- **Price the cheapest Mac that offers that chip at that memory**, on the
-  smallest storage that configuration can be ordered with, so the figure tracks
-  the memory rather than an SSD upgrade - and name the machine in `config`, since
-  a Mac mini and a MacBook Pro with the same chip are not the same purchase.
+- **Price the machine someone would actually run this workload on**, not
+  whatever chassis carries the chip most cheaply. Prefer a desktop - Mac Studio,
+  Mac mini, Mac Pro, iMac - and fall back to a laptop only when nothing else
+  offers that chip at that memory. Take the smallest storage that configuration
+  can be ordered with, so the figure tracks the memory rather than an SSD
+  upgrade, and name the machine in `config`.
+- **Say what kind of box it is** in `chassis`: `desktop`, `laptop`, or
+  `laptop_fanless`. This is not cosmetic. Decode is bandwidth-bound and bandwidth
+  is a property of the SoC, so an M5 in a MacBook Air and an M5 in a Mac mini
+  have the same memory bandwidth and the same derived ceiling - but inference is
+  a sustained GPU load measured in minutes, and only an actively cooled machine
+  holds its clocks that long. A fanless laptop shares the bandwidth and not the
+  cooling. The page prints a caveat for anything that is not a desktop, and the
+  throughput ceiling elsewhere on the page assumes sustained clocks it will not
+  reach.
 - **`as_of` is not optional.** A price with no date is a liability; the page
   prints the date next to the figure.
 - **Omit rather than guess.** A configuration with no defensible figure is left

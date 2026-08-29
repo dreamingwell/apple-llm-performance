@@ -16,6 +16,7 @@ PRICES = {
         "usd": 1699,
         "basis": "apple_new",
         "config": "Mac mini, 15-core CPU / 16-core GPU, 24 GB, 512 GB SSD",
+        "chassis": "desktop",
         "as_of": "2026-08-29",
         "note": "The cheapest way onto this chip. Apple sells M5 Pro in the Mac mini "
                 "and the MacBook Pro; the mini is the cheaper of the two and the only "
@@ -27,6 +28,7 @@ PRICES = {
         "usd": 2299,
         "basis": "apple_new",
         "config": "Mac mini, 15-core CPU / 16-core GPU, 48 GB, 512 GB SSD",
+        "chassis": "desktop",
         "as_of": "2026-08-29",
         "source": ("Apple Store configurator",
                    f"{_MINI}/m5-pro-chip-15-core-cpu-16-core-gpu-48gb-memory-512gb-storage"),
@@ -35,6 +37,7 @@ PRICES = {
         "usd": 2699,
         "basis": "apple_new",
         "config": "Mac mini, 15-core CPU / 16-core GPU, 64 GB, 512 GB SSD",
+        "chassis": "desktop",
         "as_of": "2026-08-29",
         "note": "$2,699 buys 64 GB behind 307 GB/s. The same 64 GB on an M5 Max is "
                 "$3,499 and doubles the bandwidth, which is what decides tokens per "

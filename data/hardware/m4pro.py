@@ -16,6 +16,7 @@ PRICES = {
         "usd": 1779,
         "basis": "apple_refurb",
         "config": "14-inch MacBook Pro Apple M4 Pro Chip with 12\u2011Core CPU and 16\u2011Core GPU - Silver, 512GB SSD",
+        "chassis": "laptop",
         "as_of": "2026-08-29",
         "source": ("Apple Certified Refurbished", "https://www.apple.com/shop/product/fx2e3ll/a/Refurbished-14-inch-MacBook-Pro-Apple-M4-Pro-Chip-with-12%E2%80%91Core-CPU-and-16%E2%80%91Core-GPU-Silver"),
     },

@@ -257,6 +257,11 @@ def check_hardware():
             if e.get("basis") not in R.PRICE_BASES:
                 err(at, f"basis {e.get('basis')!r} must be one of "
                         f"{sorted(R.PRICE_BASES)}")
+            if e.get("chassis") not in R.CHASSIS:
+                err(at, f"chassis {e.get('chassis')!r} must be one of "
+                        f"{sorted(R.CHASSIS)} - a price has to say what kind of "
+                        "machine it buys, because the same chip does not sustain "
+                        "the same throughput in a fanless laptop as in a Studio")
             if not e.get("config"):
                 err(at, "missing config; a price with no machine attached is not "
                         "checkable")

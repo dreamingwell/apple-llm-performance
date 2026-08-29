@@ -16,6 +16,7 @@ PRICES = {
         "usd": 5499,
         "basis": "apple_new",
         "config": "Mac Studio, 30-core CPU / 64-core GPU, 96 GB, 1 TB SSD",
+        "chassis": "desktop",
         "as_of": "2026-08-29",
         "source": ("Apple Store configurator",
                    f"{_STUDIO}/m5-ultra-chip-30-core-cpu-64-core-gpu-96gb-memory-1tb-storage"),
@@ -24,6 +25,7 @@ PRICES = {
         "usd": 9499,
         "basis": "apple_new",
         "config": "Mac Studio, 30-core CPU / 64-core GPU, 256 GB, 1 TB SSD",
+        "chassis": "desktop",
         "as_of": "2026-08-29",
         "note": "The 160 GB of memory over the base machine costs $4,000 on its own. "
                 "The 36-core CPU / 80-core GPU part is a further $1,300 and buys no memory.",
