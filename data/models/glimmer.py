@@ -11,6 +11,9 @@ LICENSE = 'Apache-2.0'
 CONTEXT = '131k'
 HF = 'meta-models/Muse-Glimmer-30B'
 PARAMS_B = 30
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# dense, so every parameter is read for every token.
+ACTIVE_PARAMS_B = 30
 
 NOTE = ("Meta's open agentic model, distilled from the closed Muse Spark - Spark itself is API-only, "
  'so this is the one you can actually run. Apache-2.0, with Meta publishing both the GGUF and '

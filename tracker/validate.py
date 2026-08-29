@@ -269,6 +269,16 @@ def check_speeds(m, w):
             if flag in s and not isinstance(s[flag], bool):
                 err(at, f"{flag} must be a bool")
 
+        build = s.get("build")
+        if build is not None and not (isinstance(build, str) and build.strip()):
+            err(at, "build must name the exact checkpoint, or be left out")
+        rung = next((r for rungs in (getattr(m, "LADDER", {}) or {}).values()
+                     for r in rungs if r.get("label") == build), None)
+        if rung is not None and throughput.rung_reason(rung):
+            # An expert-pruned build reads the same bytes per token however much
+            # of it was deleted, so there is no bound to check it against.
+            continue
+
         # A decode figure is only checkable against the arithmetic when the
         # record says which build and which context it was taken at. Without
         # those it still belongs on the page as someone's measurement, but it

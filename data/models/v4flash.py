@@ -11,6 +11,9 @@ LICENSE = 'MIT'
 CONTEXT = '1M'
 HF = 'deepseek-ai/DeepSeek-V4-Flash-0731'
 PARAMS_B = 284
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as 13B active of 284B total.
+ACTIVE_PARAMS_B = 13
 
 NOTE = ('The best shape on this page for Apple hardware: 13B active reads roughly 7.5 GB per token, '
  'so bandwidth stops being the constraint and a 256 GB machine finally does useful work. It is '
@@ -127,6 +130,30 @@ LADDER = {'ds4': [{'bpw': 4.64,
 KV = {'bytes_per_token': 49536,
  'max_context': 1048576,
  'derivation': '43 layers of DSA latent attention, 512 + 64 rope'}
+
+# Published throughput measurements: someone else's numbers, with whose they are.
+# Never crowd-sourced and never estimated - see notes/tokens-per-second.md for the
+# bar a record has to clear, and tracker/throughput.py for what the page derives.
+SPEEDS = [
+ {'engine': 'ds4', 'chip': 'm5max', 'mem_gb': 128,
+  'build': 'DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2',
+  'gb': 86.7, 'context': 2048, 'decode_tps': 39.4, 'prefill_tps': 790,
+  'who': 'ds4 speed-bench README',
+  'url': 'https://github.com/antirez/ds4/blob/main/speed-bench/README.md',
+  'note': 'The best-specified measurement on this page: a purpose-built engine on the model '
+          'it was written for, naming the machine, the build and the context. It lands at '
+          'about a quarter of the bandwidth bound, and the build label says why - routed '
+          'experts at 2 bits but attention projections, shared experts and output at Q8, so '
+          'the slice read per token is denser than the 2.4 bits per weight the file averages.'},
+ {'engine': 'ds4', 'chip': 'm5max', 'mem_gb': 128,
+  'build': 'DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2',
+  'gb': 86.7, 'context': 65536, 'decode_tps': 27.6,
+  'who': 'ds4 speed-bench README',
+  'url': 'https://github.com/antirez/ds4/blob/main/speed-bench/README.md',
+  'note': 'The same build and machine at 64k. Decode falls 30% while the arithmetic bound '
+          'falls 44%, because DSA attends over a selected subset of the cache rather than all '
+          'of it - so the ceiling degrades with context faster than the model does.'},
+]
 
 # Per-engine status. Keys must be engines whose modality matches MODALITY.
 ENGINES = {'vllmmetal': {'status': 'blocked',
