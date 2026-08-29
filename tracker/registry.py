@@ -130,6 +130,18 @@ MATRIX = {
 #               entry's `note` - a median with no spread behind it is a guess
 #               wearing a number's clothes. Currently unused: the API that
 #               serves sold prices is access-restricted. See tools/ebay_prices.py.
+# The chassis a price describes. Decode is bandwidth-bound and bandwidth is a
+# property of the SoC, so the derived ceiling is the same in every box - but only
+# an actively cooled one holds it. Inference is a sustained GPU load measured in
+# minutes, which is exactly the regime where a thin laptop clocks down. The page
+# says which kind of machine the money buys.
+CHASSIS = {
+    "desktop": "",
+    "laptop": "laptop; sustained throughput will fall below a desktop with the same chip",
+    "laptop_fanless": "fanless laptop; it shares the bandwidth but not the cooling, "
+                      "so sustained throughput will fall furthest below a desktop",
+}
+
 PRICE_BASES = {
     "apple_new": "Apple list price",
     "apple_refurb": "Apple refurbished",
