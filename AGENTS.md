@@ -363,6 +363,26 @@ it; committing it would conflict on every parallel PR.
 
 **Do not hand-edit `LADDER`.** Run `tracker/measure.py`.
 
+**The browser JavaScript is the least-defended code here.** It is ~600 lines
+inside a Python string, nothing in CI executes it, and its failure mode is
+silent: a handler that throws does not blank the page, it just stops responding
+to one control. A shipped bug where selecting an unpriced memory size threw
+inside the picker - so the "What for?" selector quietly stopped reordering the
+table - was found by a reader, not by us.
+
+Two cheap defences, in order of value:
+
+1. **Run `tools/smoke.js` after any change to the template's JavaScript.** It
+   drives every chip x memory x unit-count x use-case combination in a real
+   browser - 1,300-odd of them - and fails on a single thrown error. It needs a
+   browser, which is why it is not in `validate.py`.
+2. **Never use `var`.** That bug was `var warn = ...` inside an `if` block,
+   shadowing an outer `warn` that held a DOM element, because `var` is
+   function-scoped and hoists. `let` would have confined it to the block and the
+   bug could not have existed. A type checker catches it too - TypeScript rejects
+   a second declaration of the same name at a different type - but `let` is free
+   and needs no toolchain.
+
 **Escaping traps in `render_status.py`.** The HTML lives in a `str.format`
 template, so every literal `{` or `}` in CSS or JS must be doubled. And never
 write `\"` inside it — the escape is consumed twice, once by the Python string

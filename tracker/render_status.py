@@ -509,7 +509,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     font-variant-numeric: tabular-nums; }}
   .rig-cost strong {{ color: var(--ink); font-weight: 600; }}
   .rig-cost .rig-basis {{ color: var(--muted); }}
-  .rig-cost .rig-warn {{ color: var(--warn, var(--muted)); }}
+  .rig-cost .rig-chassis {{ color: var(--warn, var(--muted)); }}
   .rig-cost.unpriced {{ color: var(--muted); }}
   .rig-warn {{ margin: .5rem 0 0; font-size: .8rem; color: var(--critical);
     border-left: 2px solid var(--critical); padding-left: .6rem; }}
@@ -1116,8 +1116,10 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       // Same chip, different box: the bandwidth is identical and the ceiling
       // derived from it is identical, but only an actively cooled machine holds
       // it over a generation that runs for minutes.
-      var warn = CHASSIS[entry.chassis];
-      if (warn) line += ' <span class="rig-warn">' + esc(warn) + '.</span>';
+      // NB: not named `warn` - that is the clustering-warning element in this
+      // same function scope, and `var` would hoist over it.
+      var chassisNote = CHASSIS[entry.chassis];
+      if (chassisNote) line += ' <span class="rig-chassis">' + esc(chassisNote) + '.</span>';
       cost.className = 'rig-cost';
       cost.innerHTML = line;
     }} else {{
