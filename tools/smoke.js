@@ -26,7 +26,15 @@ const FILE = path.resolve(process.argv[2] || 'docs/index.html');
     console.error(`no such file: ${FILE} - run tracker/build.py first`);
     process.exit(1);
   }
-  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
+  // CI has Playwright's own chromium; a developer machine usually has Chrome
+  // installed and no downloaded browser. Try the bundled one first so CI is the
+  // predictable path, and fall back rather than making everyone download 150 MB.
+  let browser;
+  try {
+    browser = await chromium.launch({ headless: true });
+  } catch (e) {
+    browser = await chromium.launch({ headless: true, channel: 'chrome' });
+  }
   const failures = [];
   let checks = 0;
   try {
