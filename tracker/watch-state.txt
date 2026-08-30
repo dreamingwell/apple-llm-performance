@@ -58,7 +58,7 @@ jundot/omlx#3117|open|Qwen3.8 with the Neural Engine enabled produces zero token
 jundot/omlx#3121|closed|DeepSeek V4 Flash decodes at 4-17 tok/s on an M5 Max from residency thrash
 jundot/omlx#3293|open|Qwen4-Exp sparse-attention indexer fails under multi-row batching
 jundot/omlx#3294|open|Qwen4-Exp QSA cache: prefix blocks unusable across text and MRoPE turns
-jundot/omlx#3300|open|Loading another Qwen3.5-family VLM permanently breaks qwen4_exp Lightning MTP
+jundot/omlx#3300|closed|Loading another Qwen3.5-family VLM permanently breaks qwen4_exp Lightning MTP
 jundot/omlx#3303|open|v0.6.4 qwen4-exp performance benchmark returns N/A for some prompt sizes
 lmstudio-ai/lmstudio-bug-tracker#2240|open|Too much memory allocated
 lmstudio-ai/lmstudio-bug-tracker#2243|open|Native MLX tool calling: parser coverage requests
@@ -123,6 +123,6 @@ waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tok
 ggml-org/llama.cpp@release|v0.3.0|latest release
 ollama/ollama@release|v0.33.2|latest release
 jundot/omlx@release|v0.6.4|latest release
-vllm-project/vllm-metal@release|v0.3.0.dev20260829020049|latest release
+vllm-project/vllm-metal@release|v0.3.0.dev20260830051249|latest release
 waybarrios/vllm-mlx@release|v0.4.1|latest release
 ml-explore/mlx-lm@release|v0.31.3|latest release
