@@ -20,7 +20,9 @@ NOTE = ('Qwen calls this an experimental preview of the architecture behind Qwen
  'checkpoint is 180B on disk against a stated 125B. llama.cpp merged the `qwen4exp` '
  'architecture on 2026-08-27, so this is runnable on Apple silicon for the first time - '
  'from a master build, not a release, and the GGUF ladder filled out from a single 1-bit '
- 'tier to Q4_K_XL within days. Every MLX engine here is still waiting on mlx-lm.')
+ 'tier to Q4_K_XL within days. oMLX went further and vendored its own qwen4_exp '
+ 'support in v0.6.3, so the fastest published numbers on Apple silicon are now on '
+ 'MLX rather than GGUF - with the concurrency caveats on that tab.')
 
 SOURCES = [('Model card with full tables', 'https://huggingface.co/Qwen/Qwen3.8-Flash-Next'),
  ('Qwen blog', 'https://qwen.ai/blog?id=qwen3.8-flash-next')]
@@ -35,10 +37,14 @@ SCORES = {'agentic': [('Toolathlon Verified', '73.5'),
             ('DeepSWE 1.1', '58.7')]}
 
 # Which engine the card opens on and the glance row names.
-BEST_ENGINE = 'llamacpp'
+BEST_ENGINE = 'omlx'
 
 # Repositories tracker/measure.py harvests for this model.
-QUANT_SOURCES = {'gguf': ['unsloth/Qwen3.8-Flash-Next-GGUF']}
+QUANT_SOURCES = {'gguf': ['unsloth/Qwen3.8-Flash-Next-GGUF'],
+                 'mlx': ['Jundot/Qwen3.8-Flash-Next-oQ4e-mtp',
+                         'Vontra/Qwen3.8-Flash-Next-MLX-4bit',
+                         'Vontra/Qwen3.8-Flash-Next-MLX-oQ4-MTP',
+                         'Sawfwair/Qwen3.8-Flash-Next-MLX-Mixed-2bit']}
 
 # Measured by tracker/measure.py - do not hand-edit. gb is summed repo bytes;
 # bpw is gb*8/PARAMS_B and is omitted for pruned or native-precision builds.
@@ -86,7 +92,22 @@ LADDER = {'gguf': [{'label': 'Qwen3.8-Flash-Next-BF16',
            'repo': 'unsloth/Qwen3.8-Flash-Next-GGUF',
            'gb': 74.54,
            'kind': 'quant',
-           'bpw': 3.31}]}
+           'bpw': 3.31}],
+ 'mlx': [{'label': 'Qwen3.8-Flash-Next-MLX-oQ4-MTP',
+          'repo': 'Vontra/Qwen3.8-Flash-Next-MLX-oQ4-MTP',
+          'gb': 113.33,
+          'kind': 'quant',
+          'bpw': 5.04},
+         {'label': 'Qwen3.8-Flash-Next-oQ4e-mtp',
+          'repo': 'Jundot/Qwen3.8-Flash-Next-oQ4e-mtp',
+          'gb': 106.29,
+          'kind': 'quant',
+          'bpw': 4.72},
+         {'label': 'Qwen3.8-Flash-Next-MLX-Mixed-2bit',
+          'repo': 'Sawfwair/Qwen3.8-Flash-Next-MLX-Mixed-2bit',
+          'gb': 73.1,
+          'kind': 'quant',
+          'bpw': 3.25}]}
 
 # Bytes of KV per token at fp16, the context ceiling, and how it was derived.
 # None for models with no growing cache (diffusion, TTS).
@@ -113,10 +134,21 @@ ENGINES = {'llamacpp': {'status': 'degraded',
               'label': 'Blocked',
               'note': "Nothing curated in either format. Its llama.cpp engine will pick this up once LM Studio ships a build from master; its MLX engine stays blocked until mlx-lm merges a qwen4_exp class.",
               'issues': []},
- 'omlx': {'status': 'blocked',
-          'label': 'Blocked',
-          'note': "Serves mlx-lm, which has no qwen4 model class yet. oMLX does ship native Qwen3.5 kernels, which is a reasonable signal that it would pick this up once upstream does.",
-              'issues': ['ml-explore/mlx-lm#1788']},
+ 'omlx': {'status': 'degraded',
+          'label': 'Fastest, with caveats',
+          'note': 'oMLX added first-class `qwen4_exp` support in v0.6.3 on 2026-08-27 and '
+                   'improved it again in v0.6.4 two days later, with its own vendored '
+                   'implementation rather than waiting for mlx-lm - the same move it made for '
+                   'DeepSeek V4. The maintainer publishes measured numbers on an M3 Ultra 512 GB '
+                   'with the first-party `Jundot/Qwen3.8-Flash-Next-oQ4e-mtp` build: 1,061 tok/s '
+                   'prefill and 53.6 tok/s generation at 4k, still 1,114 and 45.9 at 32k, with '
+                   'Lightning MTP worth 2.3x to 2.6x on generation. That makes this the fastest '
+                   'published path to this model on Apple silicon by a wide margin. Read the '
+                   'defects before serving it, though: two concurrent requests fail outright on '
+                   'the sparse-attention indexer, and QSA prefix-cache reuse is broken across '
+                   'turns, so a single-user session is the configuration that actually works '
+                   'today. Text and image input; video is unsupported.',
+              'issues': ['jundot/omlx#3293', 'jundot/omlx#3294', 'jundot/omlx#3300', 'jundot/omlx#3303']},
  'vllmmlx': {'status': 'blocked',
              'label': 'Blocked',
              'note': "Wraps mlx-lm, which has no qwen4 class. Nothing to wrap until that PR merges.",

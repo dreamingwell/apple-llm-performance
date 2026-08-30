@@ -6,7 +6,29 @@ One record, one file. See AGENTS.md for the schema and the rules.
 REPO = 'jundot/omlx'
 
 # number -> severity / headline / why it matters.
-ISSUES = {1195: {'severity': 'low',
+ISSUES = {3293: {'severity': 'high',
+        'headline': 'Qwen4-Exp sparse-attention indexer fails under multi-row batching',
+        'why': 'Any two concurrent requests against a qwen4_exp model fail with a shape error '
+               'from the indexer. Single requests are fine, so it only appears once continuous '
+               'batching actually forms a multi-row batch - which is exactly the configuration '
+               'anyone serving this model would run.'},
+ 3294: {'severity': 'high',
+        'headline': 'Qwen4-Exp QSA cache: prefix blocks unusable across text and MRoPE turns',
+        'why': 'Four defects in the QSA cache handling vendored in for Qwen4-Exp between '
+               'v0.6.3rc3 and v0.6.3. Prefix cache reuse is the difference between a fast second '
+               'turn and paying full prefill again, so this costs exactly what the engine is '
+               'fastest at.'},
+ 3300: {'severity': 'medium',
+        'headline': 'Loading another Qwen3.5-family VLM permanently breaks qwen4_exp Lightning MTP',
+        'why': 'On a single-process server, loading any other Qwen3.5/3.6/3.8 VLM text model kills '
+               'Lightning MTP for an already-working Flash-Next until restart. MTP is worth 2.3x '
+               'to 2.6x on generation here, so losing it silently is a large regression.'},
+ 3303: {'severity': 'low',
+        'headline': 'v0.6.4 qwen4-exp performance benchmark returns N/A for some prompt sizes',
+        'why': 'The built-in benchmark intermittently reports nothing at pp16384. A reporting '
+               'defect rather than an inference one, but it undercuts the numbers you would use '
+               'to size a machine.'},
+ 1195: {'severity': 'low',
         'headline': 'MTP speculative decoding not yet supported for Nemotron-H',
         'why': 'A feature request. Nemotron 3.5 Lightning ships MTP weights, so this is speed '
                'left on the table rather than anything broken.'},
