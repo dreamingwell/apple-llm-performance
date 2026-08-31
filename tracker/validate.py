@@ -11,6 +11,7 @@ This is the contract an agent has to satisfy. If a rule here feels wrong, change
 the rule in a separate commit from the data, so a reviewer can see which of the
 two moved.
 """
+import datetime
 import os
 import re
 import sys
@@ -29,6 +30,7 @@ SEVERITIES = {"critical", "high", "medium", "low"}
 KINDS = {"quant", "pruned", "native"}
 ID_RE = re.compile(r"^[a-z][a-z0-9]*$")
 ISSUE_RE = re.compile(r"^[\w.-]+/[\w.-]+#\d+$")
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def err(where, msg):
@@ -184,6 +186,115 @@ def check_models():
                 err(w, "a KV figure needs max_context to size a stream against")
 
 
+# ------------------------------------------------------------------ hardware
+# The picker's chip table lives in the page's JavaScript, which is the only
+# place that knows which memory sizes a chip is actually offered in. A price
+# record for a chip or a memory size the picker does not offer would never
+# render, so it is read back out here rather than duplicated into data/.
+MACHINES_RE = re.compile(
+    r"""(\w+):\s*\{\{[^\n]*?label:\s*"([^"]+)"[^\n]*?mem:\s*\[([^\]]*)\]""")
+
+
+def picker_machines():
+    """chip id -> (label, {memory sizes}) as the page's picker offers them."""
+    src = open(os.path.join(HERE, "render_status.py"), encoding="utf-8").read()
+    start = src.find("var MACHINES = {{")
+    end = src.find("}};", start)
+    if start == -1 or end == -1:
+        return None
+    out = {}
+    for cid, label, mems in MACHINES_RE.findall(src[start:end]):
+        out[cid] = (label, {int(g) for g in mems.replace(" ", "").split(",") if g})
+    return out or None
+
+
+def check_hardware():
+    machines = picker_machines()
+    if machines is None:
+        err("tracker/validate.py", "could not read the MACHINES table out of "
+                                   "render_status.py; the picker's chip table moved and "
+                                   "picker_machines() needs updating")
+        return
+
+    priced = set()
+    for m in R.HARDWARE_MODULES:
+        w = m.__source_file__
+        if not ID_RE.match(m.ID):
+            err(w, f"ID {m.ID!r} must be lowercase alphanumeric")
+        if os.path.basename(w) != f"{m.ID}.py":
+            err(w, f"filename must match ID ({m.ID}.py)")
+        if m.ID not in machines:
+            err(w, f"{m.ID!r} is not a chip the picker offers; a price for a machine "
+                   "nobody can select would never render")
+            continue
+        label, mems = machines[m.ID]
+        if m.LABEL != label:
+            err(w, f"LABEL {m.LABEL!r} does not match the picker's {label!r}")
+
+        prices = getattr(m, "PRICES", {})
+        unpriced = getattr(m, "UNPRICED", {})
+        if not prices and not unpriced:
+            err(w, "neither PRICES nor UNPRICED; an empty record says nothing")
+        for gb in sorted(set(prices) & set(unpriced)):
+            err(w, f"{gb} GB is both priced and listed as unpriced")
+        for gb, why in unpriced.items():
+            if gb not in mems:
+                err(w, f"UNPRICED lists {gb} GB, which the picker does not offer for "
+                       f"{m.ID}")
+            elif not why:
+                err(w, f"UNPRICED[{gb}] must say why there is no figure")
+
+        for gb, e in prices.items():
+            at = f"{w} [{gb} GB]"
+            if gb not in mems:
+                err(at, f"the picker does not offer {gb} GB on {m.ID}; "
+                        f"it offers {sorted(mems)}")
+            usd = e.get("usd")
+            if not isinstance(usd, int) or isinstance(usd, bool) or usd <= 0:
+                err(at, "usd must be a positive whole number of dollars")
+            elif usd > 100000:
+                err(at, f"usd {usd} is beyond anything Apple sells; check the figure")
+            if e.get("basis") not in R.PRICE_BASES:
+                err(at, f"basis {e.get('basis')!r} must be one of "
+                        f"{sorted(R.PRICE_BASES)}")
+            if e.get("chassis") not in R.CHASSIS:
+                err(at, f"chassis {e.get('chassis')!r} must be one of "
+                        f"{sorted(R.CHASSIS)} - a price has to say what kind of "
+                        "machine it buys, because the same chip does not sustain "
+                        "the same throughput in a fanless laptop as in a Studio")
+            if not e.get("config"):
+                err(at, "missing config; a price with no machine attached is not "
+                        "checkable")
+            as_of = e.get("as_of", "")
+            if not DATE_RE.match(str(as_of)):
+                err(at, f"as_of {as_of!r} must be YYYY-MM-DD; a price with no date is a "
+                        "liability")
+            else:
+                try:
+                    when = datetime.date.fromisoformat(as_of)
+                except ValueError:
+                    err(at, f"as_of {as_of!r} is not a real date")
+                else:
+                    if when > datetime.date.today():
+                        err(at, f"as_of {as_of} is in the future")
+            src = e.get("source")
+            if not src or len(src) != 2 or not str(src[1]).startswith("http"):
+                err(at, f"malformed source {src!r}; expected (label, url)")
+            if gb in mems:
+                priced.add((m.ID, gb))
+
+    for cid, (label, mems) in machines.items():
+        if not any(c == cid for c, _ in priced):
+            warn("data/hardware", f"no price on record for any {label} configuration")
+            continue
+        missing = sorted(g for g in mems if (cid, g) not in priced)
+        for gb in missing:
+            mod = next((m for m in R.HARDWARE_MODULES if m.ID == cid), None)
+            if mod is not None and gb in getattr(mod, "UNPRICED", {}):
+                continue
+            warn(f"data/hardware/{cid}.py", f"no price for the {gb} GB {label}")
+
+
 # ----------------------------------------------------------------- use cases
 def check_use_cases():
     seen_order = {}
@@ -312,6 +423,7 @@ def main():
     check_engines()
     check_models()
     check_use_cases()
+    check_hardware()
     check_issues()
     check_global()
     check_no_shadowing()
@@ -320,8 +432,10 @@ def main():
         print(f"warning: {wmsg}")
     for e in ERRORS:
         print(f"error:   {e}")
+    priced = sum(len(h["prices"]) for h in R.HARDWARE.values())
     print(f"\n{len(R.MODEL_MODULES)} models, {len(R.ENGINE_MODULES)} engines, "
-          f"{len(R.USE_CASE_MODULES)} use cases, {len(R.EMETA)} tracked issues")
+          f"{len(R.USE_CASE_MODULES)} use cases, {len(R.EMETA)} tracked issues, "
+          f"{priced} priced configurations")
     print(f"{len(ERRORS)} errors, {len(WARNINGS)} warnings")
     return 1 if ERRORS else 0
 
