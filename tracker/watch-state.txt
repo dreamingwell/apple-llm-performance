@@ -108,7 +108,7 @@ waybarrios/vllm-mlx#627|open|memory_budget_gb never reconciled with the Metal al
 waybarrios/vllm-mlx#641|open|MemoryAwarePrefixCache stores caches by reference
 waybarrios/vllm-mlx#658|open|Validate Qwen MoE MTP conversion artifacts before decode
 waybarrios/vllm-mlx#668|open|DeepSeek V4 Flash unsupported
-waybarrios/vllm-mlx#672|open|Streaming tool calls can end without finish_reason
+waybarrios/vllm-mlx#672|closed|Streaming tool calls can end without finish_reason
 waybarrios/vllm-mlx#678|open|Prefix cache trims RotatingKVCache past its window
 waybarrios/vllm-mlx#682|open|Closing a stream leaves the inner generator and request state open
 waybarrios/vllm-mlx#689|open|Completion cache can store desynchronized rotating KV state
