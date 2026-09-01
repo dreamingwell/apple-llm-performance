@@ -123,6 +123,6 @@ waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tok
 ggml-org/llama.cpp@release|v0.3.0|latest release
 ollama/ollama@release|v0.33.2|latest release
 jundot/omlx@release|v0.6.4|latest release
-vllm-project/vllm-metal@release|v0.3.0.dev20260830051249|latest release
+vllm-project/vllm-metal@release|v0.28.0|latest release
 waybarrios/vllm-mlx@release|v0.4.1|latest release
 ml-explore/mlx-lm@release|v0.31.3|latest release
