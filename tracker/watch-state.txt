@@ -56,7 +56,7 @@ jundot/omlx#2972|closed|Process-global Qwen patches contaminate a resident engin
 jundot/omlx#3006|open|GLM-5.2 prefill far below published figures on an M3 Ultra 512 GB
 jundot/omlx#3117|open|Qwen3.8 with the Neural Engine enabled produces zero tokens
 jundot/omlx#3121|closed|DeepSeek V4 Flash decodes at 4-17 tok/s on an M5 Max from residency thrash
-jundot/omlx#3293|open|Qwen4-Exp sparse-attention indexer fails under multi-row batching
+jundot/omlx#3293|closed|Qwen4-Exp sparse-attention indexer fails under multi-row batching
 jundot/omlx#3294|open|Qwen4-Exp QSA cache: prefix blocks unusable across text and MRoPE turns
 jundot/omlx#3300|closed|Loading another Qwen3.5-family VLM permanently breaks qwen4_exp Lightning MTP
 jundot/omlx#3303|open|v0.6.4 qwen4-exp performance benchmark returns N/A for some prompt sizes
