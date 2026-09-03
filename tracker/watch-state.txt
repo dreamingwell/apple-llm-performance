@@ -121,7 +121,7 @@ waybarrios/vllm-mlx#730|open|Prefix-cache reuse silently disabled for hybrid arc
 waybarrios/vllm-mlx#731|open|PR: make prefix-cache rewind gate aware of non-KV hybrid leaves
 waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tokens_details.cached_tokens
 ggml-org/llama.cpp@release|v0.3.0|latest release
-ollama/ollama@release|v0.33.2|latest release
+ollama/ollama@release|v0.33.3|latest release
 jundot/omlx@release|v0.6.4|latest release
 vllm-project/vllm-metal@release|v0.28.0|latest release
 waybarrios/vllm-mlx@release|v0.4.1|latest release
