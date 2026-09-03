@@ -9,7 +9,7 @@ antirez/ds4#851|open|DeepSeek V4 Flash vision is not supported
 antirez/ds4#853|open|BPE merge loop is O(n squared): large prompts take minutes to tokenize
 antirez/ds4#860|open|ds4 crashes the machine on launch for one reporter
 ggml-org/llama.cpp#25522|open|Gemma 4 crashes with MTP speculative decoding
-ggml-org/llama.cpp#25739|open|Google's own Gemma 4 QAT GGUF aborts at vocab load
+ggml-org/llama.cpp#25739|closed|Google's own Gemma 4 QAT GGUF aborts at vocab load
 ggml-org/llama.cpp#25751|open|Sliding-window attention on Gemma 4 forgets key details
 ggml-org/llama.cpp#25967|open|Duplicate GBNF rules with a large tool list break grammar parsing
 ggml-org/llama.cpp#26365|open|Kimi K3 full-size vision lives on a branch, not master
