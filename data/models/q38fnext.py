@@ -11,6 +11,9 @@ LICENSE = 'Qwen Community 1.0'
 CONTEXT = '262k (1M on the hosted version)'
 HF = 'Qwen/Qwen3.8-Flash-Next'
 PARAMS_B = 180
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as 6B active; the 51B n-gram table is looked up, not streamed.
+ACTIVE_PARAMS_B = 6
 
 NOTE = ('Qwen calls this an experimental preview of the architecture behind Qwen4, and the numbers '
  'are the strongest per active parameter on this page: 6B active beats Qwen3.8-27B on every '

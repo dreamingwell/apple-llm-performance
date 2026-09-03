@@ -20,6 +20,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 import registry as R  # noqa: E402
+import throughput  # noqa: E402
 
 ERRORS = []
 WARNINGS = []
@@ -183,6 +184,129 @@ def check_models():
             if not kv["max_context"]:
                 err(w, "a KV figure needs max_context to size a stream against")
 
+        check_active_params(m, w)
+        check_speeds(m, w)
+
+
+# Parameters actually read per decoded token. It is what the decode ceiling
+# divides bandwidth by, so a wrong figure here moves every throughput number on
+# the card. None is a legitimate value - it means the lab has not published one,
+# and the page says so instead of showing a ceiling derived from a guess.
+def check_active_params(m, w):
+    if m.MODALITY != "text":
+        if getattr(m, "ACTIVE_PARAMS_B", None) is not None:
+            err(w, "ACTIVE_PARAMS_B is a decode-time figure; only text models have one")
+        return
+    if not hasattr(m, "ACTIVE_PARAMS_B"):
+        err(w, "text models must declare ACTIVE_PARAMS_B - the parameters read per "
+               "decoded token, or None if the lab has not published a count")
+        return
+    a = m.ACTIVE_PARAMS_B
+    if a is None:
+        warn(w, "ACTIVE_PARAMS_B is None, so no decode ceiling can be shown for this model")
+        return
+    if not isinstance(a, (int, float)) or a <= 0:
+        err(w, f"ACTIVE_PARAMS_B {a!r} must be a positive count in billions")
+    elif m.PARAMS_B and a > m.PARAMS_B:
+        err(w, f"ACTIVE_PARAMS_B {a} exceeds PARAMS_B {m.PARAMS_B}; active is a subset")
+
+
+SPEED_KINDS = {"decode", "prefill"}
+
+
+# Published throughput measurements. The bar is deliberately high, because the
+# reason this page carried no tok/s figures for so long is that self-reported
+# ones were unattributable and unreproducible: a number with no chip, no build
+# and no context is not evidence of anything. Every record here names whose
+# measurement it is and links to it.
+def check_speeds(m, w):
+    speeds = getattr(m, "SPEEDS", None)
+    if speeds is None:
+        return
+    if not isinstance(speeds, (list, tuple)):
+        err(w, "SPEEDS must be a list of measurement records")
+        return
+    kv_bpt = (getattr(m, "KV", None) or {}).get("bytes_per_token")
+    for i, s in enumerate(speeds):
+        at = f"{w} [SPEEDS {i}]"
+        if not isinstance(s, dict):
+            err(at, "each SPEEDS entry must be a dict")
+            continue
+        if m.MODALITY != "text":
+            err(at, "SPEEDS records tokens per second; only text models have them")
+
+        eid = s.get("engine")
+        if eid not in R.ENGINE_BY_ID:
+            err(at, f"unknown engine {eid!r}")
+        elif eid not in getattr(m, "ENGINES", {}):
+            err(at, f"engine {eid!r} has no cell in ENGINES for this model")
+
+        chip = s.get("chip")
+        if chip not in R.MACHINES:
+            err(at, f"unknown chip {chip!r}; it must be a key in data/machines.py")
+        elif s.get("mem_gb") is not None and s["mem_gb"] not in R.MACHINES[chip]["mem"]:
+            err(at, f"{chip} was never sold with {s['mem_gb']} GB")
+
+        if not s.get("who"):
+            err(at, "missing 'who': a measurement with no measurer is a rumour")
+        if not str(s.get("url", "")).startswith("http"):
+            err(at, "missing or malformed 'url'; the measurement has to be followable")
+
+        got = [k for k in SPEED_KINDS if s.get(k + "_tps") is not None]
+        if not got:
+            err(at, "a record needs decode_tps or prefill_tps, or it says nothing")
+        for k in got:
+            v = s[k + "_tps"]
+            if not isinstance(v, (int, float)) or v <= 0:
+                err(at, f"{k}_tps {v!r} must be a positive tokens/second figure")
+
+        for k in ("context", "gb"):
+            v = s.get(k)
+            if v is not None and (not isinstance(v, (int, float)) or v <= 0):
+                err(at, f"{k} {v!r} must be positive")
+
+        for flag in ("speculative", "batched"):
+            if flag in s and not isinstance(s[flag], bool):
+                err(at, f"{flag} must be a bool")
+
+        build = s.get("build")
+        if build is not None and not (isinstance(build, str) and build.strip()):
+            err(at, "build must name the exact checkpoint, or be left out")
+        rung = next((r for rungs in (getattr(m, "LADDER", {}) or {}).values()
+                     for r in rungs if r.get("label") == build), None)
+        if rung is not None and throughput.rung_reason(rung):
+            # An expert-pruned build reads the same bytes per token however much
+            # of it was deleted, so there is no bound to check it against.
+            continue
+
+        # A decode figure is only checkable against the arithmetic when the
+        # record says which build and which context it was taken at. Without
+        # those it still belongs on the page as someone's measurement, but it
+        # cannot be compared with anything - which is the whole complaint
+        # against self-reported numbers, so say it out loud.
+        if s.get("decode_tps") is not None and not (s.get("gb") and s.get("context")):
+            warn(at, "decode figure without both 'gb' and 'context'; it cannot be checked "
+                     "against the ceiling or compared with any other measurement")
+            continue
+        if s.get("decode_tps") is None or chip not in R.MACHINES:
+            continue
+
+        # Physical plausibility. Above the bandwidth bound the measurement is
+        # either mistyped, taken with speculative decoding, or taken batched -
+        # and the record has to say which.
+        cap = throughput.ceiling_tps(R.MACHINES[chip]["bw"], s["gb"],
+                                     getattr(m, "ACTIVE_PARAMS_B", None),
+                                     getattr(m, "PARAMS_B", None),
+                                     kv_bpt, s["context"])
+        if cap is None:
+            continue
+        if s["decode_tps"] > cap and not (s.get("speculative") or s.get("batched")):
+            err(at, f"{s['decode_tps']} tok/s exceeds the {cap:.1f} tok/s the "
+                    f"{chip} memory bandwidth allows for a {s['gb']} GB build at "
+                    f"{s['context']} context. Either a figure is wrong, or the run used "
+                    "speculative decoding or batching - set speculative/batched and say so "
+                    "in the note.")
+
 
 # ----------------------------------------------------------------- use cases
 def check_use_cases():
@@ -284,6 +408,34 @@ def check_global():
             warn("data/use_cases", f"no use case with modality {mod!r}")
 
 
+# ---------------------------------------------------------------- machines
+# The picker's chip table is also the divisor in every decode ceiling, so a
+# typo in a bandwidth figure is not cosmetic.
+def check_machines():
+    w = "data/machines.py"
+    for gen in R.GENS:
+        if not any(mc["gen"] == gen for mc in R.MACHINES.values()):
+            err(w, f"GENS lists {gen!r} but no chip belongs to it")
+    for key, mc in sorted(R.MACHINES.items()):
+        at = f"{w} [{key}]"
+        if not ID_RE.match(key):
+            err(at, "chip keys are lowercase alphanumeric; they appear in the ?chip= query")
+        for field in ("label", "gen", "tb"):
+            if not mc.get(field):
+                err(at, f"missing {field}")
+        if mc.get("gen") not in R.GENS:
+            err(at, f"gen {mc.get('gen')!r} is not in GENS, so the chip would never be listed")
+        if not isinstance(mc.get("bw"), (int, float)) or mc["bw"] <= 0:
+            err(at, "bw must be peak memory bandwidth in GB/s; it divides every decode ceiling")
+        mem = mc.get("mem")
+        if not mem or sorted(mem) != list(mem) or len(set(mem)) != len(mem):
+            err(at, "mem must be the ascending, deduplicated list of memory options")
+        if not isinstance(mc.get("tb5"), bool):
+            err(at, "tb5 must be a bool; it decides whether clustering is warned about")
+        if not isinstance(mc.get("ports"), int) or mc["ports"] < 1:
+            err(at, "ports must be the Thunderbolt port count")
+
+
 # --------------------------------------------------------------- code shape
 # The renderer imports its data from the registry. If it also defines one of
 # those names at module level, the local definition silently wins and the data/
@@ -313,6 +465,7 @@ def main():
     check_models()
     check_use_cases()
     check_issues()
+    check_machines()
     check_global()
     check_no_shadowing()
 

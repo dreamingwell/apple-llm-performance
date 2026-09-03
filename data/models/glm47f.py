@@ -11,6 +11,9 @@ LICENSE = 'MIT'
 CONTEXT = '131k'
 HF = 'zai-org/GLM-4.7-Flash'
 PARAMS_B = 31
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as ~3B active of 31B total.
+ACTIVE_PARAMS_B = 3
 
 NOTE = ('3B active out of 31B, so decode is bandwidth-cheap and KV space is abundant - the opposite '
  'tradeoff to the large GLM tiers, on the same MIT license. The natural cheap tier to route '

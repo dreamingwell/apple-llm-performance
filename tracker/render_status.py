@@ -6,9 +6,10 @@ import os, re, html, datetime, hashlib, json
 # split so two agents editing two different models never touch the same file.
 from registry import (ENGINES, ENGINE_BY_ID, EMETA, MATRIX, BEST, engine_order,
                       repo_label, CROSS_BY_ENGINE, RELEASE_FEEDS, FAM,
-                      LADDERS, KV, PARAMS, USE_CASES, MODELS, modality, SCLASS,
-                      ENGINE_PROSE_LINKS, PR_KEYS)
+                      LADDERS, KV, PARAMS, ACTIVE, SPEEDS, USE_CASES, MODELS,
+                      MACHINES, GENS, modality, SCLASS, ENGINE_PROSE_LINKS, PR_KEYS)
 from bands import BANDS, FAM_OVERRIDE, FIDELITY_NOTES
+import throughput
 
 
 def card_name():
@@ -166,7 +167,11 @@ def model_payload(m):
     bpt, maxctx, why = KV.get(m["id"], (None, None, ""))
     return {"engines": engine_payload(m),
             "kv": {"bpt": bpt, "maxctx": maxctx, "why": why},
-            "params": PARAMS.get(m["id"])}
+            "params": PARAMS.get(m["id"]),
+            # Parameters read per decoded token. The browser divides the chip's
+            # bandwidth by these bytes to get the decode ceiling; null here means
+            # no published count, and the page says so instead of guessing.
+            "active": ACTIVE.get(m["id"])}
 
 
 def index_rows(rows):
@@ -187,6 +192,7 @@ def index_rows(rows):
           <span class="ix-status v-{SCLASS[c['s']]}">{html.escape(c['label'])}</span>
           <span class="ix-eng">{html.escape(ENGINE_BY_ID[eid]['name'])}</span>
           <span class="ix-size">{gb:.0f} GB</span>
+          <span class="ix-tps"></span>
           <span class="ix-meta fit"></span>
         </a>""")
     return "".join(out)
@@ -316,8 +322,9 @@ def engine_tabs(m, rows):
           {engine_build(mid, eid)}
           <div class="eng-fit s-{sc}"{w_attr}></div>
           <p class="fidelity" hidden></p>
+          <div class="tput" hidden></div>
           <div class="ctx-wrap" hidden><span class="ctx-k">Concurrent contexts in the KV headroom</span>
-            <table class="ctx"><thead><tr><th>Context each</th><th>KV per stream</th><th>Streams</th></tr></thead>
+            <table class="ctx"><thead><tr><th>Context each</th><th>KV per stream</th><th>Decode ceiling</th><th>Streams</th></tr></thead>
             <tbody></tbody></table>
             <p class="ctx-why"></p></div>"""
         panes.append(f"""
@@ -398,6 +405,156 @@ def release_rows(releases):
     return "".join(out)
 
 
+def tok_label(n):
+    """A context length as the page writes it: 2k, 64k, 1M."""
+    if n is None:
+        return ""
+    if n >= 1000000:
+        return f"{n / 1000000:.2f}M".replace(".00M", "M")
+    return f"{round(n / 1024)}k" if n >= 1024 else str(n)
+
+
+def ladder_rung(mid, label):
+    """The measured rung a SPEEDS record names, if it is one of ours."""
+    for rungs in LADDERS.get(mid, {}).values():
+        for r in rungs:
+            if r.get("label") == label:
+                return r
+    return None
+
+
+def speed_ceiling(mid, rec):
+    """The bound this measurement can be checked against, or None with a reason.
+
+    Deliberately conservative: a record that does not state its build and its
+    context is not compared to anything, because the comparison would be
+    arithmetic over an assumption rather than over the run.
+    """
+    rung = ladder_rung(mid, rec.get("build"))
+    if rung is not None and throughput.rung_reason(rung):
+        return None, throughput.rung_reason(rung)
+    if rec.get("decode_tps") is None:
+        return None, "prefill is compute-bound, so this page does not derive a bound for it"
+    if not rec.get("gb") or not rec.get("context"):
+        return None, "the report does not state the build and the context, so there is nothing to compare"
+    if ACTIVE.get(mid) is None:
+        return None, throughput.NO_ACTIVE
+    bpt = KV.get(mid, (None, None, ""))[0]
+    mc = MACHINES.get(rec.get("chip"))
+    if not mc:
+        return None, "unknown chip"
+    cap = throughput.ceiling_tps(mc["bw"], rec["gb"], ACTIVE[mid], PARAMS.get(mid),
+                                 bpt, rec["context"])
+    return cap, ""
+
+
+def speed_conditions(rec):
+    """The run this figure came off, in the order that decides whether it is
+    comparable: which engine, which machine, which build, how much context."""
+    mc = MACHINES.get(rec.get("chip"), {})
+    bits = [ENGINE_BY_ID[rec["engine"]]["name"]]
+    machine = mc.get("label", rec.get("chip", "?"))
+    if rec.get("mem_gb"):
+        machine += f" {rec['mem_gb']} GB"
+    bits.append(machine)
+    if rec.get("build"):
+        b = rec["build"]
+        if len(b) > 46:
+            b = b[:44] + "\u2026"
+        bits.append(f"{b} ({rec['gb']:.0f} GB)" if rec.get("gb") else b)
+    elif rec.get("gb"):
+        bits.append(f"{rec['gb']:.0f} GB build")
+    else:
+        bits.append("build not stated")
+    bits.append(f"{tok_label(rec['context'])} context" if rec.get("context")
+                else "context not stated")
+    return bits
+
+
+def speeds_block(mid):
+    """Published measurements for one model. Someone else's number, with whose.
+
+    This is the page's highest confidence class and it is rendered as such -
+    plainly, above the arithmetic, with the conditions of the run beside the
+    figure rather than in a footnote. Without those conditions a
+    tokens-per-second figure compares to nothing, which is why the block prints
+    'build not stated' rather than quietly omitting it.
+    """
+    recs = SPEEDS.get(mid) or []
+    if not recs:
+        return ""
+    rows = []
+    for rec in recs:
+        kind = "decode" if rec.get("decode_tps") is not None else "prefill"
+        val = rec.get("decode_tps") if kind == "decode" else rec.get("prefill_tps")
+        cap, _why = speed_ceiling(mid, rec)
+        against = (f"""<span class="sp-vs">{val / cap * 100:.0f}% of the {cap:.0f} tok/s bound</span>"""
+                   if cap else "")
+        conds = " &middot; ".join(html.escape(b) for b in speed_conditions(rec))
+        rows.append(f"""
+          <li class="sp-row">
+            <div class="sp-head">
+              <span class="sp-n">{val:g}<span class="sp-u"> tok/s</span></span>
+              <span class="sp-kind">{kind}</span>{against}
+            </div>
+            <p class="sp-cond">{conds}</p>
+            <p class="sp-note">{prose(rec.get('note', ''))}</p>
+            <a class="sp-src" href="{html.escape(rec['url'], quote=True)}" target="_blank"
+               rel="noopener">{html.escape(rec['who'])}</a>
+          </li>""")
+    return f"""
+        <div class="speeds">
+          <span class="q-cat">Measured by others &mdash; not by us, and not derived</span>
+          <ul class="sp-list">{''.join(rows)}
+          </ul>
+        </div>"""
+
+
+def calibration():
+    """Every decode measurement complete enough to check against the bound.
+
+    The point of the table is that the page does not have to assert an
+    efficiency constant: the gap between what the arithmetic allows and what
+    somebody actually got is data, and it is shown rather than folded into a
+    fudge factor.
+    """
+    rows, fracs = [], []
+    for m in sorted(MODELS, key=lambda m: m["name"].casefold()):
+        for rec in SPEEDS.get(m["id"]) or []:
+            cap, _why = speed_ceiling(m["id"], rec)
+            if not cap:
+                continue
+            frac = rec["decode_tps"] / cap
+            fracs.append(frac)
+            mc = MACHINES[rec["chip"]]
+            rows.append(f"""
+            <tr>
+              <td>{html.escape(m['name'])}</td>
+              <td>{html.escape(ENGINE_BY_ID[rec['engine']]['name'])}</td>
+              <td>{html.escape(mc['label'])}, {rec['gb']:.0f} GB build, {tok_label(rec['context'])}</td>
+              <td class="cal-n">{cap:.0f}</td>
+              <td class="cal-n cal-meas">{rec['decode_tps']:g}</td>
+              <td class="cal-n">{frac * 100:.0f}%</td>
+            </tr>""")
+    if not rows:
+        return "", ""
+    lo, hi = min(fracs), max(fracs)
+    summary = (f"Across the {len(rows)} published decode measurement"
+               f"{'' if len(rows) == 1 else 's'} on this page that state their build and "
+               f"their context, real decode landed between {lo * 100:.0f}% and {hi * 100:.0f}% "
+               "of the bound. That spread is the reason the page quotes the bound and shows "
+               "you the measurements, rather than multiplying by an efficiency constant and "
+               "calling the product an estimate.")
+    table = f"""
+        <table class="cal">
+          <thead><tr><th>Model</th><th>Engine</th><th>Run</th><th>Ceiling</th>
+            <th>Measured</th><th>Of bound</th></tr></thead>
+          <tbody>{''.join(rows)}
+          </tbody>
+        </table>"""
+    return table, summary
+
+
 def render_items(keys, rows):
     present = [k for k in keys if k in META]
     present.sort(key=lambda k: (SEV_ORDER.get(META[k][0], 9), k))
@@ -447,7 +604,7 @@ def render():
         </dl>
         <p class="model-fit"></p>
         <p class="model-note">{prose(m['note'])}</p>
-        <div class="srcs"><span class="q-cat">Sources</span>{src_links(m)}</div>
+        <div class="srcs"><span class="q-cat">Sources</span>{src_links(m)}</div>{speeds_block(m['id'])}
         <details class="scores-wrap">
           <summary>Benchmark scores</summary>
           <div class="scores">
@@ -467,7 +624,12 @@ def render():
                            for u in USE_CASES])
     bands = json.dumps([[b[0], b[1], b[2], b[3]] for b in BANDS])
 
+    cal_table, cal_summary = calibration()
     doc = TEMPLATE.format(now=now, now_iso=now_iso, usecases=usecases, bands=bands,
+                          machines=json.dumps(MACHINES, sort_keys=True),
+                          gens=json.dumps(GENS),
+                          calibration=f'<div class="cal-wrap">{cal_table}</div>',
+                          tputsummary=cal_summary,
                           cards="".join(cards), index=index_rows(rows),
                           cross=cross_tabs(rows, releases))
     return doc.replace("/apple-llm-performance/card.jpg",
@@ -589,7 +751,7 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     margin: 0 0 .7rem; font-weight: 600; font-family: "IBM Plex Mono", ui-monospace, monospace; }}
   .ix-rows {{ display: flex; flex-direction: column; gap: 1px; background: var(--line);
     border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }}
-  .ix-row {{ display: grid; grid-template-columns: minmax(7rem, 1.5fr) 10.5rem minmax(5rem, .7fr) 5.5rem minmax(6rem, .95fr);
+  .ix-row {{ display: grid; grid-template-columns: minmax(6rem, 1.4fr) 9.25rem minmax(4rem, .55fr) 4.75rem 5.5rem minmax(4.5rem, .8fr);
     align-items: center; gap: .9rem; padding: .62rem 1rem; background: var(--surface);
     text-decoration: none; color: inherit; border-left: 3px solid var(--medium);
     transition: background .12s ease; }}
@@ -621,9 +783,18 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .ix-size {{ text-align: right; font-variant-numeric: tabular-nums; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .78rem;
     color: var(--ink-2); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }}
   .ix-meta {{ font-size: .76rem; color: var(--muted); text-align: right; white-space: nowrap; }}
-  @media (max-width: 34rem) {{
+  /* A ceiling, not a measurement, and the row has no space for that sentence -
+     so the number never appears without the "<=" that says which it is. */
+  .ix-tps {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .74rem;
+    color: var(--ink-2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }}
+  .ix-legend {{ margin: .8rem 0 0; font-size: .78rem; color: var(--muted); max-width: 52rem; }}
+  .ix-legend code {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .95em; }}
+  .ix-legend strong {{ color: var(--ink-2); font-weight: 600; }}
+  /* Six columns need about 40.5rem before the gaps; below that the row
+     stacks rather than overflowing the page horizontally. */
+  @media (max-width: 41rem) {{
     .ix-row {{ grid-template-columns: 1fr auto; row-gap: .3rem; }}
-    .ix-size, .ix-meta {{ text-align: left; }}
+    .ix-size, .ix-meta, .ix-tps {{ text-align: left; }}
     .ix-eng {{ order: 5; }}
   }}
   .model {{ margin-bottom: 2.5rem; scroll-margin-top: 1rem; }}
@@ -818,6 +989,65 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   .ctx-cap td {{ border-top: 1px solid var(--line); font-weight: 500; color: var(--ink); }}
   .ctx-cap .ctx-n {{ color: var(--ok); }}
   .ctx-why {{ margin: 0; font-size: .76rem; color: var(--muted); max-width: 46rem; }}
+  .ctx-t {{ font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--ink-2);
+    white-space: nowrap; }}
+
+  /* Derived, so it is styled as arithmetic rather than as a fact: no verdict
+     colour, the bound spelled with a "<=", and the sentence that says what it
+     is sitting under it rather than in a tooltip. */
+  .tput {{ display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .55rem;
+    background: var(--surface-2); border: 1px dashed var(--line);
+    border-radius: 6px; padding: .55rem .8rem; }}
+  .tput-k {{ font-size: .66rem; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; }}
+  .tput-v {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .95rem;
+    font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }}
+  .tput.none .tput-v {{ font-size: .82rem; font-weight: 400; color: var(--muted); }}
+  .tput-at {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .76rem;
+    color: var(--ink-2); }}
+  .tput-why {{ flex-basis: 100%; font-size: .76rem; color: var(--muted); max-width: 46rem; }}
+
+  /* Measurements. The highest confidence class on the page, so it is the one
+     block that states its provenance inline instead of in a footnote. */
+  .speeds {{ display: flex; flex-direction: column; gap: .4rem; }}
+  .sp-list {{ list-style: none; margin: 0; padding: 0; display: flex;
+    flex-direction: column; gap: 1px; background: var(--line);
+    border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }}
+  .sp-row {{ background: var(--surface-2); padding: .6rem .8rem; }}
+  .sp-head {{ display: flex; align-items: baseline; flex-wrap: wrap; gap: .45rem; }}
+  .sp-n {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 1.05rem;
+    font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }}
+  .sp-u {{ font-size: .72rem; font-weight: 500; color: var(--ink-2); }}
+  .sp-kind {{ font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .62rem;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--ok);
+    border: 1px solid var(--ok); border-radius: 4px; padding: .1rem .4rem; }}
+  .sp-vs {{ font-size: .72rem; color: var(--muted); margin-left: auto; white-space: nowrap; }}
+  .sp-cond {{ margin: .25rem 0 0; font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem; color: var(--ink-2); }}
+  .sp-note {{ margin: .3rem 0 0; font-size: .82rem; color: var(--ink-2); max-width: 52rem; }}
+  .sp-src {{ display: inline-block; margin-top: .3rem; font-size: .74rem; }}
+
+  .tp-h {{ font-size: .84rem; font-weight: 600; margin: 1.3rem 0 .35rem; letter-spacing: -.005em; }}
+  .tp-p {{ margin: 0 0 .6rem; font-size: .87rem; color: var(--ink-2); max-width: 54rem; }}
+  .tp-foot {{ color: var(--muted); font-size: .82rem; margin-top: 1rem; }}
+  .tp-f {{ margin: 0 0 .7rem; padding: .6rem .8rem; background: var(--surface-2);
+    border-left: 3px solid var(--accent); font-size: .84rem; overflow-x: auto; }}
+  .tp-f code {{ font-family: "IBM Plex Mono", ui-monospace, monospace; white-space: nowrap; }}
+  .tp-list {{ margin: 0; padding-left: 1.1rem; font-size: .86rem; color: var(--ink-2);
+    max-width: 54rem; }}
+  .tp-list li {{ margin-bottom: .4rem; }}
+  .tp-list strong {{ color: var(--ink); font-weight: 600; }}
+  .cal {{ border-collapse: collapse; font-size: .82rem; width: 100%; margin-bottom: .7rem; }}
+  .cal th {{ text-align: left; font-size: .64rem; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; padding: .25rem .7rem .25rem 0;
+    border-bottom: 1px solid var(--line); }}
+  .cal td {{ padding: .32rem .7rem .32rem 0; border-bottom: 1px solid var(--line-soft);
+    color: var(--ink-2); vertical-align: top; }}
+  .cal-n {{ font-family: "IBM Plex Mono", ui-monospace, monospace; text-align: right;
+    font-variant-numeric: tabular-nums; white-space: nowrap; }}
+  .cal-meas {{ color: var(--ink); font-weight: 600; }}
+  .cal th:nth-child(n+4) {{ text-align: right; }}
+  .cal-wrap {{ overflow-x: auto; }}
 
   .api {{ margin: 0; display: flex; flex-direction: column; gap: 1px;
     background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }}
@@ -940,6 +1170,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     <p class="uc-out" id="uc-out"></p>
     <div class="ix-rows">{index}
     </div>
+    <p class="ix-legend">The <code>&le;</code> figure is a <strong>decode ceiling</strong> at 8k
+    context, not a measurement: the chip&rsquo;s memory bandwidth divided by the bytes the engine has
+    to read to emit one token. Real decode lands below it, and how far below depends on the engine.
+    <a href="#throughput">Where that comes from, where it is wrong, and what has actually been
+    measured</a>.</p>
   </nav>
 
   <div class="detail" id="detail" hidden>
@@ -966,6 +1201,64 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     </details>
   </div>
 
+  <div class="panel" id="throughput">
+    <details class="panel-fold">
+      <summary><h2>Tokens per second</h2></summary>
+    <p class="panel-lead">Two kinds of number appear on this page, and they are never mixed. A
+    <strong>measurement</strong> is somebody else&rsquo;s run, shown with the machine, the build and the
+    context it came off and a link to whoever took it. A <strong>ceiling</strong> is arithmetic over
+    published specifications &mdash; the same class as the memory-fit figures &mdash; and it is an upper
+    bound, not a prediction. Nothing here is self-reported to us, because a tokens-per-second figure
+    with no build and no context compares to nothing; the two Qwen3.8 records on this page are kept
+    precisely to show that.</p>
+    <h3 class="tp-h">The ceiling, and where it comes from</h3>
+    <p class="tp-p">Decoding one token at batch 1 reads the whole active weight set plus whatever the
+    model attends over in its KV cache, and reuses almost none of it on the next step. So decode waits
+    on memory, and peak memory bandwidth is a hard bound on it:</p>
+    <p class="tp-f"><code>tok/s &le; bandwidth &divide; (build size &times; active&nbsp;&divide;&nbsp;total + KV per token &times; context)</code></p>
+    <p class="tp-p">Every term is already on this page: the chip&rsquo;s bandwidth from its
+    specification, the measured size of the build the picker chose, the model&rsquo;s published active
+    parameter count, and the per-token KV cost derived from its <code>config.json</code>. Nothing is
+    fitted and nothing is guessed, which is why a ceiling can be shown for a model nobody has ever
+    benchmarked. A model whose ceiling on your machine is already too slow will not be rescued by a
+    better engine.</p>
+    <h3 class="tp-h">Where the ceiling is wrong</h3>
+    <ul class="tp-list">
+      <li><strong>It is a bound, not an estimate.</strong> {tputsummary}</li>
+      <li><strong>Sparse MoE does badly against it.</strong> Each expert&rsquo;s weight read is small and
+      scattered, so a batch-1 MoE never approaches peak bandwidth. Dense models get much closer.</li>
+      <li><strong>It assumes uniform bits per weight.</strong> ds4&rsquo;s builds quantise routed experts
+      to 2 bits while leaving attention projections, shared experts and output at Q8 &mdash; the build
+      names say so &mdash; so the slice read per token is denser than the file average and the real
+      ceiling is lower. Qwen3.8-Flash-Next is dragged the other way by a 51B n-gram table that is
+      looked up, not streamed.</li>
+      <li><strong>It assumes the whole cache is read.</strong> DeepSeek&rsquo;s DSA, MiniMax Sparse
+      Attention and Qwen Sparse Attention all attend over a selected subset, so the ceiling falls with
+      context faster than these models do.</li>
+      <li><strong>Expert-pruned builds get no ceiling at all.</strong> Pruning deletes experts the
+      router was not going to pick, so it buys memory and not speed: Kimi K3&rsquo;s 350 GB and 451 GB
+      REAP builds decode at the same rate. Scaling by file size would claim otherwise.</li>
+      <li><strong>Speculative decoding can beat it.</strong> An MTP or draft head emits several tokens
+      per weight read. A measurement above the bound is not necessarily wrong &mdash; but the record has
+      to say so, and the validator rejects one that does not.</li>
+      <li><strong>Pooling does not raise it.</strong> Pipeline parallelism splits the layers; every
+      token still traverses all of them in sequence, and pays a Thunderbolt hop on the way. The ceiling
+      uses one machine&rsquo;s bandwidth however many machines are pooled, and is optimistic there.</li>
+      <li><strong>Prefill is not covered.</strong> It is a batched matmul over the whole prompt, so it
+      is compute-bound and this argument does not apply. Published prefill figures are shown; none is
+      derived.</li>
+    </ul>
+    <h3 class="tp-h">The ceiling against the measurements</h3>
+    <p class="tp-p">Every decode measurement on this page that states its build and its context,
+    beside the bound for that exact run. This is the check on the arithmetic, and it is the honest
+    place to look before trusting a ceiling anywhere else on the page.</p>
+    {calibration}
+    <p class="tp-p tp-foot">If you have measured one of these models on a Mac, that is the most
+    valuable thing you can contribute &mdash; see CONTRIBUTING.md for the fields a record needs. A
+    figure without the chip, the build and the context cannot be used.</p>
+    </details>
+  </div>
+
   <div class="panel">
     <details class="panel-fold">
       <summary><h2>Reading the scores</h2></summary>
@@ -973,6 +1266,10 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       <li><strong>Terminal-Bench 2.0 and 2.1 are different benchmarks.</strong> Qwen3-Coder-Next's 36.2 is on v2.0; Qwen3.8-27B's 73.0 and GLM-5.2's 81.0 are on v2.1. Do not rank across the two &mdash; they are shown labelled, not normalised.</li>
       <li>Scores are vendor-reported or aggregator-reported, not reproduced here. Treat them as a shortlist filter, then verify the shortlist on your own context-rot harness.</li>
       <li>Nothing on this page has been measured on M5 Ultra hardware. Everything else is published numbers.</li>
+      <li><strong>Tokens per second is never self-reported here.</strong> A figure is either somebody
+      else's measurement, shown with the machine, build and context it came off, or a ceiling derived
+      from memory bandwidth and marked <code>&le;</code>. The two are never mixed &mdash; see
+      <a href="#throughput">Tokens per second</a>.</li>
       <li>Weights are the summed file sizes of the linked repository &mdash; safetensors for MLX builds, GGUF for the rest &mdash; measured, not estimated. A <strong>*</strong> marks the exception: a figure derived from parameter count because no build has been published anywhere.</li>
       <li><strong>The same model weighs different amounts on different engines.</strong> GGUF has quant tiers MLX does not, so llama.cpp can often fit a model MLX cannot &mdash; Qwen3-Coder-Next's GGUF ladder reaches down to 18.9 GB while its MLX ladder stops at 42.4 GB. Each engine tab states its own build and its own fit.</li>
       <li>Issue lists are scoped to the engine tab you are on, and are filtered for what actually applies on a Mac. A CUDA-only or ROCm-only report is not listed here even when it dominates the upstream thread.</li>
@@ -998,37 +1295,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
 
 <script data-newblock="1">
 (function () {{
-  // Every M-series chip, its peak memory bandwidth, and the union of unified-memory
-  // options across every Mac that shipped with it - laptops, mini, iMac, Studio and
-  // Mac Pro - because the chip is what decides whether a model fits, not the case.
-  // tb5 marks Thunderbolt 5, which is what RDMA and JACCL tensor parallelism need;
-  // everything older pools only over the ring/pipeline path.
-  // gen groups the dropdown. bwNote flags chips with a binned lower-bandwidth variant.
-  var MACHINES = {{
-    m1:       {{ label: "M1",       gen: "M1", bw: 68,   mem: [8, 16],                tb: "Thunderbolt 3 / USB4", link: 40, tb5: false, ports: 2 }},
-    m1pro:    {{ label: "M1 Pro",   gen: "M1", bw: 200,  mem: [16, 32],               tb: "Thunderbolt 4", link: 40, tb5: false, ports: 3 }},
-    m1max:    {{ label: "M1 Max",   gen: "M1", bw: 400,  mem: [32, 64],               tb: "Thunderbolt 4", link: 40, tb5: false, ports: 4 }},
-    m1ultra:  {{ label: "M1 Ultra", gen: "M1", bw: 800,  mem: [64, 128],              tb: "Thunderbolt 4", link: 40, tb5: false, ports: 6 }},
-    m2:       {{ label: "M2",       gen: "M2", bw: 100,  mem: [8, 16, 24],            tb: "Thunderbolt 4", link: 40, tb5: false, ports: 2 }},
-    m2pro:    {{ label: "M2 Pro",   gen: "M2", bw: 200,  mem: [16, 32],               tb: "Thunderbolt 4", link: 40, tb5: false, ports: 4 }},
-    m2max:    {{ label: "M2 Max",   gen: "M2", bw: 400,  mem: [32, 64, 96],           tb: "Thunderbolt 4", link: 40, tb5: false, ports: 4 }},
-    m2ultra:  {{ label: "M2 Ultra", gen: "M2", bw: 800,  mem: [64, 128, 192],         tb: "Thunderbolt 4", link: 40, tb5: false, ports: 6 }},
-    m3:       {{ label: "M3",       gen: "M3", bw: 100,  mem: [8, 16, 24],            tb: "Thunderbolt 4", link: 40, tb5: false, ports: 2 }},
-    m3pro:    {{ label: "M3 Pro",   gen: "M3", bw: 150,  mem: [18, 36],               tb: "Thunderbolt 4", link: 40, tb5: false, ports: 3 }},
-    m3max:    {{ label: "M3 Max",   gen: "M3", bw: 400,  mem: [36, 48, 64, 96, 128],  tb: "Thunderbolt 4", link: 40, tb5: false, ports: 3,
-                bwNote: "300 GB/s on the binned 14-core CPU / 30-core GPU part" }},
-    m3ultra:  {{ label: "M3 Ultra", gen: "M3", bw: 819,  mem: [96, 256, 512],         tb: "Thunderbolt 5", link: 80, tb5: true,  ports: 6 }},
-    m4:       {{ label: "M4",       gen: "M4", bw: 120,  mem: [16, 24, 32],           tb: "Thunderbolt 4", link: 40, tb5: false, ports: 2 }},
-    m4pro:    {{ label: "M4 Pro",   gen: "M4", bw: 273,  mem: [24, 48, 64],           tb: "Thunderbolt 5", link: 80, tb5: true,  ports: 3 }},
-    m4max:    {{ label: "M4 Max",   gen: "M4", bw: 546,  mem: [36, 48, 64, 128],      tb: "Thunderbolt 5", link: 80, tb5: true,  ports: 4,
-                bwNote: "410 GB/s on the binned 14-core CPU part" }},
-    m5:       {{ label: "M5",       gen: "M5", bw: 153,  mem: [16, 24, 32],           tb: "Thunderbolt 4", link: 40, tb5: false, ports: 2 }},
-    m5pro:    {{ label: "M5 Pro",   gen: "M5", bw: 307,  mem: [24, 48, 64],           tb: "Thunderbolt 5", link: 80, tb5: true,  ports: 3 }},
-    m5max:    {{ label: "M5 Max",   gen: "M5", bw: 614,  mem: [36, 48, 64, 128],      tb: "Thunderbolt 5", link: 80, tb5: true,  ports: 4,
-                bwNote: "460 GB/s on the 32-core GPU part; 614 on the 40-core" }},
-    m5ultra:  {{ label: "M5 Ultra", gen: "M5", bw: 1200, mem: [96, 256, 512],         tb: "Thunderbolt 5", link: 80, tb5: true,  ports: 6 }}
-  }};
-  var GENS = ["M5", "M4", "M3", "M2", "M1"];
+  // The chip table lives in data/machines.py so that Python can read it too -
+  // the decode ceiling divides by `bw`, and two copies of a bandwidth table
+  // would go stale silently. Serialised here, not duplicated.
+  var MACHINES = {machines};
+  var GENS = {gens};
   var USE_CASES = {usecases};
   var BAND_RANK = {{ full: 0, mild: 1, low: 2, pruned: 2, unusable: 3 }};
   var ORDER = Object.keys(MACHINES);
@@ -1038,6 +1309,10 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
   // 10 GB made a 310 MB model report "10 GB resident".
   var OVERHEAD_TEXT = 10, OVERHEAD_MEDIA = 1.5, OVERHEAD = OVERHEAD_TEXT;
   var BANDS = {bands};
+  // The context the one-line ceilings are quoted at. A realistic agent turn:
+  // long enough that the KV term is not free, short enough not to flatter a
+  // model whose only advantage is a cheap cache. Stated wherever it is used.
+  var REF_CTX = 8192;
 
 
   var chipSel = document.getElementById("rig-chip"),
@@ -1202,6 +1477,34 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
       return out;
     }}
 
+    // Decode ceiling: bandwidth over the bytes read to emit one token. This is
+    // a mirror of tracker/throughput.py, which carries the full statement of
+    // what it assumes and where it is wrong. Keep the two identical.
+    //
+    // M.bw is one machine's bandwidth on purpose. Pipeline parallelism splits
+    // the layers, but every token still traverses all of them in sequence, so
+    // pooling does not raise the bound - it only adds a Thunderbolt hop that
+    // this does not model.
+    function ceiling(rung, pl, ctx) {{
+      if (!rung || rung.kind === 'pruned' || rung.kind === 'native') return null;
+      if (!pl.active || !pl.params) return null;
+      var kv = pl.kv && pl.kv.bpt ? (pl.kv.bpt * (ctx || 0)) / 1e9 : 0;
+      var per = rung.gb * (pl.active / pl.params) + kv;
+      return per > 0 ? M.bw / per : null;
+    }}
+
+    function ceilingWhy(rung, pl) {{
+      if (rung && rung.kind === 'pruned')
+        return 'expert-pruned build, so per-token traffic does not scale with file size';
+      if (rung && rung.kind === 'native') return 'not an autoregressive decoder';
+      if (!pl.active) return 'no published active-parameter count for this model';
+      return 'inputs missing';
+    }}
+
+    function tpsFmt(t) {{
+      return t >= 10 ? String(Math.round(t)) : t.toFixed(1);
+    }}
+
     function tokFmt(t) {{
       return t >= 1000000 ? (t / 1000000).toFixed(t % 1000000 ? 2 : 0) + "M"
                           : Math.round(t / 1000) + "k";
@@ -1259,6 +1562,15 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
         el.querySelector(".ix-eng").textContent = chosen.name;
         el.querySelector(".ix-size").textContent = fmt(rung.gb);
         el.querySelector(".fit").textContent = f.short;
+        var tpsEl = el.querySelector(".ix-tps");
+        if (tpsEl) {{
+          var cap = f.tooBig ? null : ceiling(rung, pl, REF_CTX);
+          tpsEl.textContent = cap ? '\u2264 ' + tpsFmt(cap) + ' tok/s' : '';
+          tpsEl.title = cap
+            ? 'Decode ceiling at 8k context on one machine: ' + M.bw +
+              ' GB/s of bandwidth over the bytes read per token. Arithmetic, not a measurement.'
+            : '';
+        }}
         return;
       }}
 
@@ -1330,6 +1642,38 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
           }}
         }}
 
+        var tp = pane.querySelector(".tput");
+        if (tp) {{
+          var capRef = pf.tooBig ? null : ceiling(r, pl, REF_CTX);
+          if (pf.tooBig) {{
+            tp.hidden = true;
+          }} else if (!capRef) {{
+            tp.hidden = false;
+            tp.className = "tput none";
+            tp.innerHTML = '<span class="tput-k">Decode ceiling</span>' +
+              '<span class="tput-v">not derived</span>' +
+              '<span class="tput-why">' + ceilingWhy(r, pl) + '.</span>';
+          }} else {{
+            var maxc = pl.kv && pl.kv.maxctx ? pl.kv.maxctx : 0;
+            var capMax = maxc ? ceiling(r, pl, maxc) : null;
+            var wGb = r.gb * (pl.active / pl.params);
+            var perGb = wGb + (pl.kv && pl.kv.bpt ? (pl.kv.bpt * REF_CTX) / 1e9 : 0);
+            tp.hidden = false;
+            tp.className = "tput";
+            tp.innerHTML = '<span class="tput-k">Decode ceiling</span>' +
+              '<span class="tput-v">\u2264 ' + tpsFmt(capRef) + ' tok/s</span>' +
+              '<span class="tput-at">at 8k context' +
+              (capMax ? ', \u2264 ' + tpsFmt(capMax) + ' tok/s at ' + tokFmt(maxc) : '') + '</span>' +
+              '<span class="tput-why">' + M.bw + ' GB/s over ' + perGb.toFixed(1) +
+              ' GB read per token (' + wGb.toFixed(1) + ' GB of active weights' +
+              (pl.kv && pl.kv.bpt ? ' plus KV' : '') +
+              '). Upper bound from published specifications, not a measurement \u2014 real decode ' +
+              'lands below it. <a href="#throughput">How this is derived, and where it is wrong</a>' +
+              (n > 1 && pf.nodes > 1 ? '. Pooling does not raise it: every token still crosses ' +
+                'every layer, plus a Thunderbolt hop this does not model' : '') + '.</span>';
+          }}
+        }}
+
         var wrap = pane.querySelector(".ctx-wrap");
         if (wrap) {{
           var rows = pf.tooBig ? [] : ctxRows(pl.kv.bpt, pl.kv.maxctx, pf.free, pf.copies);
@@ -1340,8 +1684,11 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
             wrap.querySelector("tbody").innerHTML = rows.map(function (c) {{
               var label = c.cap ? tokFmt(c.tok) + " &mdash; " + c.frac
                                 : tokFmt(c.tok) + " (" + c.frac + ")";
+              var rowCap = ceiling(r, pl, c.tok);
               return "<tr" + (c.cap ? ' class="ctx-cap"' : "") + "><td>" + label + "</td><td>" +
                      (c.perGB < 1 ? (c.perGB * 1000).toFixed(0) + " MB" : c.perGB.toFixed(1) + " GB") +
+                     '</td><td class="ctx-t">' +
+                     (rowCap ? '\u2264 ' + tpsFmt(rowCap) + ' tok/s' : '\u2014') +
                      '</td><td class="ctx-n' + (c.streams < 1 ? ' none' : '') + '">' +
                      (c.streams < 1 ? "does not fit" : c.streams) + "</td></tr>";
             }}).join("");
@@ -1349,7 +1696,8 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
               "KV at fp16: " + (pl.kv.bpt / 1024).toFixed(1) + " KiB per token. " + pl.kv.why + ". " +
               (pf.copies > 1 ? "Stream counts are the total across all " + pf.copies +
                                " machines, each running its own copy. " : "") +
-              "Quantising the KV cache to 8-bit doubles every count above.";
+              "Quantising the KV cache to 8-bit doubles every count above. The ceiling " +
+              "column is one stream's bound at that context, not the group's total.";
           }}
         }}
       }});
@@ -1517,6 +1865,18 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     }});
     if (listEl) listEl.hidden = !!found;
     if (detailEl) detailEl.hidden = !found;
+    // A fragment that is not a card is an in-page anchor - the throughput
+    // explainer, say. Open the fold it lives in and let it scroll; pinning the
+    // scroll position here would swallow the jump entirely.
+    if (!found && want) {{
+      var target = document.getElementById(want);
+      if (target) {{
+        var fold = target.querySelector ? target.querySelector("details") : null;
+        if (fold) fold.open = true;
+        window.scrollTo(0, Math.max(0, target.getBoundingClientRect().top + window.scrollY - 14));
+        return null;
+      }}
+    }}
     // Restore now and again after layout: the adjustment does not always land in
     // the same tick as the attribute change.
     if (pin !== false) {{
