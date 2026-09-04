@@ -622,9 +622,18 @@ TEMPLATE = """<title>Apple LLM Performance Tracker</title>
     color: var(--ink-2); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }}
   .ix-meta {{ font-size: .76rem; color: var(--muted); text-align: right; white-space: nowrap; }}
   @media (max-width: 34rem) {{
-    .ix-row {{ grid-template-columns: 1fr auto; row-gap: .3rem; }}
-    .ix-size, .ix-meta {{ text-align: left; }}
-    .ix-eng {{ order: 5; }}
+    /* The bar is a percentage of .ix-name, so every name cell has to be the same
+       width or the chart lies about the ranking. Sharing a row with the status
+       pill made the cell as wide as whatever the pill left over - a long label
+       like "Fastest, with caveats" cut it from 225px to 128px, so a top-ranked
+       model drew a shorter bar than one below it. Give the name its own full
+       row and put the attributes on shared rows underneath. */
+    .ix-row {{ grid-template-columns: 1fr auto; row-gap: .35rem; }}
+    .ix-name {{ grid-column: 1 / -1; grid-row: 1; }}
+    .ix-size {{ grid-column: 1; grid-row: 2; text-align: left; }}
+    .ix-status {{ grid-column: 2; grid-row: 2; justify-self: end; }}
+    .ix-eng {{ grid-column: 1; grid-row: 3; }}
+    .ix-meta {{ grid-column: 2; grid-row: 3; text-align: right; }}
   }}
   .model {{ margin-bottom: 2.5rem; scroll-margin-top: 1rem; }}
   .nofit-row {{ scroll-margin-top: 1rem; }}

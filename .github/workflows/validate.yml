@@ -40,9 +40,54 @@ jobs:
       - name: Check the rendered output
         run: python3 tools/check_output.py
 
+      - name: Upload the built page
+        # Attach the build to every run so a reviewer can open the exact page a
+        # branch produces without asking anyone to build it. Safe for forks: the
+        # artifact is downloaded deliberately, not served from our origin.
+        uses: actions/upload-artifact@v4
+        with:
+          name: page-${{ github.event.pull_request.number || github.sha }}
+          path: docs/index.html
+          retention-days: 14
+
       - name: Generated output is not committed
         run: |
           if git ls-files --error-unmatch docs/index.html >/dev/null 2>&1; then
             echo "error: docs/index.html is tracked. It is generated; CI publishes it."
             exit 1
           fi
+
+  smoke:
+    # The browser JavaScript is the only code here that CI cannot reach any other
+    # way. A handler that throws does not blank the page - it silently stops one
+    # control from working, which is how a picker bug reached a reader. Separate
+    # job so it runs alongside the fast checks rather than delaying them.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache the Playwright browser
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Build the page
+        run: python3 tracker/build.py
+
+      - name: Drive every picker combination
+        run: node tools/smoke.js docs/index.html

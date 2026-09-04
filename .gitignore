@@ -4,3 +4,6 @@ __pycache__/
 
 # Built by tracker/build.py and deployed straight from the Actions artifact.
 docs/
+
+# tooling only; the site has no runtime dependencies
+node_modules/
