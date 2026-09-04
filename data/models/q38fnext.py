@@ -136,18 +136,19 @@ ENGINES = {'llamacpp': {'status': 'degraded',
               'issues': []},
  'omlx': {'status': 'degraded',
           'label': 'Fastest, with caveats',
-          'note': 'oMLX added first-class `qwen4_exp` support in v0.6.3 on 2026-08-27 and '
-                   'improved it again in v0.6.4 two days later, with its own vendored '
-                   'implementation rather than waiting for mlx-lm - the same move it made for '
-                   'DeepSeek V4. The maintainer publishes measured numbers on an M3 Ultra 512 GB '
-                   'with the first-party `Jundot/Qwen3.8-Flash-Next-oQ4e-mtp` build: 1,061 tok/s '
-                   'prefill and 53.6 tok/s generation at 4k, still 1,114 and 45.9 at 32k, with '
-                   'Lightning MTP worth 2.3x to 2.6x on generation. That makes this the fastest '
-                   'published path to this model on Apple silicon by a wide margin. Read the '
-                   'defects before serving it, though: two concurrent requests fail outright on '
-                   'the sparse-attention indexer, and QSA prefix-cache reuse is broken across '
-                   'turns, so a single-user session is the configuration that actually works '
-                   'today. Text and image input; video is unsupported.',
+          'note': 'oMLX vendored its own `qwen4_exp` support in v0.6.3 rather than waiting for '
+                   'mlx-lm - the same move it made for DeepSeek V4 - and it is the fastest '
+                   'published path to this model on Apple silicon. Measured by the maintainer on '
+                   'an M3 Ultra 512 GB with the first-party `Jundot/Qwen3.8-Flash-Next-oQ4e-mtp` '
+                   'build: 1,061 tok/s prefill and 53.6 tok/s generation at 4k, still 1,114 and '
+                   '45.9 at 32k, with Lightning MTP worth 2.3x to 2.6x on generation. Two of the '
+                   'four defects behind this status were fixed in the first days of September - '
+                   'concurrent requests no longer fail on the sparse-attention indexer, and '
+                   'loading another Qwen VLM no longer kills MTP - but neither fix is in a '
+                   'tagged release yet, so a packaged v0.6.4 install still hits both. What '
+                   'remains open either way is QSA prefix-cache reuse across turns, which means '
+                   'paying full prefill again on every turn of a conversation. Text and image '
+                   'input; video is unsupported.',
               'issues': ['jundot/omlx#3293', 'jundot/omlx#3294', 'jundot/omlx#3300', 'jundot/omlx#3303']},
  'vllmmlx': {'status': 'blocked',
              'label': 'Blocked',

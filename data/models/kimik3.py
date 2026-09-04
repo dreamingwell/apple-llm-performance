@@ -127,20 +127,27 @@ ENGINES = {'llamacpp': {'status': 'works',
                   'and a 451 GB build decode at the same rate. mlx-lm has no kimi_k3 model '
                   'class, so these repos ship their own modelling code.',
           'issues': []},
- 'vllmmlx': {'status': 'blocked',
-             'label': 'Blocked',
-             'note': 'mlx-lm carries kimi_k25 and kimi_linear but nothing for K3, so there is '
-                     'no architecture to wrap.',
+ 'vllmmlx': {'status': 'degraded',
+             'label': 'Pruned builds only',
+             'note': 'Wraps mlx-lm, which gained a `kimi_k3` class on 2026-09-01, so there is '
+                      'now an architecture to wrap. The practical limit is the same one '
+                      'everywhere on this model: the only MLX builds published are expert- '
+                      'pruned.',
              'issues': []},
- 'mlxlm': {'status': 'blocked',
-           'label': 'Blocked',
-           'note': 'kimi_k25 and kimi_linear exist; K3 does not. Community REAP repos supply '
-                   'their own modelling code via auto_map rather than relying on mlx-lm.',
+ 'mlxlm': {'status': 'degraded',
+           'label': 'Pruned builds only',
+           'note': 'mlx-lm merged a `kimi_k3` model class on 2026-09-01, so the architecture '
+                    'gap that used to block this is closed - the community REAP repos that '
+                    'shipped their own modelling code via `auto_map` are no longer the only '
+                    'route. What has not changed is the size: no unpruned MLX conversion exists, '
+                    'so in practice you are still loading a REAP build with most of its routed '
+                    'experts deleted. Treat this as loadable rather than solved.',
            'issues': ['ml-explore/mlx-lm#1572']},
  'vllmmetal': {'status': 'blocked',
                'label': 'Blocked',
-               'note': 'Not in the support matrix, and no unpruned MLX build of K3 exists to '
-                       'try.',
+               'note': 'The support matrix has not been updated for K3, though mlx-lm now '
+                        'carries the class it would build on. Still no unpruned MLX build to try '
+                        'even if it had.',
                'issues': []},
  'ds4': {'status': 'none',
          'label': 'Out of scope',

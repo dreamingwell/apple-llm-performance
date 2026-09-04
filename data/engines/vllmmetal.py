@@ -22,7 +22,9 @@ SITE = 'https://github.com/vllm-project/vllm-metal'
 # deliberately not an alias anywhere: it means upstream vLLM, not the plugin.
 PROSE_ALIASES = ['vLLM Metal']
 
-RELEASE_FEED = {'repo': 'vllm-project/vllm-metal', 'scheme': 'release', 'note': ''}
+RELEASE_FEED = {'repo': 'vllm-project/vllm-metal', 'scheme': 'release',
+                'note': 'v0.28.0 on 2026-09-01 is the first non-prerelease since v0.2.0 in '
+                        'June; the version now tracks vLLM upstream rather than the plugin'}
 
 WHAT = ('vLLM itself, running on Apple Silicon. This is a plugin in the vllm-project org that keeps '
  'vLLM core and swaps the compute layer for MLX, unifying MLX and PyTorch under one lowering '

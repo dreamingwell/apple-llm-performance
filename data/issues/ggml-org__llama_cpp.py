@@ -31,9 +31,11 @@ ISSUES = {26694: {'severity': 'high',
                 'correctness.'},
  25739: {'severity': 'medium',
          'headline': "Google's own Gemma 4 QAT GGUF aborts at vocab load",
-         'why': 'Filed against the E2B variant. Relevant because the QAT repo is the '
-                'recommended download, so a vocab assert there affects the default path rather '
-                'than an exotic one.'},25751: {'severity': 'high',
+         'why': 'Closed 2026-09-03 as not planned, which is a decision not to fix rather than a '
+                "fix - the vocab assert on Google's own QAT GGUF still stands. Filed against the "
+                'E2B variant, and it matters because the QAT repo is the recommended download, '
+                'so this is the default path and not an exotic one. Treat the closed marker as '
+                "'no longer being worked on'."},25751: {'severity': 'high',
          'headline': 'Sliding-window attention on Gemma 4 forgets key details',
          'why': "Gemma 4's long context is built on SWA, so this bites exactly where the 256k "
                 'window is the reason you picked the model. Quality loss, not a crash, which '

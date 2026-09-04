@@ -39,7 +39,8 @@ QUANT_SOURCES = {'gguf': ['unsloth/GLM-5.3-Flash-GGUF'],
                  'mlx': ['Jundot/GLM-5.3-Flash-oQ4e',
                          'pipenetwork/GLM-5.3-Flash-MLX-8bit',
                          'pipenetwork/GLM-5.3-Flash-MLX-4bit',
-                         'Vontra/GLM-5.3-Flash-MLX-4bit-MTP']}
+                         'Vontra/GLM-5.3-Flash-MLX-4bit-MTP'],
+                 'ds4': ['antirez/glm-5.3-flash-gguf']}
 
 # Measured by tracker/measure.py - do not hand-edit. gb is summed repo bytes;
 # bpw is gb*8/PARAMS_B and is omitted for pruned or native-precision builds.
@@ -97,7 +98,22 @@ LADDER = {'gguf': [{'label': 'GLM-5.3-Flash-BF16',
           'repo': 'Vontra/GLM-5.3-Flash-MLX-4bit-MTP',
           'gb': 181.71,
           'kind': 'quant',
-          'bpw': 4.53}]}
+          'bpw': 4.53}],
+ 'ds4': [{'label': 'GLM-5.3-Flash-FP8',
+          'repo': 'antirez/glm-5.3-flash-gguf',
+          'gb': 327.21,
+          'kind': 'quant',
+          'bpw': 8.15},
+         {'label': 'GLM-5.3-Flash-Q4_K',
+          'repo': 'antirez/glm-5.3-flash-gguf',
+          'gb': 190.88,
+          'kind': 'quant',
+          'bpw': 4.76},
+         {'label': 'GLM-5.3-Flash-Q2',
+          'repo': 'antirez/glm-5.3-flash-gguf',
+          'gb': 96.51,
+          'kind': 'quant',
+          'bpw': 2.41}]}
 
 # Bytes of KV per token at fp16, the context ceiling, and how it was derived.
 # None for models with no growing cache (diffusion, TTS).
@@ -146,8 +162,14 @@ ENGINES = {
                   'note': "Not in `docs/supported_models.md`, and the compute layer is MLX, so it "
                           "inherits the missing model class.",
                   'issues': []},
-    'ds4':      {'status': 'none', 'label': 'Out of scope',
-                 'note': "ds4 is purpose-built for DeepSeek V4 and GLM-5.2. It does not carry this "
-                         "architecture.",
+    'ds4':      {'status': 'works', 'label': 'Purpose-built',
+                 'note': 'ds4 has a dedicated GLM-5.3-Flash implementation, not a generic path: '
+                          'its own graph for the recurrent KDA and sparse DSA layers, its own '
+                          'published artifacts, and a documented section of the README. '
+                          '`antirez/glm-5.3-flash-gguf` carries Q2 at 96.5 GB, Q4_K at 190.9 GB '
+                          'and FP8 at 327.2 GB, plus a separate 1.1 GB vision encoder that the '
+                          'text GGUF does not include - pass it with `--vision`. MTP is '
+                          'supported, and two 128 GB machines can run it over RDMA. That makes '
+                          'Q2 the one build here that fits a single 128 GB Mac.',
                  'issues': []},
 }

@@ -17,6 +17,7 @@ AXIS = ('Tool-use and agent benchmarks. Scores are from different suites - they 
 # Curated ordering, best first. Each entry is (model_id, metric_name, value).
 # Membership is editorial; see AGENTS.md before reordering.
 RANK = [['kimik3', 'MCPMark-Verified', '94.5'],
+ ['glm53', 'Terminal-Bench 2.1', '88.2'],
  ['qwenmax', 'Terminal-Bench 2.1', '86.6'],
  ['glm52', 'Terminal-Bench 2.1', '81.0'],
  ['q38fnext', 'CoWorkBench', '73.9'],

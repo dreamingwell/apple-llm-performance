@@ -43,8 +43,9 @@ ISSUES = {546: {'severity': 'high',
               'is unimplemented upstream too.'},
  672: {'severity': 'high',
        'headline': 'Streaming tool calls can end without finish_reason',
-       'why': 'A tool call that ends without a terminator is exactly the shape that reads as a '
-              'fabricated turn downstream.'},
+       'why': 'Fixed, closed 2026-08-30. It mattered because a streaming tool call that ends '
+              'without a terminator is exactly the shape that reads as a fabricated turn '
+              'downstream. Kept listed so the fix is dated.'},
  678: {'severity': 'high',
        'headline': 'Prefix cache trims RotatingKVCache past its window',
        'why': 'Cross-conversation KV leak and repetition loops. A correctness bug, not a speed '

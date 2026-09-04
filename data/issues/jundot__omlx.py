@@ -8,10 +8,11 @@ REPO = 'jundot/omlx'
 # number -> severity / headline / why it matters.
 ISSUES = {3293: {'severity': 'high',
         'headline': 'Qwen4-Exp sparse-attention indexer fails under multi-row batching',
-        'why': 'Any two concurrent requests against a qwen4_exp model fail with a shape error '
-               'from the indexer. Single requests are fine, so it only appears once continuous '
-               'batching actually forms a multi-row batch - which is exactly the configuration '
-               'anyone serving this model would run.'},
+        'why': 'Fixed on 2026-09-02, but after v0.6.4 shipped and there has been no release '
+               'since, so a packaged install still fails on any two concurrent requests. It was '
+               'a shape error from the sparse-attention indexer that only appeared once '
+               'continuous batching formed a multi-row batch - which is the configuration anyone '
+               'serving this model would run.'},
  3294: {'severity': 'high',
         'headline': 'Qwen4-Exp QSA cache: prefix blocks unusable across text and MRoPE turns',
         'why': 'Four defects in the QSA cache handling vendored in for Qwen4-Exp between '
@@ -20,9 +21,10 @@ ISSUES = {3293: {'severity': 'high',
                'fastest at.'},
  3300: {'severity': 'medium',
         'headline': 'Loading another Qwen3.5-family VLM permanently breaks qwen4_exp Lightning MTP',
-        'why': 'On a single-process server, loading any other Qwen3.5/3.6/3.8 VLM text model kills '
-               'Lightning MTP for an already-working Flash-Next until restart. MTP is worth 2.3x '
-               'to 2.6x on generation here, so losing it silently is a large regression.'},
+        'why': 'Fixed on 2026-08-30, and likewise not in a tagged release yet. Loading any other '
+               'Qwen3.5-family VLM used to kill Lightning MTP for an already-working Flash-Next '
+               'until restart, silently costing the 2.3x to 2.6x that MTP is worth on '
+               'generation.'},
  3303: {'severity': 'low',
         'headline': 'v0.6.4 qwen4-exp performance benchmark returns N/A for some prompt sizes',
         'why': 'The built-in benchmark intermittently reports nothing at pp16384. A reporting '

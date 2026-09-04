@@ -17,6 +17,7 @@ AXIS = ('Terminal-Bench 2.1 only, so these are directly comparable. Models whose
 # Curated ordering, best first. Each entry is (model_id, metric_name, value).
 # Membership is editorial; see AGENTS.md before reordering.
 RANK = [['kimik3', 'Terminal-Bench 2.1', '88.3'],
+ ['glm53', 'Terminal-Bench 2.1', '88.2'],
  ['qwenmax', 'Terminal-Bench 2.1', '86.6'],
  ['glm52', 'Terminal-Bench 2.1', '81.0'],
  ['qwen38', 'Terminal-Bench 2.1', '73.0'],

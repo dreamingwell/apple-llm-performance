@@ -37,7 +37,12 @@ sys.path.insert(0, HERE)
 import registry as R  # noqa: E402
 
 # Draft heads, projectors and imatrix files are not weights anyone serves.
-DRAFT = re.compile(r"(mmproj|^mtp-|-mtp|dflash|dspark|eagle3|imatrix|Qwen3\.5-\d|MTP)", re.I)
+# Files that are not a servable model: draft heads, projectors, imatrix data, and
+# the separate vision encoders some GGUF repos ship alongside the text weights.
+# ds4's GLM-5.3-Flash repo carries a 1.1 GB Vision-Encoder that measured as a
+# 0.03 bpw "build" until it was filtered here.
+DRAFT = re.compile(r"(mmproj|^mtp-|-mtp|dflash|dspark|eagle3|imatrix|Qwen3\.5-\d|MTP"
+                   r"|vision[-_]?encoder|[-_]encoder$|projector)", re.I)
 PRUNED = re.compile(r"(REAP|reap\d)", re.I)
 
 MIN_GB_GGUF = 1.0     # below this a .gguf is a projector, not a model
