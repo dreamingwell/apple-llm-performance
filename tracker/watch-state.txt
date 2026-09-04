@@ -84,7 +84,7 @@ ml-explore/mlx-lm#1572|open|>300GB models trip the GPU watchdog at load
 ml-explore/mlx-lm#1573|open|RotatingKVCache.to_quantized() blocks --kv-bits on sliding-window layers
 ml-explore/mlx-lm#1662|closed|Models that discard update_and_fetch's return leak one Metal buffer per layer per generation
 ml-explore/mlx-lm#1788|open|Add Qwen3.8-Flash-Next (qwen4_exp) model support
-ollama/ollama#14116|open|Tiered context length can exhaust VRAM
+ollama/ollama#14116|closed|Tiered context length can exhaust VRAM
 ollama/ollama#15813|open|Metal backend crash on Apple M5: bfloat/half type mismatch
 ollama/ollama#17323|open|Bare-JSON tool-call models silently drop content generated after the call
 ollama/ollama#17569|open|x/mlxrunner panics importing a plain Qwen3 MLX 4-bit model
@@ -116,7 +116,7 @@ waybarrios/vllm-mlx#699|open|DFlash and DSpark draft heads block speculative dec
 waybarrios/vllm-mlx#710|open|MTP drafting pinned to k=1 on hybrid linear-attention
 waybarrios/vllm-mlx#711|open|--prefill-step-size silently dropped under --continuous-batching
 waybarrios/vllm-mlx#725|open|PR: GLM-4.7 thinking streams into content, not reasoning_content
-waybarrios/vllm-mlx#729|open|PR: honor --prefill-step-size with continuous batching
+waybarrios/vllm-mlx#729|MERGED|PR: honor --prefill-step-size with continuous batching
 waybarrios/vllm-mlx#730|open|Prefix-cache reuse silently disabled for hybrid architectures
 waybarrios/vllm-mlx#731|open|PR: make prefix-cache rewind gate aware of non-KV hybrid leaves
 waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tokens_details.cached_tokens
