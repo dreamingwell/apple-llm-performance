@@ -83,6 +83,15 @@ def main():
     if not lines:
         print("probe: nothing fetched, refusing to emit an empty state", file=sys.stderr)
         return 1
+    # A partial fetch is a failure, not a shorter watchlist. Rate limiting can
+    # drop most of the results while every individual request still "succeeds",
+    # and the caller usually redirects stdout straight over the state file.
+    expected = len(META) + len(R.RELEASE_FEEDS)
+    if len(lines) < expected // 2:
+        print(f"probe: only {len(lines)} of {expected} items came back - refusing to "
+              "emit a truncated watchlist", file=sys.stderr)
+        return 1
+
     sys.stdout.write("\n".join(lines) + "\n")
     print(f"probe: {len(lines)} items", file=sys.stderr)
     return 0

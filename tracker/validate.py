@@ -308,6 +308,38 @@ def check_no_shadowing():
             "the local value would shadow data/ and render stale facts")
 
 
+def check_watch_state():
+    """The polled issue states the page renders its open/closed pills from.
+
+    This is the one input that is written by redirecting a command's stdout over
+    it, which is how it once got truncated to nothing. The page still rendered -
+    build.py reads whatever is there - so neither the build nor the output check
+    noticed. Verify it covers what is tracked.
+    """
+    path = os.path.join(HERE, "watch-state.txt")
+    if not os.path.exists(path):
+        err("tracker/watch-state.txt", "missing; run tracker/probe.py")
+        return
+    keys = set()
+    for line in open(path, encoding="utf-8"):
+        k = line.split("|", 1)[0].strip()
+        if k:
+            keys.add(k)
+    if not keys:
+        err("tracker/watch-state.txt", "is empty; the page would show no issue states at all")
+        return
+    tracked = set(R.EMETA)
+    missing = tracked - {k for k in keys if "@" not in k}
+    if len(missing) > len(tracked) // 4:
+        err("tracker/watch-state.txt",
+            f"has no state for {len(missing)} of {len(tracked)} tracked issues; "
+            "it looks truncated - re-run tracker/probe.py")
+    elif missing:
+        warn("tracker/watch-state.txt",
+             f"{len(missing)} tracked issues have no polled state yet: "
+             + ", ".join(sorted(missing)[:4]))
+
+
 def main():
     check_engines()
     check_models()
@@ -315,6 +347,7 @@ def main():
     check_issues()
     check_global()
     check_no_shadowing()
+    check_watch_state()
 
     for wmsg in WARNINGS:
         print(f"warning: {wmsg}")
