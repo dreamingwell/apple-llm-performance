@@ -8,9 +8,9 @@ REPO = 'ollama/ollama'
 # number -> severity / headline / why it matters.
 ISSUES = {14116: {'severity': 'medium',
          'headline': 'Tiered context length can exhaust VRAM',
-         'why': 'The automatic context sizing can commit more memory than the machine has. On '
-                'a Mac that is unified memory, so it is the whole machine rather than just the '
-                'model.'},
+         'why': 'Fixed, closed 2026-09-04. The automatic context sizing could commit more memory '
+                'than the machine had, and on a Mac that is unified memory, so it took the whole '
+                'machine rather than just a GPU. Kept listed so the fix is dated.'},
  15813: {'severity': 'critical',
          'headline': 'Metal backend crash on Apple M5: bfloat/half type mismatch',
          'why': 'An M5-specific crash in the Metal matmul path. If you are buying an M5 '

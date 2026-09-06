@@ -38,7 +38,8 @@ BEST_ENGINE = 'ds4'
 # Repositories tracker/measure.py harvests for this model.
 QUANT_SOURCES = {'ds4': ['antirez/glm-5.3-gguf'],
                  'gguf': ['unsloth/GLM-5.3-GGUF'],
-                 'mlx': []}
+                 'mlx': ['mlx-community/GLM-5.3-mixed-4_5bit',
+                         'mlx-community/GLM-5.3-4bit']}
 
 # Measured by tracker/measure.py - do not hand-edit. gb is summed repo bytes;
 # bpw is gb*8/PARAMS_B and is omitted for pruned or native-precision builds.
@@ -92,7 +93,16 @@ LADDER = {'ds4': [{'label': 'GLM-5.3-UD-IQ2_XXS_RoutedIQ2XXS_blk78Q2K',
            'gb': 216.72,
            'kind': 'quant',
            'bpw': 2.3}],
- 'mlx': []}
+ 'mlx': [{'label': 'GLM-5.3-mixed-4_5bit',
+          'repo': 'mlx-community/GLM-5.3-mixed-4_5bit',
+          'gb': 450.71,
+          'kind': 'quant',
+          'bpw': 4.79},
+         {'label': 'GLM-5.3-4bit',
+          'repo': 'mlx-community/GLM-5.3-4bit',
+          'gb': 418.32,
+          'kind': 'quant',
+          'bpw': 4.44}]}
 
 # Bytes of KV per token at fp16, the context ceiling, and how it was derived.
 # None for models with no growing cache (diffusion, TTS).
@@ -124,17 +134,23 @@ ENGINES = {
                  'note': "Its llama.cpp engine carries the architecture. Nothing curated under "
                          "lmstudio-community at this size; point it at the unsloth ladder.",
                  'issues': []},
-    'omlx': {'status': 'blocked', 'label': 'No MLX build',
-             'note': "oMLX serves `glm_moe_dsa` and added GLM-5.3-Flash in v0.6.3, so the "
-                     "architecture is not the obstacle. Nobody has published an MLX conversion of "
-                     "the full 753B model - the hub has GGUF only.",
+    'omlx': {'status': 'degraded', 'label': 'Needs a cluster',
+             'note': 'oMLX serves `glm_moe_dsa` and added GLM-5.3-Flash in v0.6.3, and as of '
+                      '2026-09-02 there are MLX conversions of the full model to point it at - '
+                      'mlx-community published a 4-bit at 418 GB and a mixed 4/5-bit at 451 GB. '
+                      'Both need memory pooled across machines; neither fits one Mac. No '
+                      'measured figures for the full model on this engine have been published.',
              'issues': []},
-    'mlxlm': {'status': 'blocked', 'label': 'No MLX build',
-              'note': "mlx-lm has a `glm_moe_dsa` class, so this would load if a conversion "
-                      "existed. None does at 753B.",
+    'mlxlm': {'status': 'degraded', 'label': 'Needs a cluster',
+              'note': 'mlx-lm has had a `glm_moe_dsa` class since GLM-5.2, and mlx-community '
+                       'published 4-bit and mixed 4/5-bit conversions of the full model on '
+                       '2026-09-02. What was a missing-conversion wall a week ago is now a size '
+                       'wall: 418 GB is more than one Mac holds.',
               'issues': []},
-    'vllmmlx': {'status': 'blocked', 'label': 'No MLX build',
-                'note': "Wraps mlx-lm, which has the class. Same missing-conversion wall.",
+    'vllmmlx': {'status': 'degraded', 'label': 'Needs a cluster',
+                'note': 'Wraps mlx-lm, which carries the architecture, and MLX conversions now '
+                         'exist. Same size constraint - this needs pooled memory before '
+                         'continuous batching is the interesting part.',
                 'issues': []},
     'vllmmetal': {'status': 'blocked', 'label': 'Blocked',
                   'note': "Not in the supported-model matrix, and the compute layer is MLX, so it "

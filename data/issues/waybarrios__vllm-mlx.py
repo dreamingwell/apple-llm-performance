@@ -80,7 +80,8 @@ ISSUES = {546: {'severity': 'high',
               "the model's reasoning as the visible reply."},
  729: {'severity': 'medium',
        'headline': 'PR: honor --prefill-step-size with continuous batching',
-       'why': 'One of two competing fixes for #711.'},
+       'why': 'Merged 2026-09-04. It was one of two competing fixes for #711; this is the one '
+              'that landed, making --prefill-step-size actually apply under continuous batching.'},
  730: {'severity': 'critical',
        'headline': 'Prefix-cache reuse silently disabled for hybrid architectures',
        'why': "#691's all-or-nothing rewind gate rejects every hybrid model: ArraysCache "

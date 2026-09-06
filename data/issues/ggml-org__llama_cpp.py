@@ -41,9 +41,11 @@ ISSUES = {26694: {'severity': 'high',
                 'window is the reason you picked the model. Quality loss, not a crash, which '
                 'makes it harder to notice.'},25967: {'severity': 'high',
          'headline': 'Duplicate GBNF rules with a large tool list break grammar parsing',
-         'why': 'Constrained decoding is how tool calls are kept well-formed. Past some number '
-                'of tools the generated grammar fails to parse - which is to say the failure '
-                'arrives as you add capability to your agent.'},
+         'why': 'Closed 2026-09-03 as not planned - a decision not to fix rather than a fix, so '
+                'the defect stands. Constrained decoding is how tool calls are kept well-formed, '
+                'and past some number of tools the generated grammar fails to parse, which is to '
+                'say the failure arrives exactly when an agent has enough tools to be useful. '
+                "Read the closed marker as 'no longer being worked on'."},
  26365: {'severity': 'low',
          'headline': 'Kimi K3 full-size vision lives on a branch, not master',
          'why': 'The text backbone is in mainline. This asks for tensor-split support on the '

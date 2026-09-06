@@ -20,9 +20,10 @@ NOTE = ('Qwen calls this an experimental preview of the architecture behind Qwen
  'checkpoint is 180B on disk against a stated 125B. llama.cpp merged the `qwen4exp` '
  'architecture on 2026-08-27, so this is runnable on Apple silicon for the first time - '
  'from a master build, not a release, and the GGUF ladder filled out from a single 1-bit '
- 'tier to Q4_K_XL within days. oMLX went further and vendored its own qwen4_exp '
- 'support in v0.6.3, so the fastest published numbers on Apple silicon are now on '
- 'MLX rather than GGUF - with the concurrency caveats on that tab.')
+ 'tier to Q4_K_XL within days, and v0.4.0 on 2026-09-04 carries the architecture so '
+ 'a stock build runs it. oMLX went further and vendored its own qwen4_exp support in '
+ 'v0.6.3, so the fastest published numbers on Apple silicon are on MLX rather than '
+ 'GGUF - with the concurrency caveats on that tab.')
 
 SOURCES = [('Model card with full tables', 'https://huggingface.co/Qwen/Qwen3.8-Flash-Next'),
  ('Qwen blog', 'https://qwen.ai/blog?id=qwen3.8-flash-next')]
@@ -117,14 +118,15 @@ KV = {'bytes_per_token': 24576,
                '2048 budget, so this is an upper bound; the other 36 are Gated DeltaNet'}
 
 # Per-engine status. Keys must be engines whose modality matches MODALITY.
-ENGINES = {'llamacpp': {'status': 'degraded',
-              'label': 'Master only',
-              'note': "Support landed on 2026-08-27: `qwen4exp` is now in "
-                      "`src/llama-arch.cpp`. It is on master only - no tagged release carries it "
-                      "yet, so a packaged build or a distro binary will still refuse the weights. "
-                      "Build from source until the next release cuts. Three further PRs are open "
-                      "against the same architecture for fixes, so treat the implementation as "
-                      "new rather than settled.",
+ENGINES = {'llamacpp': {'status': 'works',
+              'label': 'Runs',
+              'note': 'Released. `qwen4exp` landed on 2026-08-27 and v0.4.0 on 2026-09-04 '
+                       'carries it along with five follow-up commits - fewer graph splits, '
+                       'indexer heads summed by slices, recurrent state rollback - so a stock '
+                       'build loads this now and building from master is no longer required. The '
+                       'GGUF ladder filled out in step, from a single 1-bit tier to Q4_K_XL. '
+                       'oMLX is still the faster path on published numbers, but this is the one '
+                       'that works out of a package manager.',
               'issues': ['ggml-org/llama.cpp#27742', 'ggml-org/llama.cpp#27741']},
  'ollama': {'status': 'blocked',
             'label': 'Blocked',
