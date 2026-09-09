@@ -11,6 +11,9 @@ LICENSE = 'Apache-2.0'
 CONTEXT = '1,048,576'
 HF = 'tencent/Hy4-preview'
 PARAMS_B = 780
+# Tencent's card states 49B activated, 8 routed experts per token.
+ACTIVE_PARAMS_B = 49
+
 
 NOTE = (
     "Notable for its licence more than its scores: Apache-2.0 on 780B is rare, and the models it "
