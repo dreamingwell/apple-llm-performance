@@ -97,7 +97,7 @@ vllm-project/vllm-metal#360|open|RFC: a specialised Metal kernel for MLA paged a
 vllm-project/vllm-metal#450|open|RFC: attention backend dispatch
 vllm-project/vllm-metal#482|open|Draft-model speculative decoding is net-negative
 vllm-project/vllm-metal#610|open|Built-in MTP draft heads do not yet work with prefix caching on hybrid GDN
-vllm-project/vllm-metal#644|open|Nemotron-H (Mamba-2 + MoE hybrid) paged attention not implemented
+vllm-project/vllm-metal#644|closed|Nemotron-H (Mamba-2 + MoE hybrid) paged attention not implemented
 vllm-project/vllm-metal#646|closed|Mixed batches with top_k enabled on some requests crash the Metal sampler
 waybarrios/vllm-mlx#546|open|Strict json_schema decode wedges with no token progress
 waybarrios/vllm-mlx#570|open|Qwen3.6-35B-A3B dequantize shape mismatch (works in mlx-vlm)
