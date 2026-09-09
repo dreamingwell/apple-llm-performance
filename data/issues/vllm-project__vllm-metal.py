@@ -26,8 +26,12 @@ ISSUES = {360: {'severity': 'medium',
               'choose between the draft head and the prefix cache rather than having both.'},
  644: {'severity': 'medium',
        'headline': 'Nemotron-H (Mamba-2 + MoE hybrid) paged attention not implemented',
-       'why': 'Open request rather than a bug. It is the reason Nemotron 3.5 Lightning does '
-              'not load here.'},
+       'why': 'Closed as completed on 2026-09-09 after a long chain of work - hybrid geometry '
+              'behind a family owner, a state-family routing table, Mamba-2 mixers on paged '
+              'state, and finally Nemotron-H through the decode pipeline. Kept listed because '
+              'the fix is nightly-only: the v0.28.0 stable predates it. Before this, such a '
+              'model loaded, warmed up, reported healthy and then killed EngineCore on the first '
+              'request.'},
  646: {'severity': 'high',
        'headline': 'Mixed batches with top_k enabled on some requests crash the Metal sampler',
        'why': 'Fixed. PR #648 normalises disabled top_k rows to vocab_size and merged '

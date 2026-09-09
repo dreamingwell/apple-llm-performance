@@ -142,11 +142,15 @@ ENGINES = {'llamacpp': {'status': 'degraded',
            'label': 'Runs',
            'note': 'Runs on the hybrid Mamba-Transformer path without special handling.',
            'issues': []},
- 'vllmmetal': {'status': 'blocked',
-               'label': 'Blocked',
-               'note': 'Nemotron-H paged attention is an open request - the Mamba-2 plus MoE '
-                       'hybrid has no implementation here yet. That issue is the thing to '
-                       'watch.',
+ 'vllmmetal': {'status': 'degraded',
+               'label': 'Nightly only',
+               'note': 'Implemented, and only in nightlies. Mamba-2 mixers now run on paged '
+                        'state (#710, merged 2026-09-07) and Nemotron-H goes through the decode '
+                        'pipeline (#735, merged 2026-09-08), closing the request that had '
+                        'blocked this. Neither is in the v0.28.0 stable from 2026-09-01; the '
+                        '`v0.28.0.dev20260908140440` prerelease was cut 32 minutes after #735 '
+                        'landed and is the first build that carries both. So this works if you '
+                        'track nightlies and does not if you pin the release.',
                'issues': ['vllm-project/vllm-metal#644']},
  'ds4': {'status': 'none',
          'label': 'Out of scope',
