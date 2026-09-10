@@ -11,6 +11,9 @@ LICENSE = 'MIT'
 CONTEXT = '262,144'
 HF = 'ornith-ai/Ornith-1.5-35B-A3B'
 PARAMS_B = 36
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as 3B active of 36B total, 8 of 256 experts firing.
+ACTIVE_PARAMS_B = 3
 
 NOTE = (
     "The strongest thing on this page for its size, and MIT on top. SWE-bench Verified of 79 puts "

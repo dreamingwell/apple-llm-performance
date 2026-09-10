@@ -11,6 +11,9 @@ LICENSE = 'NVIDIA OpenMDW-1.1'
 CONTEXT = '128k'
 HF = 'nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B'
 PARAMS_B = 30
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as ~3B active of 30B total.
+ACTIVE_PARAMS_B = 3
 
 NOTE = ('Released 2026-08-11 with weights, training data and recipes. 3B active makes it the cheapest '
  'thing here to run at concurrency, and the checkpoint ships MTP draft weights. Published '
