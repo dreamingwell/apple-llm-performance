@@ -41,6 +41,7 @@ data/
                         cross-cutting issues
   use_cases/<id>.py     one "What for?" category and its curated ranking
   issues/<owner>__<repo>.py   tracked issues for one upstream repository
+  hardware/<chip>.py    what one M-series chip costs, per memory size
   pr_keys.py            which issue keys are pull requests (small, shared)
 
 tracker/
@@ -71,6 +72,7 @@ Conflict surface by task:
 | Correct a model's figure or prose | `data/models/<id>.py` only |
 | Add or update a tracked issue | `data/issues/<repo>.py` only |
 | Add an engine | `data/engines/<new>.py`, plus one cell in each `data/models/*.py` it can load |
+| Price a machine | `data/hardware/<chip>.py` only |
 | Change the UI | `tracker/render_status.py` only |
 | Change the schema | `tracker/registry.py` **and** `tracker/validate.py`, in a commit of their own |
 
@@ -391,6 +393,26 @@ it; committing it would conflict on every parallel PR.
 
 **Do not hand-edit `LADDER`.** Run `tracker/measure.py`.
 
+**The browser JavaScript is the least-defended code here.** It is ~600 lines
+inside a Python string, nothing in CI executes it, and its failure mode is
+silent: a handler that throws does not blank the page, it just stops responding
+to one control. A shipped bug where selecting an unpriced memory size threw
+inside the picker - so the "What for?" selector quietly stopped reordering the
+table - was found by a reader, not by us.
+
+Two cheap defences, in order of value:
+
+1. **Run `tools/smoke.js` after any change to the template's JavaScript.** It
+   drives every chip x memory x unit-count x use-case combination in a real
+   browser - 1,300-odd of them - and fails on a single thrown error. It needs a
+   browser, which is why it is not in `validate.py`.
+2. **Never use `var`.** That bug was `var warn = ...` inside an `if` block,
+   shadowing an outer `warn` that held a DOM element, because `var` is
+   function-scoped and hoists. `let` would have confined it to the block and the
+   bug could not have existed. A type checker catches it too - TypeScript rejects
+   a second declaration of the same name at a different type - but `let` is free
+   and needs no toolchain.
+
 **Escaping traps in `render_status.py`.** The HTML lives in a `str.format`
 template, so every literal `{` or `}` in CSS or JS must be doubled. And never
 write `\"` inside it — the escape is consumed twice, once by the Python string
@@ -486,6 +508,12 @@ The notes are the reason to read this page rather than a spec sheet.
   (0.5–20), `pruned` and `native` rungs carry none
 - `KV` has exactly the three expected keys; only text models declare a per-token
   cost; a declared cost has a derivation and a max context
+- a hardware record names a chip the picker offers, with the picker's own label,
+  and prices only memory sizes that chip is sold in
+- every price has a positive whole-dollar figure, a known `basis`, the exact
+  machine it buys, an `as_of` date that is real and not in the future, and a
+  `(label, url)` source
+- a memory size is priced or listed in `UNPRICED` with a reason, never both
 - `DISPLAY_ORDER` is present and unique for engines and use cases
 - every engine has a `SITE` URL and a non-empty `PROSE_ALIASES`, and no two
   engines claim the same alias — an ambiguous name would link to the wrong engine
@@ -496,5 +524,125 @@ The notes are the reason to read this page rather than a spec sheet.
 
 Warnings, which do not fail the build: a very short note, a missing ladder for a
 family an in-scope engine loads, an issue tracked but cited nowhere, a modality
-with no models or no category, and an alias that is neither the engine's own name
-nor used in any note (which means it will never link, and is usually a typo).
+with no models or no category, an unpriced chip or memory size, and an alias that
+is neither the engine's own name nor used in any note (which means it will never
+link, and is usually a typo).
+
+---
+
+## 10. Pricing a machine
+
+Prices come from three places and the page must say which:
+
+- **`apple_new`** - Apple's configurator, for machines Apple still sells.
+- **`apple_refurb`** - Apple Certified Refurbished, for chips Apple has stopped
+  selling new. The same kind of number as a list price, so no median and no
+  sample count, but the stock rotates constantly, so every entry is a snapshot
+  with an `as_of`. Harvested by `tools/apple_refurb.js`, which needs two stages
+  because the listing grid does not carry memory - one title covers three memory
+  configurations at three prices.
+- **`ebay_sold`** - currently unused. eBay's sold prices come from the
+  Marketplace Insights API, which is access-restricted, and the site now
+  requires sign-in to view completed listings. `tools/ebay_prices.py` documents
+  what was tried and why active-listing asking prices are not a substitute.
+
+`data/hardware/<chip>.py` says what one chip costs at each memory size the
+picker offers. The page multiplies by the unit count and puts the total in the
+header summary, so this is the number a reader weighs capability against.
+
+The `<chip>` is the picker's own id - `m5ultra`, `m4pro` - and `LABEL` must match
+the picker's label exactly. `PRICES` is keyed by memory size in gigabytes:
+
+```python
+PRICES = {
+    256: {
+        "usd": 9499,
+        "basis": "apple_new",
+        "config": "Mac Studio, 30-core CPU / 64-core GPU, 256 GB, 1 TB SSD",
+        "as_of": "2026-08-29",
+        "note": "optional; what is surprising about this figure",
+        "source": ("Apple Store configurator", "https://www.apple.com/shop/..."),
+    },
+}
+```
+
+- **Say which kind of number it is.** `basis` is `apple_new` for a machine Apple
+  currently sells, or `apple_refurb` for Apple's own price on the Certified
+  Refurbished store. Both are list prices; neither is a market survey. They are
+  labelled differently on the page because refurbished stock rotates and a
+  refurbished entry is a snapshot. Never file one kind as the other.
+- **If a market-survey basis is ever used**, put the sample count and the
+  observed range in the `note`. A median with no spread behind it is a guess
+  wearing a number's clothes. See the eBay note below before adding one.
+- **Price the machine someone would actually run this workload on**, not
+  whatever chassis carries the chip most cheaply. Prefer a desktop - Mac Studio,
+  Mac mini, Mac Pro, iMac - and fall back to a laptop only when nothing else
+  offers that chip at that memory. Take the smallest storage that configuration
+  can be ordered with, so the figure tracks the memory rather than an SSD
+  upgrade, and name the machine in `config`.
+- **Say what kind of box it is** in `chassis`: `desktop`, `laptop`, or
+  `laptop_fanless`. This is not cosmetic. Decode is bandwidth-bound and bandwidth
+  is a property of the SoC, so an M5 in a MacBook Air and an M5 in a Mac mini
+  have the same memory bandwidth and the same derived ceiling - but inference is
+  a sustained GPU load measured in minutes, and only an actively cooled machine
+  holds its clocks that long. A fanless laptop shares the bandwidth and not the
+  cooling. The page prints a caveat for anything that is not a desktop, and the
+  throughput ceiling elsewhere on the page assumes sustained clocks it will not
+  reach.
+- **`as_of` is not optional.** A price with no date is a liability; the page
+  prints the date next to the figure.
+- **Omit rather than guess.** A configuration with no defensible figure is left
+  out and the page says so. If you know *why* there is no figure - Apple has not
+  announced one yet, say - put it in `UNPRICED` keyed by memory size and the page
+  prints your reason instead of its generic sentence.
+
+### Where the numbers come from
+
+**Apple new.** The configurator pages carry the exact price in a `ld+json`
+`Product` offer, which is the cheapest reliable way to read one: fetch the
+configured URL and take `offers[0].price`. That URL is also the right thing to
+cite.
+
+**Apple refurbished.** `tools/apple_refurb.js` drives a browser over the
+Certified Refurbished store. It needs two stages because the listing grid ships
+no memory size at all - zero of 60 MacBook Pro titles contained one - and a
+single title covers several memory configurations at several prices, so each
+product page has to be opened. Re-run it when prices go stale; stock rotates, so
+expect entries to move in and out of `UNPRICED`.
+
+**eBay: read this before trying.** The `ebay_sold` basis exists in the schema and
+is deliberately unused. Two things stand in the way, and only one of them is
+technical.
+
+The technical one: sold prices are served by the Marketplace Insights API, which
+is a Limited Release requiring per-application approval from eBay. Ordinary
+client credentials are refused the `buy.marketplace.insights` scope at the token
+endpoint. The legacy `findCompletedItems` operation that used to serve this need
+has been retired.
+
+The one that matters more: **eBay's API License Agreement constrains how their
+data may be displayed**, and this page's design runs straight into it. The
+agreement requires eBay Content in a public display to be kept visually isolated
+from non-eBay content, and restricts redistributing Restricted API data in raw or
+aggregated form. A median price sitting in a header summary beside model specs
+and benchmark scores, committed to a public MIT repository, is difficult to
+reconcile with either. That is a reading of the agreement rather than legal
+advice, but it is the reason this is not a matter of finding a clever workaround.
+
+So, concretely, for contributors:
+
+- **Do not scrape eBay's website for this.** Completed-listing pages now sit
+  behind a sign-in wall, and automated access to them is not something this
+  project asks anyone to do. A pull request adding scraped eBay data will be
+  declined.
+- **If you have approved Marketplace Insights access** under your own agreement
+  with eBay, `tools/ebay_prices.py` has the filtering, outlier rejection and
+  sample floor already written; point `search()` at `item_sales/search`. Whether
+  the resulting figures can be published *here* is a licensing question to settle
+  with eBay first, not afterwards.
+- **Prefer a source with no such constraint.** Apple's own pricing carries none
+  of this, which is why it is what the page uses.
+
+`tools/ebay_prices.py` also records what active-listing asking prices measured
+when tried, and why they are not a substitute: they skew high, because the
+overpriced listings are exactly the ones that fail to sell and therefore stay up.
