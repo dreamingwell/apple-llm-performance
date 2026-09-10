@@ -105,4 +105,11 @@ ENGINES = {
                  'note': "ds4 is purpose-built for DeepSeek V4 and the GLM-5.x line. It does not "
                          "carry this architecture.",
                  'issues': []},
+    'mtplx': {'status': 'blocked', 'label': 'Unsupported architecture',
+              'note': "`hy_v4` is not in the architecture catalog. Tencent's previous generation "
+                      "is - `hy_v3` and `hy_v3_mtp` both have entries - so this is a gap that "
+                      "closes when someone adds the newer arch rather than a decision against the "
+                      "family. Size would be the next wall regardless at 780B.",
+              'issues': []},
+
 }
