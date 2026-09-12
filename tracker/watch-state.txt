@@ -14,7 +14,6 @@ ggml-org/llama.cpp#25751|open|Sliding-window attention on Gemma 4 forgets key de
 ggml-org/llama.cpp#25967|closed|Duplicate GBNF rules with a large tool list break grammar parsing
 ggml-org/llama.cpp#26365|open|Kimi K3 full-size vision lives on a branch, not master
 ggml-org/llama.cpp#26382|open|Same K and V cache type enforced for models with no V cache
-ggml-org/llama.cpp#26694|open|DeepSeek V4 Flash degenerates into repetition and leaks special tokens in long agentic sessions 
 ggml-org/llama.cpp#26894|open|DFlash drafter fails to bind when the GGUF encodes attention.sliding_window
 ggml-org/llama.cpp#27066|open|Adaptive-P sampling is broken on Muse Glimmer
 ggml-org/llama.cpp#27139|open|Qwen3.8 tool-calling errors resolved by substituting the Qwen3.6 chat template
