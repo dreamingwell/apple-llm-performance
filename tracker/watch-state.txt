@@ -13,7 +13,7 @@ ggml-org/llama.cpp#25739|closed|Google's own Gemma 4 QAT GGUF aborts at vocab lo
 ggml-org/llama.cpp#25751|open|Sliding-window attention on Gemma 4 forgets key details
 ggml-org/llama.cpp#25967|closed|Duplicate GBNF rules with a large tool list break grammar parsing
 ggml-org/llama.cpp#26365|closed|Kimi K3 full-size vision lives on a branch, not master
-ggml-org/llama.cpp#26382|open|Same K and V cache type enforced for models with no V cache
+ggml-org/llama.cpp#26382|closed|Same K and V cache type enforced for models with no V cache
 ggml-org/llama.cpp#26894|open|DFlash drafter fails to bind when the GGUF encodes attention.sliding_window
 ggml-org/llama.cpp#27066|open|Adaptive-P sampling is broken on Muse Glimmer
 ggml-org/llama.cpp#27139|open|Qwen3.8 tool-calling errors resolved by substituting the Qwen3.6 chat template
