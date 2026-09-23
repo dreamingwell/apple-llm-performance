@@ -73,7 +73,7 @@ ml-explore/mlx-lm#1281|open|Request: add DeepSeek V4 to mlx_lm
 ml-explore/mlx-lm#1332|closed|DeepSeek-V4 unbounded Metal residency during decode
 ml-explore/mlx-lm#1335|open|Tool calls dropped when the tokenizer merges the tool-call start marker
 ml-explore/mlx-lm#1352|open|Gemma 4 with thinking enabled returns only reasoning, content empty
-ml-explore/mlx-lm#1401|open|PR: Add MiniMax-M3 (text backbone) - unmerged
+ml-explore/mlx-lm#1401|closed|PR: Add MiniMax-M3 (text backbone) - unmerged
 ml-explore/mlx-lm#1404|open|DeepSeek V4 Flash drifts from Simplified to Traditional Chinese
 ml-explore/mlx-lm#1418|open|GLM-5.2 fails to load — missing per-layer indexer params
 ml-explore/mlx-lm#1443|open|DSA Indexer sparse top-k evicts attention sinks
@@ -120,8 +120,8 @@ waybarrios/vllm-mlx#730|open|Prefix-cache reuse silently disabled for hybrid arc
 waybarrios/vllm-mlx#731|open|PR: make prefix-cache rewind gate aware of non-KV hybrid leaves
 waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tokens_details.cached_tokens
 ggml-org/llama.cpp@release|v0.4.1|latest release
-ollama/ollama@release|v0.34.2|latest release
+ollama/ollama@release|v0.34.3|latest release
 jundot/omlx@release|v0.6.4|latest release
-vllm-project/vllm-metal@release|v0.29.0|latest release
+vllm-project/vllm-metal@release|v0.30.0|latest release
 waybarrios/vllm-mlx@release|v0.5.0|latest release
 ml-explore/mlx-lm@release|v0.31.3|latest release
