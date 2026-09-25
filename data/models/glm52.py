@@ -195,4 +195,13 @@ ENGINES = {'vllmmetal': {'status': 'blocked',
                    'sink eviction under DSA top-k, and the >300 GB load watchdog.',
            'issues': ['ml-explore/mlx-lm#1418',
                       'ml-explore/mlx-lm#1443',
-                      'ml-explore/mlx-lm#1572']}}
+                      'ml-explore/mlx-lm#1572']},
+ 'mtplx': {'status': 'blocked',
+           'label': 'MTP stripped in conversion',
+           'note': 'MTPLX ships a GLM MoE DSA backend, so this is closer than most blocked rows '
+                   '- but the MLX conversions set `num_nextn_predict_layers` to 0 and drop the '
+                   'draft layer entirely, which leaves nothing for the engine to detect. It is '
+                   'refused as a model with no MTP head before size or DSA kernels ever come '
+                   'up. Nobody has published a GLM-5.2 MLX build that keeps the layer, and at '
+                   '395 GB the conversion is not something a reader will redo casually.',
+           'issues': []}}

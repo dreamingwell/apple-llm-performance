@@ -170,4 +170,14 @@ ENGINES = {'llamacpp': {'status': 'works',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'none',
+           'label': 'Out of scope',
+           'note': 'No MTP head in the checkpoint and no `muse_glimmer` entry in the '
+                   'architecture catalog, so it is refused before loading. Meta does publish a '
+                   'separate draft head, and that does not help: MTPLX will not pair an '
+                   'arbitrary drafter with a trunk, on the stated grounds that nothing in the '
+                   'tensor shapes proves the two were trained together. Its one paired backend '
+                   'is the first-party Gemma 4 bundle. Use one of the general-purpose MLX '
+                   'servers for this model.',
+           'issues': []}}

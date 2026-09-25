@@ -128,4 +128,14 @@ ENGINES = {'vllmmetal': {'status': 'blocked',
                     'it at. Conversions exist - a 4-bit at 837 GB and a Q2.8 at 562 GB - which '
                     'is exactly the files-ahead-of-the-loader pattern this page keeps running '
                     'into.',
-           'issues': ['ml-explore/mlx-lm#1233', 'ml-explore/mlx-lm#1443']}}
+           'issues': ['ml-explore/mlx-lm#1233', 'ml-explore/mlx-lm#1443']},
+ 'mtplx': {'status': 'blocked',
+           'label': 'Nothing that fits',
+           'note': 'Not an architecture problem: `deepseek_v4` is the same gate that lets Flash '
+                   'through, and the published Pro conversion would pass it. It is arithmetic. '
+                   'The 4-bit build is 837 GB and the smallest published MLX build is 562 GB, '
+                   'both past the 512 GB ceiling of any Mac, and MTPLX has no expert streaming '
+                   'from SSD to get around it the way ds4 does. As with Flash, no published Pro '
+                   'conversion carries the draft tensors, so even on hardware that could hold '
+                   'it you would be running the target autoregressive.',
+           'issues': []}}

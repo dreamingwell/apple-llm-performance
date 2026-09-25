@@ -124,8 +124,8 @@ ENGINES = {'llamacpp': {'status': 'works',
               'label': 'Runs',
               'note': 'The better path for this model, for one specific reason: the GGUF repo '
                       'ships a separate 1.4 GB MTP draft head, so `--draft-mtp` gives you real '
-                      'multi-token speculative decoding - exactly the thing that is capped at '
-                      'k=1 on the MLX servers. A 29-tier quant ladder from 6.2 GB to 31.5 GB '
+                      'multi-token speculative decoding - the thing the general-purpose MLX '
+                      'servers cap at k=1. A 29-tier quant ladder from 6.2 GB to 31.5 GB '
                       'on top. Watch two Mac-specific things: a crash on an M2 Ultra with '
                       'default settings, and a chat template that mis-renders tool calls until '
                       'you substitute the Qwen3.6 one.',
@@ -205,4 +205,26 @@ ENGINES = {'llamacpp': {'status': 'works',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'works',
+           'label': 'Runs',
+           'note': "The one model on this page where a checkpoint's own MTP heads drive "
+                   'speculative decoding on MLX rather than on GGUF. MTPLX publishes six '
+                   'first-party builds of it - Bare Speed, Optimized Speed and Optimized '
+                   'Quality, each with an FP16 twin the app picks automatically on M1 and M2 - '
+                   'and each one carries `mtp.safetensors` and the `mtplx_runtime.json` '
+                   'contract that puts it in the verified tier. Optimized Speed is a 4-bit '
+                   'dynamic quant at a measured 23.6 GiB peak, so 32 GB is the practical floor. '
+                   'The speedup figures are the project measuring itself and nobody has '
+                   'replicated them: 2.24x on an M5 Max, and a depth sweep on a 16 GB M4 mini '
+                   'that took the 9B sibling from 14.4 to 23.0 tok/s. The project also files '
+                   'against its own numbers - a verify cycle costs 1.6-2.0x an AR forward where '
+                   'its bench implies 1.2-1.3x, which is why the Qwen family is capped at depth '
+                   '3. Do not run it as a shared server: two concurrent requests measured 0.41x '
+                   'single-request throughput on an M3 Max. The stock '
+                   '`mlx-community/Qwen3.8-27B-*` quants load too, but they ship no draft '
+                   'tensors, so they serve autoregressive and you get none of this.',
+           'issues': ['youssofal/MTPLX#293',
+                      'youssofal/MTPLX#265',
+                      'youssofal/MTPLX#308',
+                      'youssofal/MTPLX#286']}}

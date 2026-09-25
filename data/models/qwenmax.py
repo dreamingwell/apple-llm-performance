@@ -168,4 +168,15 @@ ENGINES = {'llamacpp': {'status': 'works',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'blocked',
+           'label': 'Only the 806 GB build loads',
+           'note': 'A precise and unlucky intersection. The Qwen MoE gate requires the packed '
+                   '`switch_mlp` expert layout and refuses numbered `mlp.experts.N.*` tensors '
+                   'by name, telling you to re-run Forge. Of the four builds measured above '
+                   'only the unpruned 805.62 GB one is packed; all three REAP builds, at 360.94 '
+                   'to 540.28 GB, use numbered experts and are rejected outright. So the only '
+                   'artifact MTPLX will accept is the one no Mac can hold, and the ones that '
+                   'fit a 512 GB machine are exactly the ones it refuses. The rejection is at '
+                   'least loud rather than a silent slow path.',
+           'issues': []}}
