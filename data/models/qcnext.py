@@ -11,6 +11,9 @@ LICENSE = 'Apache-2.0'
 CONTEXT = '262k'
 HF = 'Qwen/Qwen3-Coder-Next'
 PARAMS_B = 80
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as 3B active of 80B total.
+ACTIVE_PARAMS_B = 3
 
 NOTE = ('The best fit-to-capability ratio on this page. 3B active out of 80B total gets SWE-bench '
  'Verified 74.2% - within a point of GLM-5.2 at a fraction of the footprint - and '

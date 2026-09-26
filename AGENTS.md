@@ -42,12 +42,14 @@ data/
   use_cases/<id>.py     one "What for?" category and its curated ranking
   issues/<owner>__<repo>.py   tracked issues for one upstream repository
   pr_keys.py            which issue keys are pull requests (small, shared)
+  machines.py           every M-series chip: bandwidth, memory options, Thunderbolt
 
 tracker/
   registry.py           loads data/ and assembles it. The only file that knows the schema.
   validate.py           enforces the schema. CI runs this.
   render_status.py      the HTML template and the page's prose. No per-model data.
   bands.py              fidelity thresholds and per-model quant caveats
+  throughput.py         the decode ceiling, and what it assumes
   build.py              renders docs/index.html
   measure.py            re-measures one model's quant ladder from Hugging Face
   probe.py              re-polls tracked issue states from GitHub
@@ -56,6 +58,9 @@ tracker/
 
 tools/
   check_output.py       sanity-checks the rendered page
+
+notes/
+  tokens-per-second.md  why the page derives a ceiling and collects measurements
 
 .github/workflows/
   validate.yml          the gate: validate, import-smoke, build, check output
@@ -72,6 +77,7 @@ Conflict surface by task:
 | Add or update a tracked issue | `data/issues/<repo>.py` only |
 | Add an engine | `data/engines/<new>.py`, plus one cell in each `data/models/*.py` it can load |
 | Change the UI | `tracker/render_status.py` only |
+| Add a published throughput measurement | `data/models/<id>.py` only — see section 4b |
 | Change the schema | `tracker/registry.py` **and** `tracker/validate.py`, in a commit of their own |
 
 Two agents adding two models never touch the same file. Two agents adding issues
@@ -255,7 +261,13 @@ explain that its ordering is editorial. An invented number is worse than none.
    (`#qwen38`) and people share those links. Copy the closest existing model as
    your template.
 2. **Fill the identity fields.** `NAME`, `ARCH`, `LICENSE`, `CONTEXT`, `HF`,
-   `PARAMS_B`, `MODALITY`, `NOTE`, `SOURCES`. For a non-text model use
+   `PARAMS_B`, `ACTIVE_PARAMS_B`, `MODALITY`, `NOTE`, `SOURCES`.
+   `ACTIVE_PARAMS_B` is the parameters read per decoded token — all of them for
+   a dense model, the routed experts that fire plus everything shared for an
+   MoE. It is what the decode ceiling divides bandwidth by, so it moves every
+   throughput figure on the card. If the lab has not published a count, write
+   `None` and say why in a comment; the page will show no ceiling rather than
+   one derived from a guess. For a non-text model use
    `CONTEXT_LABEL` to relabel that spec — `Output`, `Coverage`, `Behaviour` — as
    "Context" is meaningless for a diffusion model.
 3. **Write one `ENGINES` cell per engine that could load it.** Only engines whose
@@ -302,6 +314,51 @@ fourfold.
 
 Put the reasoning in `derivation`. It is rendered on the page, and it is how the
 next agent checks your arithmetic.
+
+---
+
+## 4b. Tokens per second
+
+Two kinds of number, never mixed. Read `notes/tokens-per-second.md` before
+adding either; it is the design argument, and this is the operating rule.
+
+**Derived: the decode ceiling.** `tracker/throughput.py` divides the chip's peak
+memory bandwidth by the bytes an engine must read to emit one token. It is an
+upper bound and it is rendered as one — always prefixed `≤`, always called a
+ceiling. Do not multiply it by an efficiency factor and call the product an
+estimate. There is no such constant: the measurements collected here land
+between 19% and 32% of the bound, and a dense model would land far higher.
+
+**Measured: `SPEEDS`.** Somebody else's run, with the run attached:
+
+```python
+SPEEDS = [
+ {'engine': 'ds4', 'chip': 'm5max', 'mem_gb': 128,
+  'build': 'DeepSeek-V4-Flash-IQ2XXS-...', 'gb': 86.7, 'context': 2048,
+  'decode_tps': 39.4, 'prefill_tps': 790,
+  'who': 'ds4 speed-bench README',
+  'url': 'https://github.com/antirez/ds4/blob/main/speed-bench/README.md',
+  'note': 'why this figure is what it is, and what it does not cover'},
+]
+```
+
+`engine` must have a cell in this model's `ENGINES`; `chip` must be a key in
+`data/machines.py`; `who` and `url` are mandatory, because a measurement with no
+measurer is a rumour. `build` and `context` are optional to the validator and
+essential in practice — without them the record cannot be compared with
+anything, and `validate.py` warns to say so.
+
+Three rules that have already earned their place:
+
+1. **Never invent a figure to fill a gap.** A model with no measurement gets its
+   ceiling and nothing else. That is a complete answer.
+2. **A figure above the bandwidth bound is an error unless the record says
+   `speculative` or `batched`.** `validate.py` enforces this. If your record
+   trips it, check the build size and the parameter counts before adding the
+   flag — the flag is for MTP and draft heads, not for making the check quiet.
+3. **Keep the under-specified records.** The two Qwen3.8 rows name only the chip
+   and are kept deliberately: they are the page's evidence for why a bare
+   tokens-per-second number is worth nothing. Do not tidy them away.
 
 ---
 
@@ -390,6 +447,21 @@ through every place it appears.
 it; committing it would conflict on every parallel PR.
 
 **Do not hand-edit `LADDER`.** Run `tracker/measure.py`.
+
+**Bits per weight is an average, and the decode ceiling assumes it is not.** The
+ceiling scales a build's size by `active / total`, which is only the bytes read
+per token if the whole checkpoint is quantised the same way. ds4's builds are
+not — the labels say so: `IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8` is 2-bit routed
+experts with Q8 attention projections, shared experts and output. Those models
+read more per token than the arithmetic says and their real ceiling is lower.
+Qwen3.8-Flash-Next is dragged the other way by a 51B n-gram table that is looked
+up rather than streamed.
+
+**Expert pruning buys memory, not speed.** A REAP build deletes experts the
+router was not going to pick, so per-token traffic barely moves: Kimi K3's
+349.67 GB and 451.42 GB builds decode at the same rate. Pruned rungs therefore
+get no ceiling at all, and a `SPEEDS` record naming a pruned build is exempt
+from the bandwidth check.
 
 **Escaping traps in `render_status.py`.** The HTML lives in a `str.format`
 template, so every literal `{` or `}` in CSS or JS must be doubled. And never
@@ -486,6 +558,17 @@ The notes are the reason to read this page rather than a spec sheet.
   (0.5–20), `pruned` and `native` rungs carry none
 - `KV` has exactly the three expected keys; only text models declare a per-token
   cost; a declared cost has a derivation and a max context
+- text models declare `ACTIVE_PARAMS_B`; it is positive and not larger than
+  `PARAMS_B`, or it is `None` (a warning, not an error); non-text models do not
+  declare it at all
+- every `SPEEDS` record names a known engine that has a cell in this model, a
+  known chip from `data/machines.py`, a memory option that chip was sold with, a
+  measurer and a URL, and carries at least one of `decode_tps` / `prefill_tps`
+- a `SPEEDS` decode figure above what the chip's bandwidth allows for that build
+  at that context is an **error** unless the record declares `speculative` or
+  `batched` — the one check that makes a fabricated figure hard to land
+- `data/machines.py` chips have a positive `bw`, an ascending deduplicated `mem`
+  list, a `gen` that appears in `GENS`, and a Thunderbolt port count
 - `DISPLAY_ORDER` is present and unique for engines and use cases
 - every engine has a `SITE` URL and a non-empty `PROSE_ALIASES`, and no two
   engines claim the same alias — an ambiguous name would link to the wrong engine

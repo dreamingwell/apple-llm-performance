@@ -11,6 +11,11 @@ LICENSE = 'Custom (zai-org)'
 CONTEXT = '1,048,576'
 HF = 'zai-org/GLM-5.3'
 PARAMS_B = 753
+# Z.ai publishes no activated-parameter count for 5.3. GLM-5.2 is 40B on the same
+# 78-layer, 256-expert, 8-active geometry, but inferring it would put a number on
+# the page that nobody published, so no decode ceiling is shown for this model.
+ACTIVE_PARAMS_B = None
+
 
 NOTE = (
     "The flagship successor to GLM-5.2, and architecturally the same machine: `glm_moe_dsa`, 78 "

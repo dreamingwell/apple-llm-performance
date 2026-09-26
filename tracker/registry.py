@@ -104,6 +104,17 @@ KV = {m.ID: (m.KV["bytes_per_token"], m.KV["max_context"], m.KV["derivation"])
       for m in MODEL_MODULES}
 BEST = {m.ID: m.BEST_ENGINE for m in MODEL_MODULES}
 
+# Parameters read per decoded token, which is what the decode ceiling divides
+# bandwidth by. Equal to PARAMS_B for a dense model, far smaller for an MoE, and
+# None where the lab has not published a figure - in which case no ceiling is
+# shown rather than a guessed one.
+ACTIVE = {m.ID: getattr(m, "ACTIVE_PARAMS_B", None) for m in MODEL_MODULES}
+
+# Published throughput measurements: someone else's number, with whose it is.
+# Never crowd-sourced and never estimated - see notes/tokens-per-second.md.
+SPEEDS = {m.ID: [dict(s) for s in (getattr(m, "SPEEDS", None) or [])]
+          for m in MODEL_MODULES}
+
 MATRIX = {
     m.ID: {eid: {"s": c["status"], "label": c["label"], "w": None, "q": None,
                  "note": c["note"], "items": list(c["issues"])}
@@ -125,10 +136,24 @@ for _m in ISSUE_MODULES:
     for _num, _meta in _m.ISSUES.items():
         EMETA[f"{_m.REPO}#{_num}"] = (_meta["severity"], _meta["headline"], _meta["why"])
 
-_pr = importlib.util.spec_from_file_location("data_pr_keys", os.path.join(DATA, "pr_keys.py"))
-_prm = importlib.util.module_from_spec(_pr)
-_pr.loader.exec_module(_prm)
+def _load_file(name, mod_name):
+    spec = importlib.util.spec_from_file_location(mod_name, os.path.join(DATA, name))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.__source_file__ = os.path.join("data", name)
+    return mod
+
+
+_prm = _load_file("pr_keys.py", "data_pr_keys")
 PR_KEYS = set(_prm.PR_KEYS)
+
+
+# -------------------------------------------------------------------- machines
+# The chip table the picker offers and the decode ceiling divides by. Shared
+# rather than per-record; it used to be a JavaScript literal in the renderer.
+MACHINE_MODULE = _load_file("machines.py", "data_machines")
+MACHINES = MACHINE_MODULE.MACHINES
+GENS = list(MACHINE_MODULE.GENS)
 
 
 # ------------------------------------------------------------------- derived

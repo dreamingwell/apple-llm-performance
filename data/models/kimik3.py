@@ -11,6 +11,9 @@ LICENSE = 'Modified MIT'
 CONTEXT = '1M'
 HF = 'moonshotai/Kimi-K3'
 PARAMS_B = 2780
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as 104B active of 2.8T total.
+ACTIVE_PARAMS_B = 104
 
 NOTE = ('The best open-weight agentic model there is - Terminal-Bench 2.1 of 88.3, MCPMark-Verified '
  '94.5 - and the hardest to get onto a Mac. Both available routes trade quality for fit: 1-bit '
@@ -95,6 +98,20 @@ LADDER = {'gguf': [{'bpw': 4.49,
 KV = {'bytes_per_token': 27648,
  'max_context': 1048576,
  'derivation': '24 of 93 layers are full attention; the other 69 hold a fixed KDA state'}
+
+# Published throughput measurements: someone else's numbers, with whose they are.
+# Never crowd-sourced and never estimated - see notes/tokens-per-second.md for the
+# bar a record has to clear, and tracker/throughput.py for what the page derives.
+SPEEDS = [
+ {'engine': 'omlx', 'chip': 'm3ultra', 'mem_gb': 512,
+  'build': 'Kimi-K3-REAP80-MLX-mxfp4-q8', 'gb': 349.67, 'decode_tps': 5.54,
+  'who': 'pipenetwork, the build publisher',
+  'url': 'https://huggingface.co/pipenetwork/Kimi-K3-REAP80-MLX-mxfp4-q8',
+  'note': 'No ceiling is derived against this one, because the build is expert-pruned: '
+          'pruning deletes experts the router was not going to pick, so it buys memory and '
+          'not speed, and the 349.67 GB and 451.42 GB builds decode at the same rate. '
+          'Dividing by file size would claim otherwise.'},
+]
 
 # Per-engine status. Keys must be engines whose modality matches MODALITY.
 ENGINES = {'llamacpp': {'status': 'works',

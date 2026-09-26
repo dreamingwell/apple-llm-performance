@@ -11,6 +11,11 @@ LICENSE = 'MIT'
 CONTEXT = '1,048,576'
 HF = 'zai-org/GLM-5.3-Flash'
 PARAMS_B = 321
+# Parameters read per decoded token, the divisor in the decode ceiling. Z.ai
+# publishes the expert counts but not an active-parameter total, and 321B over
+# 288 routed experts cannot be split without the dense share, so no ceiling is
+# shown for this model rather than one derived from a guess.
+ACTIVE_PARAMS_B = None
 
 NOTE = (
     "Released 2026-08-25 under MIT, which is unusually permissive for a model this size. It is a "
