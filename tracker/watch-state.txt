@@ -16,7 +16,7 @@ ggml-org/llama.cpp#26365|closed|Kimi K3 full-size vision lives on a branch, not 
 ggml-org/llama.cpp#26382|closed|Same K and V cache type enforced for models with no V cache
 ggml-org/llama.cpp#26894|open|DFlash drafter fails to bind when the GGUF encodes attention.sliding_window
 ggml-org/llama.cpp#27066|closed|Adaptive-P sampling is broken on Muse Glimmer
-ggml-org/llama.cpp#27139|open|Qwen3.8 tool-calling errors resolved by substituting the Qwen3.6 chat template
+ggml-org/llama.cpp#27139|closed|Qwen3.8 tool-calling errors resolved by substituting the Qwen3.6 chat template
 ggml-org/llama.cpp#27141|open|nemotron_h_moe aborts in ggml_ssm_scan during context reservation
 ggml-org/llama.cpp#27335|open|Qwen3.8-27B crashes on an M2 Ultra with default settings
 ggml-org/llama.cpp#27427|open|A ~50 KB request crashes llama-server with exit 139
@@ -113,7 +113,7 @@ waybarrios/vllm-mlx#682|open|Closing a stream leaves the inner generator and req
 waybarrios/vllm-mlx#689|open|Completion cache can store desynchronized rotating KV state
 waybarrios/vllm-mlx#699|open|DFlash and DSpark draft heads block speculative decoding
 waybarrios/vllm-mlx#710|open|MTP drafting pinned to k=1 on hybrid linear-attention
-waybarrios/vllm-mlx#711|open|--prefill-step-size silently dropped under --continuous-batching
+waybarrios/vllm-mlx#711|closed|--prefill-step-size silently dropped under --continuous-batching
 waybarrios/vllm-mlx#725|open|PR: GLM-4.7 thinking streams into content, not reasoning_content
 waybarrios/vllm-mlx#729|MERGED|PR: honor --prefill-step-size with continuous batching
 waybarrios/vllm-mlx#730|open|Prefix-cache reuse silently disabled for hybrid architectures
