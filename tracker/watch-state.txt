@@ -109,8 +109,8 @@ waybarrios/vllm-mlx#658|open|Validate Qwen MoE MTP conversion artifacts before d
 waybarrios/vllm-mlx#668|open|DeepSeek V4 Flash unsupported
 waybarrios/vllm-mlx#672|closed|Streaming tool calls can end without finish_reason
 waybarrios/vllm-mlx#678|open|Prefix cache trims RotatingKVCache past its window
-waybarrios/vllm-mlx#682|open|Closing a stream leaves the inner generator and request state open
-waybarrios/vllm-mlx#689|open|Completion cache can store desynchronized rotating KV state
+waybarrios/vllm-mlx#682|closed|Closing a stream leaves the inner generator and request state open
+waybarrios/vllm-mlx#689|closed|Completion cache can store desynchronized rotating KV state
 waybarrios/vllm-mlx#699|open|DFlash and DSpark draft heads block speculative decoding
 waybarrios/vllm-mlx#710|open|MTP drafting pinned to k=1 on hybrid linear-attention
 waybarrios/vllm-mlx#711|closed|--prefill-step-size silently dropped under --continuous-batching
