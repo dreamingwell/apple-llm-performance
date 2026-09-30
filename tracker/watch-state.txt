@@ -103,7 +103,7 @@ waybarrios/vllm-mlx#570|open|Qwen3.6-35B-A3B dequantize shape mismatch (works in
 waybarrios/vllm-mlx#584|open|Non-loopback requests silently dropped on --host 0.0.0.0
 waybarrios/vllm-mlx#590|open|Gemma 4 TextModel dispatch, logit_bias API, and MLLM fallback stalls
 waybarrios/vllm-mlx#619|open|Hardcoded mx.set_cache_limit(32GB) is not device-scaled
-waybarrios/vllm-mlx#627|open|memory_budget_gb never reconciled with the Metal allocation ceiling
+waybarrios/vllm-mlx#627|closed|memory_budget_gb never reconciled with the Metal allocation ceiling
 waybarrios/vllm-mlx#641|open|MemoryAwarePrefixCache stores caches by reference
 waybarrios/vllm-mlx#658|open|Validate Qwen MoE MTP conversion artifacts before decode
 waybarrios/vllm-mlx#668|open|DeepSeek V4 Flash unsupported
@@ -120,7 +120,7 @@ waybarrios/vllm-mlx#730|open|Prefix-cache reuse silently disabled for hybrid arc
 waybarrios/vllm-mlx#731|open|PR: make prefix-cache rewind gate aware of non-KV hybrid leaves
 waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tokens_details.cached_tokens
 ggml-org/llama.cpp@release|v0.5.0|latest release
-ollama/ollama@release|v0.34.4|latest release
+ollama/ollama@release|v0.35.0|latest release
 jundot/omlx@release|v0.7.0rc1|latest release
 vllm-project/vllm-metal@release|v0.30.0|latest release
 waybarrios/vllm-mlx@release|v0.5.0|latest release
