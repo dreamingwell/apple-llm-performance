@@ -25,7 +25,7 @@ ggml-org/llama.cpp#27720|closed|gpt-oss malformed Harmony channel headers break 
 ggml-org/llama.cpp#27727|open|Garbled output from a Qwen3-Coder-Next abliterated GGUF
 ggml-org/llama.cpp#27741|open|Feature request: support Qwen3.8-Flash-Next
 ggml-org/llama.cpp#27742|MERGED|model: add Qwen3.8-Flash-Next (qwen4exp)
-ggml-org/llama.cpp#27752|open|model: add GLM-5.3-Flash (glm5next)
+ggml-org/llama.cpp#27752|closed|model: add GLM-5.3-Flash (glm5next)
 jundot/omlx#1195|open|MTP speculative decoding not yet supported for Nemotron-H
 jundot/omlx#1783|open|Continuous batching prefill collapses at exactly two concurrent requests
 jundot/omlx#1794|open|Hitting the context wall with Gemma 4
