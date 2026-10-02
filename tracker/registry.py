@@ -2,7 +2,8 @@
 """Load data/ and present it in the shape the renderer expects.
 
 The data lives as one file per record - one model, one engine, one use case, one
-issue tracker - so two agents adding two models never touch the same file. This
+issue tracker, one chip's prices - so two agents adding two models never touch
+the same file. This
 module is the only place that knows how those files assemble into the structures
 the page renders from, which means a schema change happens here and in
 tracker/validate.py rather than scattered through the renderer.
@@ -47,6 +48,7 @@ MODEL_MODULES = _load_dir("models")
 ENGINE_MODULES = _load_dir("engines")
 USE_CASE_MODULES = _load_dir("use_cases")
 ISSUE_MODULES = _load_dir("issues")
+HARDWARE_MODULES = _load_dir("hardware")
 
 
 # --------------------------------------------------------------------- engines
@@ -109,6 +111,51 @@ MATRIX = {
                  "note": c["note"], "items": list(c["issues"])}
            for eid, c in m.ENGINES.items()}
     for m in MODEL_MODULES
+}
+
+
+# ------------------------------------------------------------------- hardware
+# What kind of number a price is. The page must say this next to the figure: a
+# list price and a used-market estimate are not the same claim, and presenting
+# one as the other is the fastest way to make the page untrustworthy.
+#
+#   apple_new   Apple's own list price for a machine Apple currently sells. Read
+#               off the linked configurator URL.
+#   apple_refurb Apple's own price on the Certified Refurbished store. Same
+#               confidence class as apple_new - it is a list price, not a
+#               survey - but the stock rotates, so the entry is a snapshot and
+#               the machine may not be orderable by the time anyone reads it.
+#   ebay_sold   Median of completed eBay sold listings, for hardware Apple has
+#               discontinued. Put the sample count and the observed range in the
+#               entry's `note` - a median with no spread behind it is a guess
+#               wearing a number's clothes. Currently unused: the API that
+#               serves sold prices is access-restricted. See tools/ebay_prices.py.
+# The chassis a price describes. Decode is bandwidth-bound and bandwidth is a
+# property of the SoC, so the derived ceiling is the same in every box - but only
+# an actively cooled one holds it. Inference is a sustained GPU load measured in
+# minutes, which is exactly the regime where a thin laptop clocks down. The page
+# says which kind of machine the money buys.
+CHASSIS = {
+    "desktop": "",
+    "laptop": "laptop; sustained throughput will fall below a desktop with the same chip",
+    "laptop_fanless": "fanless laptop; it shares the bandwidth but not the cooling, "
+                      "so sustained throughput will fall furthest below a desktop",
+}
+
+PRICE_BASES = {
+    "apple_new": "Apple list price",
+    "apple_refurb": "Apple refurbished",
+    "ebay_sold": "eBay sold, median",
+}
+
+# chip id -> {"label": ..., "prices": {memory_gb: entry}, "unpriced": {memory_gb: why}}
+# Keyed by the same chip ids the picker uses, so a record is either about a
+# machine the page offers or it is a typo; validate.py checks that.
+HARDWARE = {
+    m.ID: {"label": m.LABEL,
+           "prices": {int(gb): dict(entry) for gb, entry in getattr(m, "PRICES", {}).items()},
+           "unpriced": {int(gb): why for gb, why in getattr(m, "UNPRICED", {}).items()}}
+    for m in HARDWARE_MODULES
 }
 
 

@@ -102,8 +102,9 @@ It rewrites the `LADDER` block in that model's file and nothing else.
 
 ## What's where
 
-One record, one file. A model, an engine, a use case and an issue tracker each
-own exactly one file, so two people adding two models never touch the same file.
+One record, one file. A model, an engine, a use case, an issue tracker and one
+chip's prices each own exactly one file, so two people adding two models never
+touch the same file.
 
 ```
 data/models/<id>.py       one model: identity, scores, per-engine status,
@@ -111,6 +112,7 @@ data/models/<id>.py       one model: identity, scores, per-engine status,
 data/engines/<id>.py      one engine: what it is, its API, its cross-cutting issues
 data/use_cases/<id>.py    one "What for?" category and its curated ranking
 data/issues/<repo>.py     tracked issues for one upstream repository
+data/hardware/<chip>.py  what one M-series chip costs, per memory size
 data/pr_keys.py           which issue keys are pull requests
 
 tracker/registry.py       loads data/ and assembles it; the only file that
