@@ -11,6 +11,9 @@ LICENSE = 'MIT'
 CONTEXT = '1M'
 HF = 'deepseek-ai/DeepSeek-V4-Pro-0813'
 PARAMS_B = 1600
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as 49B active of 1.6T total.
+ACTIVE_PARAMS_B = 49
 
 NOTE = ('Same architecture as Flash at roughly five times the size, which makes it a capacity problem '
  'rather than a compatibility one. It runs, on hardware most people will not have: a 512 GB '
@@ -68,6 +71,20 @@ LADDER = {'ds4': [{'bpw': 2.32,
 KV = {'bytes_per_token': 70272,
  'max_context': 1048576,
  'derivation': '61 layers of DSA latent attention, 512 + 64 rope'}
+
+# Published throughput measurements: someone else's numbers, with whose they are.
+# Never crowd-sourced and never estimated - see notes/tokens-per-second.md for the
+# bar a record has to clear, and tracker/throughput.py for what the page derives.
+SPEEDS = [
+ {'engine': 'ds4', 'chip': 'm3ultra', 'mem_gb': 512,
+  'build': 'DeepSeek-V4-Pro-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-Instruct',
+  'gb': 464.6, 'context': 32768, 'decode_tps': 9.56,
+  'who': 'ds4 speed-bench README',
+  'url': 'https://github.com/antirez/ds4/blob/main/speed-bench/README.md',
+  'note': 'Single machine, no layer split. Under 10 tok/s is the number to hold against the '
+          'benchmark scores before buying a 512 GB Mac for this model: it is slower than '
+          'reading, and an agent loop pays it on every token of every turn.'},
+]
 
 # Per-engine status. Keys must be engines whose modality matches MODALITY.
 ENGINES = {'vllmmetal': {'status': 'blocked',

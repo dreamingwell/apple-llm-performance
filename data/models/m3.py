@@ -11,6 +11,9 @@ LICENSE = 'MiniMax Community'
 CONTEXT = '1M'
 HF = 'MiniMaxAI/MiniMax-M3'
 PARAMS_B = 428
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as 23B active of 428B total.
+ACTIVE_PARAMS_B = 23
 
 NOTE = ('SWE-bench Verified 80.5% is the best coding score on this page that fits one 256 GB machine, '
  'and since the architecture reached mainline llama.cpp that is now a real option rather than '

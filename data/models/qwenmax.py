@@ -11,6 +11,9 @@ LICENSE = 'Qwen3.8-Max (custom)'
 CONTEXT = '262k'
 HF = 'Qwen/Qwen3.8-2.4T-A95B'
 PARAMS_B = 2446
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as 95B active of 2.45T total.
+ACTIVE_PARAMS_B = 95
 
 NOTE = ('The weights are public at Qwen/Qwen3.8-2.4T-A95B and the architecture is already supported - '
  'this is the same qwen3_5_moe family as Qwen3.8-27B, so llama.cpp and mlx-lm both load it. '
