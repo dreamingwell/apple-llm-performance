@@ -156,4 +156,14 @@ ENGINES = {
                   'note': "Not in the supported-model matrix, and the compute layer is MLX, so it "
                           "would need a conversion that does not exist either.",
                   'issues': []},
+    'mtplx': {'status': 'blocked', 'label': 'MTP stripped in conversion',
+              'note': "Two walls, and the architecture is not either of them - MTPLX ships a "
+                      "`glm_moe_dsa` backend and its MTP variant, the same entry that covers "
+                      "GLM-5.2. The first is that both mlx-community conversions set "
+                      "`num_nextn_predict_layers` to 0 and drop the draft layer, so the engine "
+                      "refuses them as models with no MTP head - upstream ships 1. The second is "
+                      "size: 418 GB is past any single Mac, and MTPLX has no SSD expert streaming "
+                      "to work around it.",
+              'issues': []},
+
 }

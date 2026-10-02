@@ -152,4 +152,16 @@ ENGINES = {'llamacpp': {'status': 'works',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'blocked',
+           'label': 'No draft weights published',
+           'note': 'The architecture is recognised - `glm4_moe_lite` maps to a contract-gated '
+                   'GLM-4 MoE backend - and all four mlx-community builds keep '
+                   '`num_nextn_predict_layers: 1` in their config. They ship no `mtp.*` tensors '
+                   'to go with it, so the gate fails and MTPLX declines rather than serving a '
+                   'model it cannot verify. There is no AR fallback for GLM as there is for '
+                   'Qwen: outside the Qwen and DeepSeek V4 families, a checkpoint with no draft '
+                   'head is refused. The conversion is the whole problem, and it has been '
+                   'demonstrated: a reporter restored the layer count and the tensors by hand '
+                   'on a GLM-4.7 variant and got the engine to load it.',
+           'issues': ['youssofal/MTPLX#65']}}

@@ -108,4 +108,12 @@ ENGINES = {'llamacpp': {'status': 'degraded',
  'ds4': {'status': 'none',
          'label': 'Out of scope',
          'note': 'Not one of the three checkpoints ds4 loads.',
-         'issues': []}}
+         'issues': []},
+ 'mtplx': {'status': 'none',
+           'label': 'Out of scope',
+           'note': 'gpt-oss has no MTP head, and `gpt_oss` is not one of the architectures '
+                   'MTPLX will serve autoregressive. The engine exits with "MTPLX requires an '
+                   'MTP-equipped model" rather than loading it. There is no defect here to '
+                   'track - a runtime whose entire purpose is native multi-token prediction has '
+                   'nothing to offer a checkpoint that never trained one.',
+           'issues': []}}
