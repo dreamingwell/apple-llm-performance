@@ -19,7 +19,7 @@ ggml-org/llama.cpp#27066|closed|Adaptive-P sampling is broken on Muse Glimmer
 ggml-org/llama.cpp#27139|closed|Qwen3.8 tool-calling errors resolved by substituting the Qwen3.6 chat template
 ggml-org/llama.cpp#27141|open|nemotron_h_moe aborts in ggml_ssm_scan during context reservation
 ggml-org/llama.cpp#27335|closed|Qwen3.8-27B crashes on an M2 Ultra with default settings
-ggml-org/llama.cpp#27427|open|A ~50 KB request crashes llama-server with exit 139
+ggml-org/llama.cpp#27427|closed|A ~50 KB request crashes llama-server with exit 139
 ggml-org/llama.cpp#27428|open|draft-mtp roughly halves prompt processing on a multi-GPU layer split
 ggml-org/llama.cpp#27720|closed|gpt-oss malformed Harmony channel headers break tool calls
 ggml-org/llama.cpp#27727|open|Garbled output from a Qwen3-Coder-Next abliterated GGUF
