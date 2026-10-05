@@ -26,7 +26,7 @@ ggml-org/llama.cpp#27727|open|Garbled output from a Qwen3-Coder-Next abliterated
 ggml-org/llama.cpp#27741|open|Feature request: support Qwen3.8-Flash-Next
 ggml-org/llama.cpp#27742|MERGED|model: add Qwen3.8-Flash-Next (qwen4exp)
 ggml-org/llama.cpp#27752|closed|model: add GLM-5.3-Flash (glm5next)
-jundot/omlx#1195|open|MTP speculative decoding not yet supported for Nemotron-H
+jundot/omlx#1195|closed|MTP speculative decoding not yet supported for Nemotron-H
 jundot/omlx#1783|open|Continuous batching prefill collapses at exactly two concurrent requests
 jundot/omlx#1794|open|Hitting the context wall with Gemma 4
 jundot/omlx#1862|open|MiniMax 3 model-type error
@@ -47,7 +47,7 @@ jundot/omlx#2600|open|DFlash speculative decoding renders the cache non-function
 jundot/omlx#2604|open|Glimmer DFlash can end a turn after reasoning without the forced tool call
 jundot/omlx#2606|open|Thinking leaks into content when generation is truncated mid-thought
 jundot/omlx#2641|open|Glimmer is extremely slow with DFlash on
-jundot/omlx#2691|open|Request: an oQ4e-mtp quantisation of Qwen3.8-27B
+jundot/omlx#2691|closed|Request: an oQ4e-mtp quantisation of Qwen3.8-27B
 jundot/omlx#2747|open|Qwen3.8-27B single-stream decode regressed 36.5 to 24 tok/s on an M3 Ultra
 jundot/omlx#2786|open|Gemma 4 performance regressed after 0.6.1
 jundot/omlx#2854|open|No continuous-batching results published for Qwen3.8 and DFlash2
