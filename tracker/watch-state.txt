@@ -27,25 +27,25 @@ ggml-org/llama.cpp#27741|open|Feature request: support Qwen3.8-Flash-Next
 ggml-org/llama.cpp#27742|MERGED|model: add Qwen3.8-Flash-Next (qwen4exp)
 ggml-org/llama.cpp#27752|closed|model: add GLM-5.3-Flash (glm5next)
 jundot/omlx#1195|closed|MTP speculative decoding not yet supported for Nemotron-H
-jundot/omlx#1783|open|Continuous batching prefill collapses at exactly two concurrent requests
-jundot/omlx#1794|open|Hitting the context wall with Gemma 4
-jundot/omlx#1862|open|MiniMax 3 model-type error
-jundot/omlx#1927|open|GLM-5.2-mxfp4 will not load
-jundot/omlx#1968|open|MiniMax-M3 fails to load: 2225 parameters not in model (vision_tower)
-jundot/omlx#2018|open|OpenAI endpoint returns 500 while the Anthropic endpoint works
-jundot/omlx#2099|open|GLM-5.2 loops
+jundot/omlx#1783|closed|Continuous batching prefill collapses at exactly two concurrent requests
+jundot/omlx#1794|closed|Hitting the context wall with Gemma 4
+jundot/omlx#1862|closed|MiniMax 3 model-type error
+jundot/omlx#1927|closed|GLM-5.2-mxfp4 will not load
+jundot/omlx#1968|closed|MiniMax-M3 fails to load: 2225 parameters not in model (vision_tower)
+jundot/omlx#2018|closed|OpenAI endpoint returns 500 while the Anthropic endpoint works
+jundot/omlx#2099|closed|GLM-5.2 loops
 jundot/omlx#2137|closed|GLM-5.2-mxfp4 prefill fell from 160-180 tok/s to 40 tok/s on 0.5.0.dev2
-jundot/omlx#2208|open|GLM-5.2 cold prefill throttles near the memory ceiling
-jundot/omlx#2216|open|Legitimate gpt-oss tool calls with explicit to=functions.* are dropped
-jundot/omlx#2252|open|A broken-load DFlash helper poisons concurrent requests to an unrelated model
-jundot/omlx#2307|open|A model-discovery race orphans a loaded engine - 404 GB unreclaimable, restart only
-jundot/omlx#2469|open|DeepSeek V4 mxfp4 gather_qmm_blocks crashes on float32 activations
-jundot/omlx#2493|open|'Cache signature mismatch' then a severe performance drop on DeepSeek V4
-jundot/omlx#2589|open|Muse Glimmer oQ4e: tool calling broken and decode slow
-jundot/omlx#2590|open|Scope clarification: MiniMax M3 long-prefill fixes across Q4 and oQ3
+jundot/omlx#2208|closed|GLM-5.2 cold prefill throttles near the memory ceiling
+jundot/omlx#2216|closed|Legitimate gpt-oss tool calls with explicit to=functions.* are dropped
+jundot/omlx#2252|closed|A broken-load DFlash helper poisons concurrent requests to an unrelated model
+jundot/omlx#2307|closed|A model-discovery race orphans a loaded engine - 404 GB unreclaimable, restart only
+jundot/omlx#2469|closed|DeepSeek V4 mxfp4 gather_qmm_blocks crashes on float32 activations
+jundot/omlx#2493|closed|'Cache signature mismatch' then a severe performance drop on DeepSeek V4
+jundot/omlx#2589|closed|Muse Glimmer oQ4e: tool calling broken and decode slow
+jundot/omlx#2590|closed|Scope clarification: MiniMax M3 long-prefill fixes across Q4 and oQ3
 jundot/omlx#2600|open|DFlash speculative decoding renders the cache non-functional on Gemma and Glimmer
 jundot/omlx#2604|open|Glimmer DFlash can end a turn after reasoning without the forced tool call
-jundot/omlx#2606|open|Thinking leaks into content when generation is truncated mid-thought
+jundot/omlx#2606|closed|Thinking leaks into content when generation is truncated mid-thought
 jundot/omlx#2641|open|Glimmer is extremely slow with DFlash on
 jundot/omlx#2691|closed|Request: an oQ4e-mtp quantisation of Qwen3.8-27B
 jundot/omlx#2747|open|Qwen3.8-27B single-stream decode regressed 36.5 to 24 tok/s on an M3 Ultra
