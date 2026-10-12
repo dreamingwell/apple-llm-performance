@@ -117,7 +117,7 @@ waybarrios/vllm-mlx#711|closed|--prefill-step-size silently dropped under --cont
 waybarrios/vllm-mlx#725|open|PR: GLM-4.7 thinking streams into content, not reasoning_content
 waybarrios/vllm-mlx#729|MERGED|PR: honor --prefill-step-size with continuous batching
 waybarrios/vllm-mlx#730|open|Prefix-cache reuse silently disabled for hybrid architectures
-waybarrios/vllm-mlx#731|open|PR: make prefix-cache rewind gate aware of non-KV hybrid leaves
+waybarrios/vllm-mlx#731|closed|PR: make prefix-cache rewind gate aware of non-KV hybrid leaves
 waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tokens_details.cached_tokens
 ggml-org/llama.cpp@release|v0.6.0|latest release
 ollama/ollama@release|v0.40.3|latest release
