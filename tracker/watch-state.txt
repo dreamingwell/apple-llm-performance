@@ -93,7 +93,7 @@ ollama/ollama#17776|open|Qwen3.8-27B MTP variants are 2x slower than non-MTP on 
 ollama/ollama#17783|closed|gemma4:31b-mlx grows in memory over a session
 ollama/ollama#17878|open|Embeddings silently return all-zero vectors under sustained load
 vllm-project/vllm-metal#360|open|RFC: a specialised Metal kernel for MLA paged attention
-vllm-project/vllm-metal#450|open|RFC: attention backend dispatch
+vllm-project/vllm-metal#450|closed|RFC: attention backend dispatch
 vllm-project/vllm-metal#482|open|Draft-model speculative decoding is net-negative
 vllm-project/vllm-metal#610|open|Built-in MTP draft heads do not yet work with prefix caching on hybrid GDN
 vllm-project/vllm-metal#644|closed|Nemotron-H (Mamba-2 + MoE hybrid) paged attention not implemented
@@ -120,7 +120,7 @@ waybarrios/vllm-mlx#730|open|Prefix-cache reuse silently disabled for hybrid arc
 waybarrios/vllm-mlx#731|closed|PR: make prefix-cache rewind gate aware of non-KV hybrid leaves
 waybarrios/vllm-mlx#732|open|PR: surface prefix-cache reuse via usage.prompt_tokens_details.cached_tokens
 ggml-org/llama.cpp@release|v0.6.0|latest release
-ollama/ollama@release|v0.40.3|latest release
+ollama/ollama@release|v0.40.4|latest release
 jundot/omlx@release|v0.7.1.dev1|latest release
 vllm-project/vllm-metal@release|v0.31.0|latest release
 waybarrios/vllm-mlx@release|v0.5.0|latest release
