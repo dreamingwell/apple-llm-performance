@@ -94,7 +94,7 @@ ollama/ollama#17783|closed|gemma4:31b-mlx grows in memory over a session
 ollama/ollama#17878|open|Embeddings silently return all-zero vectors under sustained load
 vllm-project/vllm-metal#360|open|RFC: a specialised Metal kernel for MLA paged attention
 vllm-project/vllm-metal#450|closed|RFC: attention backend dispatch
-vllm-project/vllm-metal#482|open|Draft-model speculative decoding is net-negative
+vllm-project/vllm-metal#482|closed|Draft-model speculative decoding is net-negative
 vllm-project/vllm-metal#610|open|Built-in MTP draft heads do not yet work with prefix caching on hybrid GDN
 vllm-project/vllm-metal#644|closed|Nemotron-H (Mamba-2 + MoE hybrid) paged attention not implemented
 vllm-project/vllm-metal#646|closed|Mixed batches with top_k enabled on some requests crash the Metal sampler
