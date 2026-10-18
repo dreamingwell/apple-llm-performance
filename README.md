@@ -112,17 +112,21 @@ data/engines/<id>.py      one engine: what it is, its API, its cross-cutting iss
 data/use_cases/<id>.py    one "What for?" category and its curated ranking
 data/issues/<repo>.py     tracked issues for one upstream repository
 data/pr_keys.py           which issue keys are pull requests
+data/machines.py          every M-series chip: bandwidth, memory options,
+                          Thunderbolt generation
 
 tracker/registry.py       loads data/ and assembles it; the only file that
                           knows the schema
 tracker/validate.py       enforces the schema — CI runs this
 tracker/render_status.py  the HTML template and the page's prose
 tracker/bands.py          fidelity thresholds and per-model quant caveats
+tracker/throughput.py     the decode ceiling, and what it assumes
 tracker/build.py          renders docs/index.html
 tracker/measure.py        re-measures a quant ladder from the Hugging Face API
 tracker/probe.py          refreshes watch-state.txt from the GitHub API
 tracker/watch-state.txt   last polled state of every tracked issue
 tools/check_output.py     sanity-checks the rendered page — CI runs this
+notes/                    design notes; start with tokens-per-second.md
 assets/                   social card source and output
 docs/                     GENERATED, gitignored — the built site
 ```
@@ -164,13 +168,25 @@ bitten us here.
 - **Fit** assumes a 90% wired-memory limit plus framework overhead — ~10 GB for
   an LLM server holding a paged KV pool, ~1.5 GB for an image or audio runtime.
   It answers "does this load", not "does this run well".
+- **Tokens per second comes in two classes and they are never mixed.** A
+  *measurement* is somebody else's run, shown with the machine, build and context
+  it came off and a link to whoever took it. A *ceiling* is `bandwidth ÷ bytes
+  read per token`, marked `≤`, and it is an upper bound rather than a prediction
+  — decoding at batch 1 reads the active weights plus the attended KV for every
+  token and reuses almost none of it, so memory bandwidth caps it. Nothing is
+  self-reported to us: a tokens-per-second figure with no build and no context
+  compares to nothing. The reasoning, the failure modes and the bound checked
+  against every complete measurement on the page are in
+  [notes/tokens-per-second.md](notes/tokens-per-second.md) and in the page's own
+  "Tokens per second" panel.
 
 ## Limits worth stating plainly
 
 Nothing here has been benchmarked on this hardware by us. Benchmark scores are
 vendor- or aggregator-reported. Issue states are a twice-daily snapshot. Every
-memory and throughput figure is arithmetic over published specifications, not a
-measurement. Treat the page as a shortlist filter and verify anything you intend
+memory figure, and every throughput figure marked `≤`, is arithmetic over
+published specifications rather than a measurement — the handful of real
+throughput measurements on the page are other people's, and say whose. Treat the page as a shortlist filter and verify anything you intend
 to spend money on.
 
 If you have measured something on real hardware, that is the most valuable kind

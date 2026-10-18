@@ -19,11 +19,36 @@ Apple silicon, we want it on the page. Adding one is a new file in
 `data/models/` plus a line in each category it belongs to.
 
 **Numbers measured on real hardware.** Nothing on this page has been benchmarked
-on Apple silicon by us — it is all published specifications and arithmetic. If
-you have run one of these models on a Mac and have tokens/second, a peak
-resident figure, or a context ceiling you actually hit, that is the single most
-valuable thing you can add. Say which chip, how much memory, which engine
-version and which exact quant.
+on Apple silicon by us — it is all published specifications, arithmetic, and
+other people's measurements. If you have run one of these models on a Mac, that
+is the single most valuable thing you can add.
+
+Throughput goes in the model's `SPEEDS` list, and the fields are not optional
+etiquette — they are what makes the figure mean anything:
+
+```python
+SPEEDS = [
+ {'engine': 'llamacpp', 'chip': 'm4max', 'mem_gb': 128,
+  'build': 'Qwen3.8-27B-UD-Q4_K_XL', 'gb': 17.56, 'context': 8192,
+  'decode_tps': 31.2,
+  'who': 'your name or handle, and the engine version you ran',
+  'url': 'https://…  a gist, a comment, a README - somewhere it can be read',
+  'note': 'anything that would change how someone reads the number'},
+]
+```
+
+A tokens-per-second figure without the chip, the build and the context compares
+to nothing — that is why the old self-reported numbers were removed. Two records
+on the page (Qwen3.8 on oMLX) are kept in that under-specified state on purpose,
+as the worked example.
+
+`python3 tracker/validate.py` will reject a decode figure that exceeds what the
+chip's memory bandwidth allows for that build at that context, unless you mark
+the record `'speculative': True` (MTP or a draft head) or `'batched': True`. If
+it trips, check the build size first — it is usually right.
+
+A peak resident figure or a context ceiling you actually hit is just as welcome;
+those belong in the relevant note, saying which chip and which build.
 
 **Corrections where the page is wrong about support.** The failure mode here is
 concluding "blocked" from a missing quant when the real blocker is elsewhere, or

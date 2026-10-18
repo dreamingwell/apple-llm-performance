@@ -26,7 +26,7 @@ jobs:
         # twice-daily refresh broke while validate and build stayed green.
         run: |
           python3 -m compileall -q tracker tools data
-          for m in registry validate render_status build measure probe bands; do
+          for m in registry validate render_status build measure probe bands throughput; do
             python3 -c "import sys; sys.path.insert(0,'tracker'); import $m" || exit 1
           done
           echo "all modules import"

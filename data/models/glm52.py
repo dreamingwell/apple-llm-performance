@@ -11,6 +11,9 @@ LICENSE = 'MIT'
 CONTEXT = '1M'
 HF = 'zai-org/GLM-5.2'
 PARAMS_B = 744
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as 40B active of 744B total.
+ACTIVE_PARAMS_B = 40
 
 NOTE = ('The highest agentic score reachable on Apple hardware, and reachable today - just not '
  'through the MLX servers, which are blocked three ways. The practical constraints are size '
@@ -123,6 +126,28 @@ LADDER = {'ds4': [{'bpw': 4.67,
 KV = {'bytes_per_token': 89856,
  'max_context': 1048576,
  'derivation': '78 layers of DSA latent attention, 512 + 64 rope'}
+
+# Published throughput measurements: someone else's numbers, with whose they are.
+# Never crowd-sourced and never estimated - see notes/tokens-per-second.md for the
+# bar a record has to clear, and tracker/throughput.py for what the page derives.
+SPEEDS = [
+ {'engine': 'omlx', 'chip': 'm3ultra', 'mem_gb': 512, 'build': 'GLM-5.2-mxfp4',
+  'prefill_tps': 845,
+  'who': 'oMLX published figure, contested in jundot/omlx#3006',
+  'url': 'https://github.com/jundot/omlx/issues/3006',
+  'note': 'Prefill, not decode, and this page does not derive prefill at all - prefill is a '
+          'batched matmul over the whole prompt, so it is compute-bound and the bandwidth '
+          'argument does not apply to it. The figure holds only with the native DSA kernels '
+          'compiled in.'},
+ {'engine': 'omlx', 'chip': 'm3ultra', 'mem_gb': 512, 'build': 'GLM-5.2-mxfp4',
+  'prefill_tps': 29,
+  'who': 'jundot/omlx#3006 reporters, fallback kernels',
+  'url': 'https://github.com/jundot/omlx/issues/3006',
+  'note': 'The same model on the same chip with the fallback path, which is what a plain '
+          'pip install gives you. A 29x gap between two correct measurements of the same '
+          'thing is the reason a bare tokens-per-second number is worth so little without '
+          'the build it came from.'},
+]
 
 # Per-engine status. Keys must be engines whose modality matches MODALITY.
 ENGINES = {'vllmmetal': {'status': 'blocked',

@@ -11,6 +11,9 @@ LICENSE = 'Apache-2.0'
 CONTEXT = '128k'
 HF = 'openai/gpt-oss-120b'
 PARAMS_B = 120
+# Parameters read per decoded token, the divisor in the decode ceiling:
+# published as ~5.1B active of 120B total.
+ACTIVE_PARAMS_B = 5.1
 
 NOTE = ('Older now, but a genuinely comfortable fit on any engine: 5.1B active means fast decode and '
  '63-66 GB leaves plenty of KV room. Scores scale with reasoning effort - the figures shown '
