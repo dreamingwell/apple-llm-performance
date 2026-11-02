@@ -49,8 +49,8 @@ jundot/omlx#2606|closed|Thinking leaks into content when generation is truncated
 jundot/omlx#2641|open|Glimmer is extremely slow with DFlash on
 jundot/omlx#2691|closed|Request: an oQ4e-mtp quantisation of Qwen3.8-27B
 jundot/omlx#2747|open|Qwen3.8-27B single-stream decode regressed 36.5 to 24 tok/s on an M3 Ultra
-jundot/omlx#2786|open|Gemma 4 performance regressed after 0.6.1
-jundot/omlx#2854|open|No continuous-batching results published for Qwen3.8 and DFlash2
+jundot/omlx#2786|closed|Gemma 4 performance regressed after 0.6.1
+jundot/omlx#2854|closed|No continuous-batching results published for Qwen3.8 and DFlash2
 jundot/omlx#2972|closed|Process-global Qwen patches contaminate a resident engine after loading another model
 jundot/omlx#3006|open|GLM-5.2 prefill far below published figures on an M3 Ultra 512 GB
 jundot/omlx#3117|open|Qwen3.8 with the Neural Engine enabled produces zero tokens
