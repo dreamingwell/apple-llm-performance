@@ -44,7 +44,7 @@ jundot/omlx#2493|closed|'Cache signature mismatch' then a severe performance dro
 jundot/omlx#2589|closed|Muse Glimmer oQ4e: tool calling broken and decode slow
 jundot/omlx#2590|closed|Scope clarification: MiniMax M3 long-prefill fixes across Q4 and oQ3
 jundot/omlx#2600|open|DFlash speculative decoding renders the cache non-functional on Gemma and Glimmer
-jundot/omlx#2604|open|Glimmer DFlash can end a turn after reasoning without the forced tool call
+jundot/omlx#2604|closed|Glimmer DFlash can end a turn after reasoning without the forced tool call
 jundot/omlx#2606|closed|Thinking leaks into content when generation is truncated mid-thought
 jundot/omlx#2641|closed|Glimmer is extremely slow with DFlash on
 jundot/omlx#2691|closed|Request: an oQ4e-mtp quantisation of Qwen3.8-27B
