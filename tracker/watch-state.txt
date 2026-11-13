@@ -58,7 +58,7 @@ jundot/omlx#3121|closed|DeepSeek V4 Flash decodes at 4-17 tok/s on an M5 Max fro
 jundot/omlx#3293|closed|Qwen4-Exp sparse-attention indexer fails under multi-row batching
 jundot/omlx#3294|open|Qwen4-Exp QSA cache: prefix blocks unusable across text and MRoPE turns
 jundot/omlx#3300|closed|Loading another Qwen3.5-family VLM permanently breaks qwen4_exp Lightning MTP
-jundot/omlx#3303|open|v0.6.4 qwen4-exp performance benchmark returns N/A for some prompt sizes
+jundot/omlx#3303|closed|v0.6.4 qwen4-exp performance benchmark returns N/A for some prompt sizes
 lmstudio-ai/lmstudio-bug-tracker#2240|open|Too much memory allocated
 lmstudio-ai/lmstudio-bug-tracker#2243|open|Native MLX tool calling: parser coverage requests
 lmstudio-ai/lmstudio-bug-tracker#2265|open|MLX Gemma 4 silently ignores attached images and confabulates a description
