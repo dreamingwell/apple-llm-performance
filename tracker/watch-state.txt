@@ -53,7 +53,7 @@ jundot/omlx#2786|closed|Gemma 4 performance regressed after 0.6.1
 jundot/omlx#2854|closed|No continuous-batching results published for Qwen3.8 and DFlash2
 jundot/omlx#2972|closed|Process-global Qwen patches contaminate a resident engine after loading another model
 jundot/omlx#3006|closed|GLM-5.2 prefill far below published figures on an M3 Ultra 512 GB
-jundot/omlx#3117|open|Qwen3.8 with the Neural Engine enabled produces zero tokens
+jundot/omlx#3117|closed|Qwen3.8 with the Neural Engine enabled produces zero tokens
 jundot/omlx#3121|closed|DeepSeek V4 Flash decodes at 4-17 tok/s on an M5 Max from residency thrash
 jundot/omlx#3293|closed|Qwen4-Exp sparse-attention indexer fails under multi-row batching
 jundot/omlx#3294|open|Qwen4-Exp QSA cache: prefix blocks unusable across text and MRoPE turns
