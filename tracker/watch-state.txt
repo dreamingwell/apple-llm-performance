@@ -48,7 +48,7 @@ jundot/omlx#2604|closed|Glimmer DFlash can end a turn after reasoning without th
 jundot/omlx#2606|closed|Thinking leaks into content when generation is truncated mid-thought
 jundot/omlx#2641|closed|Glimmer is extremely slow with DFlash on
 jundot/omlx#2691|closed|Request: an oQ4e-mtp quantisation of Qwen3.8-27B
-jundot/omlx#2747|open|Qwen3.8-27B single-stream decode regressed 36.5 to 24 tok/s on an M3 Ultra
+jundot/omlx#2747|closed|Qwen3.8-27B single-stream decode regressed 36.5 to 24 tok/s on an M3 Ultra
 jundot/omlx#2786|closed|Gemma 4 performance regressed after 0.6.1
 jundot/omlx#2854|closed|No continuous-batching results published for Qwen3.8 and DFlash2
 jundot/omlx#2972|closed|Process-global Qwen patches contaminate a resident engine after loading another model
