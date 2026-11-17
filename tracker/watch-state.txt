@@ -82,7 +82,7 @@ ml-explore/mlx-lm#1493|open|Generation hangs at 0% CPU right after prompt proces
 ml-explore/mlx-lm#1572|open|>300GB models trip the GPU watchdog at load
 ml-explore/mlx-lm#1573|open|RotatingKVCache.to_quantized() blocks --kv-bits on sliding-window layers
 ml-explore/mlx-lm#1662|closed|Models that discard update_and_fetch's return leak one Metal buffer per layer per generation
-ml-explore/mlx-lm#1788|open|Add Qwen3.8-Flash-Next (qwen4_exp) model support
+ml-explore/mlx-lm#1788|MERGED|Add Qwen3.8-Flash-Next (qwen4_exp) model support
 ollama/ollama#14116|closed|Tiered context length can exhaust VRAM
 ollama/ollama#15813|open|Metal backend crash on Apple M5: bfloat/half type mismatch
 ollama/ollama#17323|open|Bare-JSON tool-call models silently drop content generated after the call
