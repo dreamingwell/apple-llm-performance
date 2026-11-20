@@ -43,7 +43,7 @@ jundot/omlx#2469|closed|DeepSeek V4 mxfp4 gather_qmm_blocks crashes on float32 a
 jundot/omlx#2493|closed|'Cache signature mismatch' then a severe performance drop on DeepSeek V4
 jundot/omlx#2589|closed|Muse Glimmer oQ4e: tool calling broken and decode slow
 jundot/omlx#2590|closed|Scope clarification: MiniMax M3 long-prefill fixes across Q4 and oQ3
-jundot/omlx#2600|open|DFlash speculative decoding renders the cache non-functional on Gemma and Glimmer
+jundot/omlx#2600|closed|DFlash speculative decoding renders the cache non-functional on Gemma and Glimmer
 jundot/omlx#2604|closed|Glimmer DFlash can end a turn after reasoning without the forced tool call
 jundot/omlx#2606|closed|Thinking leaks into content when generation is truncated mid-thought
 jundot/omlx#2641|closed|Glimmer is extremely slow with DFlash on
@@ -56,7 +56,7 @@ jundot/omlx#3006|closed|GLM-5.2 prefill far below published figures on an M3 Ult
 jundot/omlx#3117|closed|Qwen3.8 with the Neural Engine enabled produces zero tokens
 jundot/omlx#3121|closed|DeepSeek V4 Flash decodes at 4-17 tok/s on an M5 Max from residency thrash
 jundot/omlx#3293|closed|Qwen4-Exp sparse-attention indexer fails under multi-row batching
-jundot/omlx#3294|open|Qwen4-Exp QSA cache: prefix blocks unusable across text and MRoPE turns
+jundot/omlx#3294|closed|Qwen4-Exp QSA cache: prefix blocks unusable across text and MRoPE turns
 jundot/omlx#3300|closed|Loading another Qwen3.5-family VLM permanently breaks qwen4_exp Lightning MTP
 jundot/omlx#3303|closed|v0.6.4 qwen4-exp performance benchmark returns N/A for some prompt sizes
 lmstudio-ai/lmstudio-bug-tracker#2240|open|Too much memory allocated
